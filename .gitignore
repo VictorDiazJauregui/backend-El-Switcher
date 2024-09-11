@@ -1,0 +1,8 @@
+# virtual environment.
+.venv
+
+# Editor directories and files.
+.vscode/*
+
+# pycache.
+__pycache__/
