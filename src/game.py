@@ -1,8 +1,10 @@
 """Module providing the game class"""
 
-class game:
+from pydantic import BaseModel
+
+
+class Game(BaseModel):
     """Class representing a game"""
-    def __init__(self, gameid, name, max_players):
-        game.gameid = gameid
-        game.name = name
-        game.max_players = max_players
+    id: int
+    name: str
+    max_players: int

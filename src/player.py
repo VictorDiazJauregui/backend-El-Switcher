@@ -1,7 +1,8 @@
 """Module providing the player class"""
+from pydantic import BaseModel
 
-class Player:
+class Player(BaseModel):
     """Class representing a player in the game"""
-    def __init__(self, playerid, name):
-        Player.playerid = playerid
-        Player.name = name
+    id: int
+    name: str
+    
