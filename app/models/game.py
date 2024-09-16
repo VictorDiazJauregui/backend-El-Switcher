@@ -5,4 +5,5 @@ class Game(BaseModel):
     gameId: int
     gameName: str
     maxPlayers: int
+    minPlayers: int
     players: List[str]

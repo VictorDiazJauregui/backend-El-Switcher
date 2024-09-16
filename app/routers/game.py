@@ -6,9 +6,10 @@ router = APIRouter()
 
 @router.post("/new", response_model=GameResponseSchema)
 def create_game_endpoint(game_data: GameCreateSchema):
-    new_game = create_game(
+    result = create_game(
         owner_name=game_data.ownerName,
         game_name=game_data.gameName,
         max_players=game_data.maxPlayers
+        min_players=game_data.minPlayers
     )
-    return new_game
+    return result

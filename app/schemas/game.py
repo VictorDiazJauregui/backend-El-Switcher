@@ -5,9 +5,8 @@ class GameCreateSchema(BaseModel):
     ownerName: str
     gameName: str
     maxPlayers: int
+    minPlayers: int
 
 class GameResponseSchema(BaseModel):
     gameId: int
-    gameName: str
-    maxPlayers: int
-    players: List[str]
+    ownerId: int
