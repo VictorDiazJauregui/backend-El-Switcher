@@ -1,53 +1,100 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
+from app.main import app  # Asegúrate de que 'app' es tu instancia FastAPI
 
 client = TestClient(app)
 
 def test_create_game_success():
-    response = client.post("/new", json={
-        "ownerName": "Alice",
+    response = client.post("/game_create", json={
+        "ownerName": "Bob",
         "gameName": "Test Game",
-        "maxPlayers": 4
+        "maxPlayers": 3,
+        "minPlayers": 2
     })
     assert response.status_code == 200
     data = response.json()
     assert "gameId" in data
-    assert "gameName" in data
-    assert "maxPlayers" in data
-    assert "players" in data
-    assert data["players"] == ["Alice"]
-
-def test_create_game_invalid_data():
-    response = client.post("/new", json={
-        "ownerName": "",
-        "gameName": "Test Game",
-        "maxPlayers": 4
-    })
-    assert response.status_code == 422  # Unprocessable Entity (Validation Error)
-    assert response.json()["detail"] == "All fields required"
-
-def test_create_game_max_players_less():
-    response = client.post("/new", json={
-        "ownerName": "Bob",
-        "gameName": "Test Game",
-        "maxPlayers": 1  # Invalid case: maxPlayers must be at least 2
-    })
-    assert response.status_code == 400  # Bad Request
-    assert response.json()["detail"] == "maxPlayers must be at least 2"
-
-def test_create_game_max_players_more():
-    response = client.post("/new", json={
-        "ownerName": "Bob",
-        "gameName": "Test Game",
-        "maxPlayers": 5  # Edge case: maxPlayers must be at most 4
-    })
-    assert response.status_code == 400
-    assert response.json()["detail"] == "maxPlayers must be at most 4"
+    assert "ownerId" in data
+    assert data["ownerId"] == 0  # Ensure that ownerId is 0
 
 def test_create_game_missing_fields():
-    response = client.post("/new", json={
-        "ownerName": "Charlie"
-        # Missing gameName and maxPlayers
+    response = client.post("/game_create", json={})
+    assert response.status_code == 422
+
+def test_create_game_empty_ownerName():
+    response = client.post("/game_create", json={
+        "ownerName": "",  # Empty field
+        "gameName": "Test Game",
+        "maxPlayers": 3,
+        "minPlayers": 2
     })
-    assert response.status_code == 422  # Unprocessable Entity (Validation Error)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "All fields required"
+
+def test_create_game_empty_gameName():
+    response = client.post("/game_create", json={
+        "ownerName": "Bob",
+        "gameName": "",  # Empty field
+        "maxPlayers": 3,
+        "minPlayers": 2
+    })
+    assert response.status_code == 400
+    assert response.json()["detail"] == "All fields required"
+
+def test_create_game_empty_max_players():
+    response = client.post("/game_create", json={
+        "ownerName": "Bob",
+        "gameName": "Test Game",
+        "maxPlayers": None,  # Empty field
+        "minPlayers": 2
+    })
+    assert response.status_code == 422 # 422 expected because of the missing field and pydantic validation
+
+def test_create_game_empty_min_players():
+    response = client.post("/game_create", json={
+        "ownerName": "Bob",
+        "gameName": "Test Game",
+        "maxPlayers": 3,
+        "minPlayers": None  # Empty field
+    })
+    assert response.status_code == 422 # 422 expected because of the missing field and pydantic validation
+
+def test_create_game_invalid_max_players():
+    response = client.post("/game_create", json={
+        "ownerName": "Bob",
+        "gameName": "Test Game",
+        "maxPlayers": 1,  # Invalid case
+        "minPlayers": 2
+    })
+    assert response.status_code == 400
+    assert response.json()["detail"] == "maxPlayers must be greater than or equal to minPlayers"
+
+def test_create_game_invalid_min_players():
+    response = client.post("/game_create", json={
+        "ownerName": "Bob",
+        "gameName": "Test Game",
+        "maxPlayers": 3,
+        "minPlayers": 1  # Invalid case
+    })
+    assert response.status_code == 400
+    assert response.json()["detail"] == "minPlayers must be at least 2 and at most 4"
+
+def test_create_game_min_players_exceeds_max():
+    response = client.post("/game_create", json={
+        "ownerName": "Bob",
+        "gameName": "Test Game",
+        "maxPlayers": 3,
+        "minPlayers": 4  # Invalid case
+    })
+    assert response.status_code == 400
+    assert response.json()["detail"] == "maxPlayers must be greater than or equal to minPlayers"
+
+def test_create_game_max_players_exceeds_limit():
+    response = client.post("/game_create", json={
+        "ownerName": "Bob",
+        "gameName": "Test Game",
+        "maxPlayers": 5,  # Invalid case
+        "minPlayers": 2
+    })
+    assert response.status_code == 400
+    assert response.json()["detail"] == "maxPlayers must be at least 2 and at most 4"

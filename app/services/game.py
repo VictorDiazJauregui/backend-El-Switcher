@@ -10,15 +10,18 @@ def create_game(owner_name: str, game_name: str, max_players: int, min_players: 
 
     if not owner_name or not game_name or not max_players or not min_players:
         raise HTTPException(status_code=400, detail="All fields required")
-    if max_players < 2:
-        raise HTTPException(status_code=400, detail="maxPlayers must be at least 2")
-    if max_players > 4:
-        raise HTTPException(status_code=400, detail="maxPlayers must be at most 4")
+    if max_players < min_players:
+        raise HTTPException(status_code=400, detail="maxPlayers must be greater than or equal to minPlayers")
+    if min_players < 2 or min_players > 4:
+        raise HTTPException(status_code=400, detail="minPlayers must be at least 2 and at most 4")
+    if max_players < 2 or max_players > 4:
+        raise HTTPException(status_code=400, detail="maxPlayers must be at least 2 and at most 4")
 
     new_game = Game(
         gameId=game_id_counter,
         gameName=game_name,
         maxPlayers=max_players,
+        minPlayers=min_players,
         players=[owner_name]  # Add the host as the first player
     )
     games[game_id_counter] = new_game
