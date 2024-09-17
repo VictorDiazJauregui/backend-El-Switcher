@@ -118,7 +118,7 @@ Happy path desde un clone limpio hasta ejecutar el proyecto.
     ```
     Windows:
     ```bash
-    venv\Scripts\activate
+    .venv\Scripts\activate
     ```
 
 3. #### Instalar dependencias
