@@ -10,7 +10,7 @@ Este repositorio corresponde al backend del juego "El Switcher", desarrollado pa
 2. [Ejecutar el código del proyecto](#ejecutar-el-código-del-proyecto)
 3. [Actualizar requirements.txt](#actualizar-requirementstxt)
 4. [Dependencias necesarias para el proyecto](#dependencias-necesarias-para-el-proyecto)
-5. [TLDR]()
+5. [TLDR](#TLDR)
 
 ## Requisitos previos.
 
