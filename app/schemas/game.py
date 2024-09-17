@@ -10,3 +10,12 @@ class GameCreateSchema(BaseModel):
 class GameResponseSchema(BaseModel):
     gameId: int
     ownerId: int
+
+class GameListSchema(BaseModel):
+    gameId: int
+    gameName: str
+    connectedPlayers: int
+    maxPlayers: int
+
+class ListSchema(BaseModel):
+    games: List[GameListSchema]

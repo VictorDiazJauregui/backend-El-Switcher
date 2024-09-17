@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.schemas.game import GameCreateSchema, GameResponseSchema
-from app.services.game import create_game
+from app.services.game import create_game, get_game_list
 
 router = APIRouter()
 
