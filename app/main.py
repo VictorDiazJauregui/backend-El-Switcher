@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import game, websocket, join
+from app.routers import game, websocket, join, start
 from app.errors.handlers import value_error_handler, generic_exception_handler, validation_exception_handler
 
 app = FastAPI()
@@ -41,6 +41,7 @@ app.add_middleware(
 app.include_router(game.router)
 app.include_router(websocket.router)
 app.include_router(join.router)
+app.include_router(start.router)
 
 @app.get("/")
 def read_root():

@@ -1,11 +1,12 @@
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from fastapi import FastAPI
 from app.main import app  # Asegúrate de importar tu aplicación FastAPI aquí
 
 @pytest.mark.asyncio
 async def test_create_and_join_game():
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)  # Usamos ASGITransport explícitamente
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Paso 1: Crear el juego
         response = await client.post("/game_create", json={
             "ownerName": "Alice",

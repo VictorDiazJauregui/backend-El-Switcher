@@ -19,3 +19,7 @@ class GameListSchema(BaseModel):
 
 class ListSchema(BaseModel):
     games: List[GameListSchema]
+
+class StartResponseSchema(BaseModel):
+    gameId: int
+    status: str
