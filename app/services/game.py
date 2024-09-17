@@ -1,7 +1,9 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from typing import Dict, List
 from app.models.game import Game
 from app.schemas.game import GameListSchema
+from app.schemas.game import ListSchema
+from app.schemas.player import PlayerResponseSchema
 
 games: Dict[int, Game] = {}  # Dictionary to store games
 game_id_counter = 1
@@ -34,7 +36,7 @@ def create_game(owner_name: str, game_name: str, max_players: int, min_players: 
         "ownerId": 0  # The owner is always the first player in the list
     }
 
-def get_game_list() -> List[GameListSchema]: # Return a list of games in a format that can be sent over WebSocket
+def get_game_list() -> ListSchema: # Return a list of games in a format that can be sent over WebSocket
     return [GameListSchema(
         gameId=game.gameId,
         gameName=game.gameName,
@@ -43,4 +45,19 @@ def get_game_list() -> List[GameListSchema]: # Return a list of games in a forma
     ) for game in games.values()]
 
 def get_game(game_id: int) -> Game:
-    return games.get(game_id)  # Return the game if found, otherwise None
+    game = games.get(game_id)
+    if game is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Game with id {game_id} does not exist.")
+    return game
+
+def add_player_to_game(player_name: str, game_id: int) -> PlayerResponseSchema:
+    game = get_game(game_id)  # Retrieve the game directly using game_id
+
+    if len(game.players) >= game.maxPlayers:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is full.")
+
+    game.players.append(player_name)  # Add the player to the game
+    return PlayerResponseSchema(
+        playerId=len(game.players) - 1,  # The new player's ID is the index in the list
+        name=player_name
+    )
