@@ -17,7 +17,7 @@ def test_create_game_success():
     assert "ownerId" in data
     assert data["ownerId"] == 0  # Ensure that ownerId is 0
 
-def test_websocket_game_list():
+def test_game_list():
     response = client.get("/game_list")
     assert response.status_code == 200
     response = response.json()
