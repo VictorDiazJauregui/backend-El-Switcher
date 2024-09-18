@@ -7,3 +7,5 @@ class Game(BaseModel):
     maxPlayers: int
     minPlayers: int
     players: List[str]
+    status: str
+    turn: int

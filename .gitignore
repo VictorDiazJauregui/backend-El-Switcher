@@ -1,9 +1,9 @@
 # virtual environment.
 .venv
+venv/*
 
 # Editor directories and files.
 .vscode/*
 
 # pycache.
 __pycache__/
-venv/*
