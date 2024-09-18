@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import game, websocket, join
+from app.routers import game, list, join
 from app.errors.handlers import value_error_handler, generic_exception_handler, validation_exception_handler
-
 app = FastAPI()
 
 # Register error handlers
@@ -39,7 +38,7 @@ app.add_middleware(
 # No es necesario cargar ni guardar ningún estado, ya que no hay persistencia
 
 app.include_router(game.router)
-app.include_router(websocket.router)
+app.include_router(list.router)
 app.include_router(join.router)
 
 @app.get("/")
