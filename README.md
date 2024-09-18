@@ -10,6 +10,7 @@ Este repositorio corresponde al backend del juego "El Switcher", desarrollado pa
 2. [Ejecutar el código del proyecto](#ejecutar-el-código-del-proyecto)
 3. [Actualizar requirements.txt](#actualizar-requirementstxt)
 4. [Dependencias necesarias para el proyecto](#dependencias-necesarias-para-el-proyecto)
+5. [TLDR](#TLDR)
 
 ## Requisitos previos.
 
@@ -101,3 +102,37 @@ A continuación se dará una lista de las dependencias más importantes y cuál 
 * `Uvicorn`: Es un servidor que utilizamos para ejecutar las aplicaciones creadas con FastAPI.
 
 * `Pydantic`: Es una biblioteca que FastAPI utiliza para la validación y serialización de datos. Se descarga automáticamente junto con `FastAPI`.
+
+## TLDR
+Happy path desde un clone limpio hasta ejecutar el proyecto.
+
+1. #### Crear venv
+    ```bash
+    python -m venv .venv
+    ```
+
+2. #### Entrar en venv:
+    Linux:
+    ```bash
+    source .venv/bin/activate
+    ```
+    Windows:
+    ```bash
+    .venv\Scripts\activate
+    ```
+
+3. #### Instalar dependencias
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4. #### Correr uvicorn
+    ```bash
+    uvicorn app.main:app --reload
+    ```
+
+5. #### Correr tests:
+    Se pueden correr los tests definidos con
+    ```bash
+    pytest
+    ```
