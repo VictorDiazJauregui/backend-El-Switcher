@@ -23,10 +23,10 @@ class GameStatus(enum.Enum):
     FINISHED = 'Finished'
 
 class Turn(enum.Enum):
-    P1 = 0
-    P2 = 1
-    P3 = 2
-    P4 = 3
+    P1 = 1
+    P2 = 2
+    P3 = 3
+    P4 = 4
 
 class FigureType(enum.Enum):
     edit = "temp"
@@ -67,6 +67,7 @@ class Player(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(25), nullable=False)
     game_id = Column(Integer, ForeignKey('games.id'))
+    turn = Column(Enum(Turn), nullable=True)
     
     game = relationship("Game", back_populates="players")
     card_moves = relationship("CardMove", back_populates="owner")
