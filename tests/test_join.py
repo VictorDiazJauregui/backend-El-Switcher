@@ -4,7 +4,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.db.db import Base, get_db
-from app.schemas.game import GameCreateSchema
 
 # Setup the test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
