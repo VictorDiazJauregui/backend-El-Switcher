@@ -1,9 +1,19 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from app.db.db import Base, engine
+
 from app.routers import game, list, join, start
 from app.errors.handlers import value_error_handler, generic_exception_handler, validation_exception_handler
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup event
+    Base.metadata.create_all(bind=engine)
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 # Register error handlers
 app.add_exception_handler(ValueError, value_error_handler)

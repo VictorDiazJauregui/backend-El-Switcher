@@ -1,10 +1,13 @@
-from fastapi import APIRouter
-from app.services.game import add_player_to_game
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from app.schemas.player import PlayerCreateRequest, PlayerResponseSchema
+from app.db.db import get_db
+from app.services.game import add_player_to_game
 
 router = APIRouter()
 
 @router.post("/game/{game_id}/join", response_model=PlayerResponseSchema)
-def join_game(game_id: int, player: PlayerCreateRequest):
-        response = add_player_to_game(player.name, game_id)
-        return response
+def join_game(game_id: int, player: PlayerCreateRequest, db: Session = Depends(get_db)):
+    response = add_player_to_game(player.name, game_id, db)
+    return response

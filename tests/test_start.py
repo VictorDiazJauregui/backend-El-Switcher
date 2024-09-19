@@ -1,48 +1,139 @@
 import pytest
-from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
-from app.main import app  # Asegúrate de importar tu aplicación FastAPI aquí
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.main import app
+from app.db.db import Base, get_db
+from app.db.db import GameStatus
 
-@pytest.mark.asyncio
-async def test_create_join_and_start_game():
-    transport = ASGITransport(app=app)  # Usamos ASGITransport explícitamente
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        # Paso 1: Crear el juego
-        response = await client.post("/game_create", json={
-            "ownerName": "Alice",
-            "gameName": "Test Game",
-            "maxPlayers": 4,
-            "minPlayers": 2
-        })
-        assert response.status_code == 200
-        response_data = response.json()
-        game_id = response_data["gameId"]
+# Setup the test database
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-        # Intentar iniciar el juego con menos del número mínimo de jugadores (2)
-        response = await client.post(f"/game/{game_id}/start")
-        assert response.status_code == 404  # Esperamos un error ya que no hay suficientes jugadores
-        assert response.json()["detail"] == "Not enough players to start the game."
+# Override the get_db dependency
+def override_get_db():
+    try:
+        db = TestingSessionLocal()
+        yield db
+    finally:
+        db.close()
 
-        # Paso 2: Unir jugadores al juego
-        player_names = ["Bob", "Charlie"]
-        for player_name in player_names:
-            response = await client.post(f"/game/{game_id}/join", json={"name": player_name})
-            assert response.status_code == 200
-            response_data = response.json()
-            assert response_data["name"] == player_name
+app.dependency_overrides[get_db] = override_get_db
 
-        # Intentar iniciar el juego con el número mínimo de jugadores (2)
-        response = await client.post(f"/game/{game_id}/start")
-        assert response.status_code == 200  # El juego debería empezar correctamente
-        response_data = response.json()
-        assert response_data["status"] == "ingame"  # Verificamos que el estado del juego cambió a 'ingame'
+# Create the test client
+client = TestClient(app)
 
-        # Paso 3: Intentar unirse a un juego que ya está en progreso
-        response = await client.post(f"/game/{game_id}/join", json={"name": "David"})
-        assert response.status_code == 400  # Esperamos un error ya que el juego no está en "lobby"
-        assert response.json()["detail"] == f"Game {game_id} is already in progress."
+# Create the database tables
+Base.metadata.create_all(bind=engine)
 
-        # Intentar iniciar el juego nuevamente (una vez iniciado, no se puede volver a iniciar)
-        response = await client.post(f"/game/{game_id}/start")
-        assert response.status_code == 400  # No se debería poder reiniciar un juego ya iniciado
-        assert response.json()["detail"] == f"Game {game_id} is already in progress."
+@pytest.fixture(scope="module")
+def test_client():
+    yield client
+
+################# Test cases for /game/{game_id}/start #################
+
+def test_start_game(test_client):
+    # First, create a game
+    response = test_client.post("/game_create/", json={
+        "ownerName": "test_owner",
+        "gameName": "test_game",
+        "maxPlayers": 4,
+        "minPlayers": 2
+    })
+    game_data = response.json()
+    game_id = game_data["gameId"]
+
+    # Add enough players to start the game
+    test_client.post(f"/game/{game_id}/join", json={"name": "test_player1"})
+    test_client.post(f"/game/{game_id}/join", json={"name": "test_player2"})
+
+    # Now, start the game
+    response = test_client.post(f"/game/{game_id}/start")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["gameId"] == game_id
+    assert data["status"] == GameStatus.INGAME.value
+
+def test_start_full_game(test_client):
+    # First, create a game
+    response = test_client.post("/game_create/", json={
+        "ownerName": "test_owner",
+        "gameName": "test_game",
+        "maxPlayers": 2,
+        "minPlayers": 2
+    })
+    game_data = response.json()
+    game_id = game_data["gameId"]
+
+    # Add enough players to start the game
+    test_client.post(f"/game/{game_id}/join", json={"name": "test_player1"})
+    test_client.post(f"/game/{game_id}/join", json={"name": "test_player2"})
+
+    # Now, start the game
+    response = test_client.post(f"/game/{game_id}/start")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["gameId"] == game_id
+    assert data["status"] == GameStatus.INGAME.value
+
+def test_start_full_game_4_players(test_client):
+    # First, create a game
+    response = test_client.post("/game_create/", json={
+        "ownerName": "test_owner",
+        "gameName": "test_game",
+        "maxPlayers": 4,
+        "minPlayers": 2
+    })
+    game_data = response.json()
+    game_id = game_data["gameId"]
+
+    # Add enough players to start the game
+    test_client.post(f"/game/{game_id}/join", json={"name": "test_player1"})
+    test_client.post(f"/game/{game_id}/join", json={"name": "test_player2"})
+    test_client.post(f"/game/{game_id}/join", json={"name": "test_player3"})
+    test_client.post(f"/game/{game_id}/join", json={"name": "test_player4"})
+
+    # Now, start the game
+    response = test_client.post(f"/game/{game_id}/start")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["gameId"] == game_id
+    assert data["status"] == GameStatus.INGAME.value
+
+def test_start_already_started_game(test_client):
+    # First, create a game
+    response = test_client.post("/game_create/", json={
+        "ownerName": "test_owner",
+        "gameName": "test_game",
+        "maxPlayers": 4,
+        "minPlayers": 2
+    })
+    game_data = response.json()
+    game_id = game_data["gameId"]
+
+    # Add enough players to start the game
+    test_client.post(f"/game/{game_id}/join", json={"name": "test_player1"})
+    test_client.post(f"/game/{game_id}/join", json={"name": "test_player2"})
+
+    # Start the game
+    test_client.post(f"/game/{game_id}/start")
+
+    # Try to start the game again
+    response = test_client.post(f"/game/{game_id}/start")
+    assert response.status_code == 400
+    assert response.json()["detail"] == f"Game {game_id} is already in progress."
+
+def test_not_enough_players(test_client):
+    response = test_client.post("/game_create/", json={
+        "ownerName": "test_owner",
+        "gameName": "test_game",
+        "maxPlayers": 4,
+        "minPlayers": 2
+    })
+    game_data = response.json()
+    game_id = game_data["gameId"]
+
+    response = test_client.post(f"/game/{game_id}/start")
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Not enough players to start the game."

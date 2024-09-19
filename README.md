@@ -106,12 +106,12 @@ A continuación se dará una lista de las dependencias más importantes y cuál 
 ## TLDR
 Happy path desde un clone limpio hasta ejecutar el proyecto.
 
-1. #### Crear venv
+1. ### Crear venv
     ```bash
     python -m venv .venv
     ```
 
-2. #### Entrar en venv:
+2. ### Entrar en venv:
     Linux:
     ```bash
     source .venv/bin/activate
@@ -121,18 +121,43 @@ Happy path desde un clone limpio hasta ejecutar el proyecto.
     .venv\Scripts\activate
     ```
 
-3. #### Instalar dependencias
+3. ### Instalar dependencias
     ```bash
     pip install -r requirements.txt
     ```
 
-4. #### Correr uvicorn
-    ```bash
-    uvicorn app.main:app --reload
-    ```
-
-5. #### Correr tests:
+4. ### Correr tests:
     Se pueden correr los tests definidos con
     ```bash
     pytest
+    ```
+
+5. ### Instalar Docker y MySQL
+
+    Crear un volumen en Docker para obtener persistencia en la db:
+    ```bash
+    docker volume create mysql-db-data
+    ```
+    Levantar Docker:
+    ```bash
+    docker run -d -p 33060:3306 --name mysql-db -e MYSQL_ROOT_PASSWORD=secret --mount src=mysql-db-data,dst=/var/lib/mysql mysql
+    ```
+    Correr el docker para ingresar a MySQL:
+    ```bash
+    docker exec -it mysql-db mysql -p
+    ```
+    Crear la database:
+    ```bash
+    CREATE DATABASE `switcher`;
+    ```
+    Comando para terminar el proceso de Docker:
+    ```bash
+    docker rm -f mysql-db
+    ```
+    Así ya podemos operar una database persistente para correr el proyecto
+
+6. ### Correr uvicorn
+    Iniciamos el programa
+    ```bash
+    uvicorn app.main:app --reload
     ```
