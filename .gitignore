@@ -7,3 +7,6 @@ venv/*
 
 # pycache.
 __pycache__/
+.coverage
+test_get_db.db
+test.db

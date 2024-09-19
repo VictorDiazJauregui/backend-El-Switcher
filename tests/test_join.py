@@ -93,8 +93,16 @@ def test_join_started_game(test_client):
     response = test_client.post(f"/game/{game_id}/start")
     assert response.status_code == 200
     
-
     # Now, add a player to the game
     response = test_client.post(f"/game/{game_id}/join", json={"name": "test_player"})
     assert response.status_code == 400
     assert response.json()["detail"] == f"Game {game_id} is already in progress."
+
+def test_add_player_to_nonexistent_game(test_client):
+    """ Test adding a player to a non-existent game """
+    nonexistent_game_id = 999  # Assuming this game ID does not exist
+    response = test_client.post(f"/game/{nonexistent_game_id}/join", json={"name": "Alice"})
+    
+    # The expected response should be 404 Not Found
+    assert response.status_code == 404
+    assert response.json()["detail"] == f"Game with id {nonexistent_game_id} does not exist."

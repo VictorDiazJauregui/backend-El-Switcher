@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.db.db import Base, engine
+from pydantic import ValidationError
 
 from app.routers import game, list, join, start
 from app.errors.handlers import value_error_handler, generic_exception_handler, validation_exception_handler
@@ -19,6 +20,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_exception_handler(ValueError, value_error_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(ValidationError, validation_exception_handler)
 
 # CORS configuration
 # Configuración no implementada, ejemplo:
