@@ -1,17 +1,19 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+from app.db.db import get_db
 from app.services.game import get_game_list
 
 router = APIRouter()
 
 @router.get("/game_list")
-async def list_endpoint():
+def list_endpoint(db: Session = Depends(get_db)):
+    print("test1")
     # Fetch the current list of games
-    games = get_game_list()
+    games = get_game_list(db)
     # Convert the list of games to a format that can be sent over HTTP
-    games_list = [game.dict() for game in games]
-    # Return the list of games as a JSON response
-    return JSONResponse(content={"games": games_list})
+    print("test2")
+    return games
 
 '''
 from fastapi import APIRouter, WebSocket

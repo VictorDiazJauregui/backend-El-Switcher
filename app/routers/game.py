@@ -1,15 +1,12 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.schemas.game import GameCreateSchema, GameResponseSchema
 from app.services.game import create_game
+from sqlalchemy.orm import Session
+from app.db.db import get_db
 
 router = APIRouter()
 
 @router.post("/game_create", response_model=GameResponseSchema)
-def create_game_endpoint(game_data: GameCreateSchema):
-    result = create_game(
-        owner_name=game_data.ownerName,
-        game_name=game_data.gameName,
-        max_players=game_data.maxPlayers,
-        min_players=game_data.minPlayers
-    )
-    return result
+def create_game_endpoint(game_data: GameCreateSchema, db: Session = Depends(get_db)):
+    response = create_game(game_data, db)
+    return response

@@ -1,15 +1,15 @@
 from fastapi import HTTPException, status
-from typing import Dict, List
-from app.models.game import Game
-from app.schemas.game import GameListSchema
-from app.schemas.game import ListSchema, StartResponseSchema
+from sqlalchemy.orm import Session
+
+from app.schemas.game import GameCreateSchema, GameListSchema, ListSchema, StartResponseSchema
 from app.schemas.player import PlayerResponseSchema
+from app.db.db import Game, Player, GameStatus, Turn
 
-games: Dict[int, Game] = {}  # Dictionary to store games
-game_id_counter = 0  # Counter to generate unique game IDs
-
-def create_game(owner_name: str, game_name: str, max_players: int, min_players: int) -> Game:
-    global game_id_counter
+def create_game(data: GameCreateSchema, db: Session):
+    owner_name = data.ownerName
+    game_name = data.gameName
+    max_players = data.maxPlayers
+    min_players = data.minPlayers
 
     if not owner_name or not game_name or not max_players or not min_players:
         raise HTTPException(status_code=400, detail="All fields required")
@@ -20,59 +20,75 @@ def create_game(owner_name: str, game_name: str, max_players: int, min_players: 
     if max_players < 2 or max_players > 4:
         raise HTTPException(status_code=400, detail="maxPlayers must be at least 2 and at most 4")
 
-    new_game = Game(
-        gameId=game_id_counter,
-        gameName=game_name,
-        maxPlayers=max_players,
-        minPlayers=min_players,
-        players=[owner_name],  # Add the host as the first player
-        status="lobby", # default status is lobby, other status: playing, finished.
-        turn=1 # default turn is the next player to the host
+    db_game = Game(
+        name=game_name,
+        max_players=max_players,
+        min_players=min_players,
+        status=GameStatus.LOBBY,
+        turn=Turn.P2  # default turn is the next player to the host
     )
-    games[game_id_counter] = new_game # Add the game to the dictionary
-    game_id_counter += 1 # Increment the game ID counter
+    db.add(db_game)
+    db.commit()
+    db.refresh(db_game)
+
+    db_player = Player(name=owner_name, game_id=db_game.id)
+    db.add(db_player)
+    db.commit()
+    db.refresh(db_player)
+
     return {
-        "gameId": new_game.gameId,
-        "ownerId": 0  # The owner is always the first player in the list
+        "gameId": db_game.id,
+        "ownerId": db_player.id 
     }
 
-def get_game_list() -> ListSchema: # Return a list of games in a format that can be sent over WebSocket
-    return [GameListSchema(
-        gameId=game.gameId,
-        gameName=game.gameName,
-        connectedPlayers=len(game.players),
-        maxPlayers=game.maxPlayers
-    ) for game in games.values() if game.status == "lobby"]
+from typing import List, Dict
 
-def get_game(game_id: int) -> Game:
-    game = games.get(game_id)
+def get_game_list(db: Session) -> List[Dict[str, any]]:
+    games = db.query(Game).filter(Game.status == GameStatus.LOBBY).all()
+    response = [
+        {
+            "gameId": game.id,
+            "gameName": game.name,
+            "connectedPlayers": len(game.players),
+            "maxPlayers": game.max_players
+        }
+        for game in games
+    ]
+    return response
+
+def get_game(game_id: int, db: Session) -> Game:
+    game = db.query(Game).filter(Game.id == game_id).first()
     if game is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Game with id {game_id} does not exist.")
     return game
 
-def add_player_to_game(player_name: str, game_id: int) -> PlayerResponseSchema:
-    game = get_game(game_id)  # Retrieve the game directly using game_id
-    if game.status != "lobby": # Check if the game is in the lobby or ingame
+def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerResponseSchema:
+    game = get_game(game_id, db)
+    
+    if game.status != GameStatus.LOBBY: 
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is already in progress.")
-
-    if len(game.players) >= game.maxPlayers:
+    
+    if len(game.players) >= game.max_players:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is full.")
 
-    game.players.append(player_name)  # Add the player to the game
+    player = Player(name=player_name, game_id=game.id)
+    db.add(player)
+    db.commit()
+    db.refresh(player)
+
     return PlayerResponseSchema(
-        playerId=len(game.players) - 1,  # The new player's ID is the index in the list
-        name=player_name
+        playerId=player.id,
+        name=player.name
     )
 
-def start_game(game_id: int) -> StartResponseSchema:
-    game = get_game(game_id)
-    if not game:
-        raise HTTPException(status_code=404, detail=f"Game with id {game_id} does not exist.")
-    if game.status != "lobby":
-        raise HTTPException(status_code=400, detail=f"Game {game_id} is already in progress.")
-    if game.minPlayers > len(game.players):
-        raise HTTPException(status_code=404, detail="Not enough players to start the game.")
-    
-    game.status = "ingame"  # Change game status to "ingame"
-    response = StartResponseSchema(gameId=game_id, status=game.status)
-    return response
+def start_game(game_id: int, db: Session) -> StartResponseSchema:
+    game = get_game(game_id, db)
+    if game.status != GameStatus.LOBBY:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is already in progress.")
+    if game.min_players > len(game.players):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not enough players to start the game.")
+
+    game.status = GameStatus.INGAME
+    db.commit()
+
+    return StartResponseSchema(gameId=game.id, status=game.status)
