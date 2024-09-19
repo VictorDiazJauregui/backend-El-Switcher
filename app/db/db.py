@@ -3,15 +3,13 @@ from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 import enum
 
 DATABASE_URL = "mysql+pymysql://root:secret@localhost:33060/switcher"
-
 engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db():
-    db = SessionLocal()
+def get_db(session_factory=SessionLocal):
+    db = session_factory()
     try:
         yield db
     finally:

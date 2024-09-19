@@ -131,18 +131,39 @@ Happy path desde un clone limpio hasta ejecutar el proyecto.
     ```bash
     pytest
     ```
+    Se pueden limpiar los archivos residuales de tests con el script
+    ```bash
+    python .\cleanup.py
+    ```
 
-5. ### Instalar Docker y MySQL
+5. ### Instalar Docker para manejar MySQL
 
     Crear un volumen en Docker para obtener persistencia en la db:
     ```bash
     docker volume create mysql-db-data
     ```
-    Levantar Docker:
+    Crear contenedor Docker: Descargará MySQL la primera vez que se ejecute (Puede ser que haya que modificar el puerto especificado, leer documentación y testear si falla.)
     ```bash
     docker run -d -p 33060:3306 --name mysql-db -e MYSQL_ROOT_PASSWORD=secret --mount src=mysql-db-data,dst=/var/lib/mysql mysql
     ```
-    Correr el docker para ingresar a MySQL:
+    Visualizar todos los contenedores existentes de Docker:
+    ```bash
+    docker ps -a
+    ```
+    Detener un contenedor activo de Docker (CONTAINER_ID obtenido en 'docker ps -a'):
+    ```bash
+    docker stop CONTAINER_ID
+    ```
+    Comando para eliminar forzosamente el contenedor de Docker:
+    ```bash
+    docker rm -f mysql-db
+    ```
+
+    Eliminar todos los contenedores inactivos de Docker
+    ```bash
+    docker container prune
+    ```
+    Correr el docker para ingresar a MySQL (Debe haber 1 contenedor Docker creado y corriendo):
     ```bash
     docker exec -it mysql-db mysql -p
     ```
@@ -150,10 +171,7 @@ Happy path desde un clone limpio hasta ejecutar el proyecto.
     ```bash
     CREATE DATABASE `switcher`;
     ```
-    Comando para terminar el proceso de Docker:
-    ```bash
-    docker rm -f mysql-db
-    ```
+
     Así ya podemos operar una database persistente para correr el proyecto
 
 6. ### Correr uvicorn
