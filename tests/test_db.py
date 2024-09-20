@@ -15,7 +15,7 @@ Base.metadata.create_all(bind=engine)
 def test_get_db():
     """ Test the real get_db function with a live database session """
     # Use get_db to get a session
-    db_gen = get_db(session_factory=TestingSessionLocal)
+    db_gen = get_db()
     db = next(db_gen)  # Get the session object
 
     # Check if the session is a valid Session object
