@@ -31,7 +31,7 @@ def create_game(data: GameCreateSchema, db: Session):
     db.commit()
     db.refresh(db_game)
 
-    db_player = Player(name=owner_name, game_id=db_game.id, turn=Turn.P1)
+    db_player = Player(name=owner_name, game_id=db_game.id)
     db.add(db_player)
     db.commit()
     db.refresh(db_player)
@@ -71,11 +71,7 @@ def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerRes
     if len(game.players) >= game.max_players:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is full.")
 
-    # Determine the turn for the new player
-    turn_order = len(game.players) + 1
-    turn = Turn(turn_order)
-
-    player = Player(name=player_name, game_id=game.id, turn=turn)
+    player = Player(name=player_name, game_id=game.id)
     db.add(player)
     db.commit()
     db.refresh(player)
@@ -96,3 +92,15 @@ def start_game(game_id: int, db: Session) -> StartResponseSchema:
     db.commit()
 
     return StartResponseSchema(gameId=game.id, status=game.status)
+
+def leave_game(game_id: int, player_id: int, db: Session):
+    game = get_game(game_id, db)
+    player = db.query(Player).filter_by(id=player_id, game_id=game.id).first()
+    if not player:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Player with id {player_id} not found in game {game_id}.")
+    
+    if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Host does not have permission to leave the lobby")
+    
+    db.delete(player)
+    db.commit()
