@@ -142,9 +142,9 @@ Happy path desde un clone limpio hasta ejecutar el proyecto.
     ```bash
     docker volume create mysql-db-data
     ```
-    Crear contenedor Docker: Descargará MySQL la primera vez que se ejecute (Puede ser que haya que modificar el puerto especificado, leer documentación y testear si falla.)
+    Crear contenedor Docker: Descargará MySQL la primera vez que se ejecute (Puede ser que haya que modificar el puerto especificado, por ejemplo de 33060 pasar a 33061 arreglaba crashes, leer documentación y testear si falla.)
     ```bash
-    docker run -d -p 33060:3306 --name mysql-db -e MYSQL_ROOT_PASSWORD=secret --mount src=mysql-db-data,dst=/var/lib/mysql mysql
+    docker run -d -p 33061:3306 --name mysql-db -e MYSQL_ROOT_PASSWORD=secret --mount src=mysql-db-data,dst=/var/lib/mysql mysql
     ```
     Visualizar todos los contenedores existentes de Docker:
     ```bash
@@ -168,6 +168,9 @@ Happy path desde un clone limpio hasta ejecutar el proyecto.
     docker exec -it mysql-db mysql -p
     ```
     Crear la database:
+    ```bash
+    CREATE DATABASE `switcher`;
+    ```
     ```bash
     CREATE DATABASE `switcher`;
     ```

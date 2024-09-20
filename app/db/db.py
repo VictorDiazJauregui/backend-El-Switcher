@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean, Enum, Fo
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 import enum
 
-DATABASE_URL = "mysql+pymysql://root:secret@localhost:33060/switcher"
+DATABASE_URL = "mysql+pymysql://root:secret@localhost:33061/switcher"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
