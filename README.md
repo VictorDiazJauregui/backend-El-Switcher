@@ -171,8 +171,9 @@ Happy path desde un clone limpio hasta ejecutar el proyecto.
     ```bash
     CREATE DATABASE `switcher`;
     ```
+    Para salir de la command line de MySQL en Docker:
     ```bash
-    CREATE DATABASE `switcher`;
+    exit
     ```
 
     Así ya podemos operar una database persistente para correr el proyecto
