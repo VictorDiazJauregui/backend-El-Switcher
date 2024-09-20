@@ -1,10 +1,18 @@
-import os
+import os, platform
 
 # Determine the project root directory (assuming this script is run from the project root)
 project_root = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the path to the target file within the .venv directory
-file_path = os.path.join(project_root, '.venv', 'Lib', 'site-packages', 'pytest_verbose_parametrize.py')
+#Linux : backend-El-Switcher/.venv/lib/python3.10/site-packages/pytest_verbose_parametrize.py
+#Windows : backend-El-Switcher/.venv/Lib/site-packages/pytest_verbose_parametrize.py
+
+if platform.system() == 'Windows':
+    file_path = os.path.join(project_root, '.venv', 'Lib', 'site-packages', 'pytest_verbose_parametrize.py')
+elif platform.system() == 'Linux':
+    file_path = os.path.join(project_root, '.venv', 'lib', 'python3.10', 'site-packages', 'pytest_verbose_parametrize.py')
+else:
+    raise NotImplementedError(f"Unsupported platform: {platform.system()}")
 
 # Read the file contents
 with open(file_path, 'r') as file:
