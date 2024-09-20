@@ -93,7 +93,7 @@ def start_game(game_id: int, db: Session) -> StartResponseSchema:
 
     return StartResponseSchema(gameId=game.id, status=game.status)
 
-def leave_game(game_id: int, player_id: int, db: Session):
+def remove_player_from_game(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = db.query(Player).filter_by(id=player_id, game_id=game.id).first()
     if not player:
