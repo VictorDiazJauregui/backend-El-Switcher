@@ -85,6 +85,11 @@ def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerRes
         name=player.name
     )
 
+def add_cards_to_db(game_id: int, db: Session) -> bool:
+    game = get_game(game_id, db)
+    
+
+
 def start_game(game_id: int, db: Session) -> StartResponseSchema:
     game = get_game(game_id, db)
     if game.status != GameStatus.LOBBY:
@@ -96,3 +101,7 @@ def start_game(game_id: int, db: Session) -> StartResponseSchema:
     db.commit()
 
     return StartResponseSchema(gameId=game.id, status=game.status)
+
+
+
+def cards_deal(game_id: int, db: Session):
