@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
 class PlayerCreateRequest(BaseModel):
-    name: str
+    playerName: str
 
 class PlayerResponseSchema(BaseModel):
     playerId: int
-    name: str
+    playerName: str
