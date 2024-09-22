@@ -62,6 +62,13 @@ def get_game(game_id: int, db: Session) -> Game:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Game with id {game_id} does not exist.")
     return game
 
+def get_player(player_id: int, db: Session) -> Player:
+    player = db.query(Player).filter(Player.id == player_id).first()
+    if player is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Player with id {player_id} does not exist.")
+    return player
+
+
 def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerResponseSchema:
     game = get_game(game_id, db)
     
@@ -96,6 +103,31 @@ def start_game(game_id: int, db: Session) -> StartResponseSchema:
     db.commit()
 
     return StartResponseSchema(gameId=game.id, status=game.status)
+
+def end_turn(game_id: int, player_id: int, db: Session):
+    game = get_game(game_id, db)
+    player = get_player(player_id, db)
+
+    if game.status != GameStatus.INGAME:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game.id} is not in progress.")
+    if game.turn != player.turn:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"It's not your turn.")
+    # obtain the current turn value
+    current_turn_value = game.turn.value
+    # obtain the max turn value
+    max_turn_value = len(game.players) +1 #The value starts at 1
+    
+    # Calculate the next turn value
+    next_turn_value = ((current_turn_value + 1) % max_turn_value)
+
+    # If the next turn value is 0, then the next turn is 1
+    if next_turn_value == 0:
+        next_turn_value = 1
+    
+    # Assign the new value for turn
+    game.turn = Turn(next_turn_value)
+    db.commit()
+    return {f"Player {player.name} has ended their turn."}
 
 def remove_player_from_game(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
