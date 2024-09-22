@@ -1,9 +1,11 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func, select
 
 from app.schemas.game import GameCreateSchema, GameListSchema, ListSchema, StartResponseSchema
 from app.schemas.player import PlayerResponseSchema
 from app.db.db import Game, Player, GameStatus, Turn, CardMove, CardFig, MoveType, FigureType
+
 
 def create_game(data: GameCreateSchema, db: Session):
     owner_name = data.ownerName
@@ -85,7 +87,7 @@ def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerRes
         name=player.name
     )
 
-def add_cards_to_db(db: Session) -> bool: # No se realmente que devolver
+def add_cards_to_db(db: Session) -> int: # No se realmente que devolver
     moves = [
         CardMove(id=MoveType.MOV_1.value[0], move=MoveType.MOV_1),
         CardMove(id=MoveType.MOV_2.value[0], move=MoveType.MOV_2),
@@ -189,6 +191,9 @@ def add_cards_to_db(db: Session) -> bool: # No se realmente que devolver
 
     db.add(moves)
     db.add(figs)
+    db.commit()
+
+    return 1
 
 
 
@@ -207,3 +212,29 @@ def start_game(game_id: int, db: Session) -> StartResponseSchema:
 
 
 def cards_deal(game_id: int, db: Session):
+    players_info = db.execute(select(
+        Player.id,
+        Player.name,
+        func.count(CardMove.id).label('card_moves_count'),
+        func.count(CardFig.id).label('card_figs_count')
+    ).outerjoin(CardMove, CardMove.owner_id == Player.id)
+    .outerjoin(CardFig, CardFig.owner_id == Player.id)
+    .group_by(Player.id, Player.name)).mappings().all()
+
+    # List of players info where every player is a tuple with its own info
+    # player_info[0] = id
+    # player_info[1] = name
+    # player_info[2] = movement cards count
+    # player_info[3] = figure cards count
+
+    for player_info in players_info:
+        if(player_info[2] != 3):
+            cards_to_deal = 3 - player_info[2]
+            random_cards = db.query(CardMove).filter(CardMove.owner_id == None) \
+                            .order_by(func.random()).limit(cards_to_deal).all()
+            
+            for card in random_cards:
+                 card.owner_id = player_info[0]
+            
+            db.commit()
+            
