@@ -5,7 +5,7 @@ from app.services.game import remove_player_from_game
 
 router = APIRouter()
 
-@router.delete("game/{gameID}/leave/{playerID}")
-def leave_game(gameID: int, playerID: int, db: Session = Depends(get_db)):
-    response = remove_player_from_game(gameID, playerID, db)
+@router.delete("/game/{game_id}/leave/{player_id}")
+def leave_game(game_id: int, player_id: int, db: Session = Depends(get_db)):
+    response = remove_player_from_game(game_id, player_id, db)
     return response
