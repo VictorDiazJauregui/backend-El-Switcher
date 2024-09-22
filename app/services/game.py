@@ -89,7 +89,7 @@ def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerRes
 
     return PlayerResponseSchema(
         playerId=player.id,
-        name=player.name
+        playerName=player.name
     )
 
 def start_game(game_id: int, db: Session) -> StartResponseSchema:
