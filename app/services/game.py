@@ -31,7 +31,7 @@ def create_game(data: GameCreateSchema, db: Session):
     db.commit()
     db.refresh(db_game)
 
-    db_player = Player(name=owner_name, game_id=db_game.id)
+    db_player = Player(name=owner_name, game_id=db_game.id, turn=Turn.P1)
     db.add(db_player)
     db.commit()
     db.refresh(db_player)
@@ -71,7 +71,11 @@ def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerRes
     if len(game.players) >= game.max_players:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is full.")
 
-    player = Player(name=player_name, game_id=game.id)
+    # Determine the turn for the new player
+    turn_order = len(game.players) + 1
+    turn = Turn(turn_order)
+
+    player = Player(name=player_name, game_id=game.id, turn=turn)
     db.add(player)
     db.commit()
     db.refresh(player)
@@ -104,3 +108,5 @@ def remove_player_from_game(game_id: int, player_id: int, db: Session):
     
     db.delete(player)
     db.commit()
+
+    return {"message": "player eliminated succesfully"}
