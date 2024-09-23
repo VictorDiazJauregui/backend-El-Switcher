@@ -55,6 +55,7 @@ app.include_router(join.router)
 app.include_router(start.router)
 app.include_router(end_turn.router)
 app.include_router(leave.router)
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to The Switcher API"}
