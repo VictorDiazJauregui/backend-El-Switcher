@@ -176,7 +176,7 @@ class CardFig(Base):
     id = Column(Integer, primary_key=True)
     owner_id = Column(Integer, ForeignKey('players.id'))
     figure = Column(Enum(FigureType), nullable=False)
-    block = Column(Boolean, default=False)
+    blocked = Column(Boolean, default=False)
     valid = Column(Boolean, default=True)
 
     owner = relationship("Player", back_populates="card_figs")
