@@ -111,7 +111,7 @@ def end_turn(game_id: int, player_id: int, db: Session):
     if game.status != GameStatus.INGAME:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game.id} is not in progress.")
     if game.turn != player.turn:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"It's not your turn.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"It's not {player.id} turn.")
     # obtain the current turn value
     current_turn_value = game.turn.value
     # obtain the max turn value
