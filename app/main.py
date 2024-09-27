@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from app.db.db import Base, engine
 from pydantic import ValidationError
 
-from app.routers import game, list, join, start,end_turn
+from app.routers import game, list, join, start, end_turn, leave
 from app.errors.handlers import value_error_handler, generic_exception_handler, validation_exception_handler
 
 @asynccontextmanager
@@ -54,6 +54,7 @@ app.include_router(list.router)
 app.include_router(join.router)
 app.include_router(start.router)
 app.include_router(end_turn.router)
+app.include_router(leave.router)
 
 @app.get("/")
 def read_root():

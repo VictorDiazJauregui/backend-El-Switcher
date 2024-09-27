@@ -45,8 +45,8 @@ def test_start_game(test_client):
     game_id = game_data["gameId"]
 
     # Add enough players to start the game
-    test_client.post(f"/game/{game_id}/join", json={"name": "test_player1"})
-    test_client.post(f"/game/{game_id}/join", json={"name": "test_player2"})
+    test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player1"})
+    test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player2"})
 
     # Now, start the game
     response = test_client.post(f"/game/{game_id}/start")
@@ -67,8 +67,8 @@ def test_start_full_game(test_client):
     game_id = game_data["gameId"]
 
     # Add enough players to start the game
-    test_client.post(f"/game/{game_id}/join", json={"name": "test_player1"})
-    test_client.post(f"/game/{game_id}/join", json={"name": "test_player2"})
+    test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player1"})
+    test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player2"})
 
     # Now, start the game
     response = test_client.post(f"/game/{game_id}/start")
@@ -89,10 +89,10 @@ def test_start_full_game_4_players(test_client):
     game_id = game_data["gameId"]
 
     # Add enough players to start the game
-    test_client.post(f"/game/{game_id}/join", json={"name": "test_player1"})
-    test_client.post(f"/game/{game_id}/join", json={"name": "test_player2"})
-    test_client.post(f"/game/{game_id}/join", json={"name": "test_player3"})
-    test_client.post(f"/game/{game_id}/join", json={"name": "test_player4"})
+    test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player1"})
+    test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player2"})
+    test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player3"})
+    test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player4"})
 
     # Now, start the game
     response = test_client.post(f"/game/{game_id}/start")
@@ -113,8 +113,8 @@ def test_start_already_started_game(test_client):
     game_id = game_data["gameId"]
 
     # Add enough players to start the game
-    test_client.post(f"/game/{game_id}/join", json={"name": "test_player1"})
-    test_client.post(f"/game/{game_id}/join", json={"name": "test_player2"})
+    test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player1"})
+    test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player2"})
 
     # Start the game
     test_client.post(f"/game/{game_id}/start")
