@@ -51,7 +51,7 @@ def test_end_turn_success(test_client):
     game_id = game_data["gameId"]
 
     # Add min players to the game
-    response = test_client.post(f"/game/{game_id}/join", json={"name": "test_player"})
+    response = test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player"})
     assert response.status_code == 200
     test_player_data = response.json()
     test_player_id = test_player_data["playerId"]
@@ -62,7 +62,7 @@ def test_end_turn_success(test_client):
 
     response = client.post(f"/game/{game_id}/end_turn/{test_player_id}")
     assert response.status_code == 200
-    assert response.json() ==  {'message': f"Player {test_player_id} has ended their turn."}
+    assert response.json() ==  {'message': "Player test_player has ended their turn."}
 
 def test_end_turn_invalid_game_id(test_client):
     response = client.post("/game/999/end_turn/1")
@@ -88,7 +88,7 @@ def test_end_turn_not_player_turn(test_client):
     owner_id = game_data["ownerId"]
 
     # Add min players to the game
-    response = test_client.post(f"/game/{game_id}/join", json={"name": "test_player"})
+    response = test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player"})
     assert response.status_code == 200
     test_player_data = response.json()
     test_player_id = test_player_data["playerId"]
@@ -114,7 +114,7 @@ def test_end_turn_game_not_started(test_client):
     owner_id = game_data["ownerId"]
 
     # Add min players to the game
-    response = test_client.post(f"/game/{game_id}/join", json={"name": "test_player"})
+    response = test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player"})
     assert response.status_code == 200
     test_player_data = response.json()
     test_player_id = test_player_data["playerId"]
