@@ -127,4 +127,4 @@ def end_turn(game_id: int, player_id: int, db: Session):
     # Assign the new value for turn
     game.turn = Turn(next_turn_value)
     db.commit()
-    return {'message' : f"Player {player.id} has ended their turn."}
+    return {f"Player {player.name} has ended their turn."}
