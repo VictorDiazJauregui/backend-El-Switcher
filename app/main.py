@@ -4,8 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.db.db import Base, engine
 from pydantic import ValidationError
+import socketio
 
 from app.routers import game, list, join, start, end_turn, leave
+from app.routers.sio_game import sio_game
 from app.errors.handlers import value_error_handler, generic_exception_handler, validation_exception_handler
 
 @asynccontextmanager
@@ -55,6 +57,10 @@ app.include_router(join.router)
 app.include_router(start.router)
 app.include_router(end_turn.router)
 app.include_router(leave.router)
+
+# Mount the Socket.IO app
+socket_app = socketio.ASGIApp(sio_game, other_asgi_app=app, socketio_path="/game/ws")
+app.mount("/game/ws", socket_app)
 
 @app.get("/")
 def read_root():
