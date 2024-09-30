@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, Enum, ForeignKey
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
+from contextlib import contextmanager
 import enum
 
 DATABASE_URL = "mysql+pymysql://root:secret@localhost:33061/switcher"
@@ -14,6 +15,9 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# Context manager to get a database session
+db_context = contextmanager(get_db)
 
 # Enumeraciones
 
