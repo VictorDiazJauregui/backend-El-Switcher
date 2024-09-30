@@ -64,46 +64,13 @@ class FigureType(enum.Enum):
 
 
 class MoveType(enum.Enum):
-    MOV_1 = (1, "Movimiento 1")
-    MOV_2 = (2, "Movimiento 2")
-    MOV_3 = (3, "Movimiento 3")
-    MOV_4 = (4, "Movimiento 4")
-    MOV_5 = (5, "Movimiento 5")
-    MOV_6 = (6, "Movimiento 6")
-    MOV_7 = (7, "Movimiento 7")
-    MOV_8 = (8, "Movimiento 8")
-    MOV_9 = (9, "Movimiento 9")
-    MOV_10 = (10, "Movimiento 10")
-    MOV_11 = (11, "Movimiento 11")
-    MOV_12 = (12, "Movimiento 12")
-    MOV_13 = (13, "Movimiento 13")
-    MOV_14 = (14, "Movimiento 14")
-    MOV_15 = (15, "Movimiento 15")
-    MOV_16 = (16, "Movimiento 16")
-    MOV_17 = (17, "Movimiento 17")
-    MOV_18 = (18, "Movimiento 18")
-    MOV_19 = (19, "Movimiento 19")
-    MOV_20 = (20, "Movimiento 20")
-    MOV_21 = (21, "Movimiento 21")
-    MOV_22 = (22, "Movimiento 22")
-    MOV_23 = (23, "Movimiento 23")
-    MOV_24 = (24, "Movimiento 24")
-    MOV_25 = (25, "Movimiento 25")
-    MOV_26 = (26, "Movimiento 26")
-    MOV_27 = (27, "Movimiento 27")
-    MOV_28 = (28, "Movimiento 28")
-    MOV_29 = (29, "Movimiento 29")
-    MOV_30 = (30, "Movimiento 30")
-    MOV_31 = (31, "Movimiento 31")
-    MOV_32 = (32, "Movimiento 32")
-    MOV_33 = (33, "Movimiento 33")
-    MOV_34 = (34, "Movimiento 34")
-    MOV_35 = (35, "Movimiento 35")
-    MOV_36 = (36, "Movimiento 36")
-    MOV_37 = (37, "Movimiento 37")
-    MOV_38 = (38, "Movimiento 38")
-    MOV_39 = (39, "Movimiento 39")
-    MOV_40 = (40, "Movimiento 40")
+    MOV_1 = (1, "CRUCE EN LINEA CONTIGUO")
+    MOV_2 = (2, "CRUCE EN LINEA CON UN ESPACIO")
+    MOV_3 = (3, "CRUCE DIAGONAL CONTIGUO")
+    MOV_4 = (4, "CRUCE DIAGONAL CON UN ESPACIO")
+    MOV_5 = (5, "CRUCE EN L A LA DERECHA CON DOS ESPACIOS")
+    MOV_6 = (6, "CRUCE EN L A LA IZQUIERDA CON DOS ESPACIOS")
+    MOV_7 = (7, "CRUCE EN LINEA AL LATERAL")
 
 class Color(enum.Enum):
     RED = 'Red'
@@ -125,6 +92,8 @@ class Game(Base):
 
     players = relationship("Player", back_populates="game")
     board = relationship("Board", uselist=False, back_populates="game")
+    cardmoves = relationship("CardMove", back_populates="game")
+    cardfigs = relationship("CardFig", back_populates="game")
 
 #    def end_game():
 #    def next_turn():
@@ -166,10 +135,12 @@ class CardMove(Base):
     __tablename__ = 'card_moves'
     
     id = Column(Integer, primary_key=True)
+    game_id = Column(Integer, ForeignKey('games.id'))
     owner_id = Column(Integer, ForeignKey('players.id'))
     move = Column(Enum(MoveType), nullable=False)
 
     owner = relationship("Player", back_populates="card_moves")
+    game = relationship("Game", back_populates="cardmoves")
 
 #    def take():
 
@@ -178,12 +149,14 @@ class CardFig(Base):
     __tablename__ = 'card_figs'
     
     id = Column(Integer, primary_key=True)
+    game_id = Column(Integer, ForeignKey('games.id'))
     owner_id = Column(Integer, ForeignKey('players.id'))
     figure = Column(Enum(FigureType), nullable=False)
-    blocked = Column(Boolean, default=False)
+    block = Column(Boolean, default=False)
     valid = Column(Boolean, default=True)
 
     owner = relationship("Player", back_populates="card_figs")
+    game = relationship("Game", back_populates="cardfigs")
 
 #    def take():
 #    def block():

@@ -1,6 +1,8 @@
 from app.db.db import db_context, Game, Player
 from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
+from app.services.cards import deal_figure_cards, deal_movement_cards
+
 import socketio
 
 # Create a new Socket.IO server
@@ -31,9 +33,14 @@ async def connect(sid, environ, auth):
             return # Player is not part of the game, then disconnect the player
 
         # Register the player's socket
-        broadcast = Broadcast()
+        channel = Broadcast()
         
-        await broadcast.register_player_socket(sio_game, player_id, game_id, sid)
+        await channel.register_player_socket(sio_game, player_id, game_id, sid)
         
-        # Example to broadcast to all players in the game
-        await broadcast.broadcast(sio_game, game_id, 'player_connected', {'playerId': player_id, 'playerName': player.name})
+        # Broadcast cards
+        total_figure_cards = deal_figure_cards(game_id=game_id, db=db)
+        player_move_cards = deal_movement_cards(game_id=game_id, player_id=player_id, db=db)
+    
+        await channel.broadcast(sio=sio_game, game_id=game_id, event='figure_cards', data=total_figure_cards)
+
+        await channel.broadcast(sio=sio_game, game_id=game_id, event='movement_cards', data=player_move_cards)
