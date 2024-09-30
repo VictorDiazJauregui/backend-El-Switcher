@@ -120,9 +120,8 @@ class Player(Base):
 class Board(Base):
     __tablename__ = 'boards'
     
-    id = Column(Integer, primary_key=True)
+    game_id = Column(Integer, ForeignKey('games.id'), primary_key=True)
     block_color = Column(Enum(Color))
-    game_id = Column(Integer, ForeignKey('games.id'))
     
     game = relationship("Game", back_populates="board")
     square_pieces = relationship("SquarePiece", back_populates="board")
@@ -169,8 +168,9 @@ class SquarePiece(Base):
     
     id = Column(Integer, primary_key=True)
     color = Column(Enum(Color), nullable=False)
-    position = Column(String(2), nullable=False)
-    board_id = Column(Integer, ForeignKey('boards.id'))
+    row = Column(Integer, nullable=False)
+    column = Column(Integer, nullable=False)
+    board_id = Column(Integer, ForeignKey('boards.game_id'))
 
     board = relationship("Board", back_populates="square_pieces")
 

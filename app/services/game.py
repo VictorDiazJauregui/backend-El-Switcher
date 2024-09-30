@@ -1,10 +1,14 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List, Dict
 from sqlalchemy import func, select
 
 from app.schemas.game import GameCreateSchema, GameListSchema, ListSchema, StartResponseSchema
 from app.schemas.player import PlayerResponseSchema
-from app.db.db import Game, Player, GameStatus, Turn, CardMove, CardFig, MoveType, FigureType
+from app.schemas.board import PieceResponseSchema
+from app.db.db import Game, Player, GameStatus, Turn, CardMove, CardFig, MoveType, FigureType, Board, SquarePiece, Color
+import random
+from app.services import lobby_events, game_events
 
 
 def create_game(data: GameCreateSchema, db: Session):
@@ -42,8 +46,6 @@ def create_game(data: GameCreateSchema, db: Session):
         "gameId": db_game.id,
         "ownerId": db_player.id 
     }
-
-from typing import List, Dict
 
 def get_game_list(db: Session) -> List[Dict[str, any]]:
     games = db.query(Game).filter(Game.status == GameStatus.LOBBY).all()
@@ -131,18 +133,31 @@ def end_turn(game_id: int, player_id: int, db: Session):
     # Assign the new value for turn
     game.turn = Turn(next_turn_value)
     db.commit()
-    return {f"Player {player.name} has ended their turn."}
+    return {'message' : f"Player {player.name} has ended their turn."}
 
-def remove_player_from_game(game_id: int, player_id: int, db: Session):
+async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
-    player = db.query(Player).filter_by(id=player_id, game_id=game.id).first()
-    if not player:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Player with id {player_id} not found in game {game_id}.")
+    player = get_player(player_id, db)
     
     if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Host does not have permission to leave the lobby")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Host does not have permission to leave the lobby.")
     
     db.delete(player)
     db.commit()
+    
+    message = f"Player {player.name} eliminated succesfully."
+    if game.status == GameStatus.INGAME and len(game.players) == 1:
+        # if there is only one player left in the game, the game is over and that player wins
+        game.status = GameStatus.FINISHED
+        db.commit()
 
-    return {"message": "player eliminated succesfully"}
+        message = message + f" Player {game.players[0].name} has won the game!"
+
+    if game.status == GameStatus.LOBBY:
+        await lobby_events.emit_players_lobby(game_id, db)
+        await lobby_events.emit_can_start_game(game_id, db)
+
+    if game.status == GameStatus.INGAME:
+        await game_events.emit_players_game(game_id, db)
+
+    return {"message": message}

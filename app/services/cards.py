@@ -5,27 +5,37 @@ from typing import List, Dict
 
 
 from app.schemas.cards import CardFigSchema, CardFigResponseSchema, CardMoveResponseSchema
-from app.db.db import Player, CardMove, CardFig, MoveType, FigureType
+from app.db.db import Player, CardMove, CardFig, MoveType, FigureType, Game
 
 
 def add_cards_to_db(game_id: int, db: Session) -> int:
-    moves = []
-    figs = []
+    # If game exists
+    game = db.query(Game).filter_by(id=game_id).first() is not None
+    if game:
+        moves = []
+        figs = []
+        
+        move_count = db.query(func.count(CardMove.id)).filter(CardMove.game_id == game_id).scalar()
+        fig_count = db.query(func.count(CardFig.id)).filter(CardFig.game_id == game_id).scalar()
 
-    for move_type in MoveType:
-        for _ in range(7):  # Create 7 cards of each type
-            moves.append(CardMove(game_id=game_id, move=move_type))
+        if move_count == 0:
+            for move_type in MoveType:
+                for _ in range(7):  # Create 7 cards of each type
+                    moves.append(CardMove(game_id=game_id, move=move_type))
 
-    for figure_type in FigureType:
-        for _ in range(2):  # Create 2 cards of each type
-            figs.append(CardFig(game_id=game_id, figure=figure_type))
+        if fig_count == 0:
+            for figure_type in FigureType:
+                for _ in range(2):  # Create 2 cards of each type
+                    figs.append(CardFig(game_id=game_id, figure=figure_type))
 
-    # Add all cards to database
-    db.add_all(moves)
-    db.add_all(figs)  
-    db.commit()
+        # Add all cards to database
+        db.add_all(moves)
+        db.add_all(figs)  
+        db.commit()
 
-    return 1 # success i guess...
+        return 1 # success i guess...
+    else:
+        raise HTTPException("Game does not exist.")
 
 
 def search_for_cards_to_deal(MovOrFig, game_id, number_of_cards_to_deal, db):

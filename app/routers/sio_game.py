@@ -1,6 +1,7 @@
 from app.db.db import db_context, Game, Player
 from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
+from app.services.board import get_board
 from app.services.cards import deal_figure_cards, deal_movement_cards
 
 import socketio
@@ -17,7 +18,6 @@ async def connect(sid, environ, auth):
 
     print(f'Player {player_id} connected to game {game_id}')
     
-    # Example to use the database
     with db_context() as db:
         game = db.query(Game).filter(Game.id == game_id).first()
 
@@ -36,11 +36,14 @@ async def connect(sid, environ, auth):
         channel = Broadcast()
         
         await channel.register_player_socket(sio_game, player_id, game_id, sid)
+
+        # Board
+        board = get_board(game.id, db)
+        await channel.broadcast(sio_game, game_id, 'board', board)
         
         # Broadcast cards
         total_figure_cards = deal_figure_cards(game_id=game_id, db=db)
         player_move_cards = deal_movement_cards(game_id=game_id, player_id=player_id, db=db)
     
         await channel.broadcast(sio=sio_game, game_id=game_id, event='figure_cards', data=total_figure_cards)
-
-        await channel.broadcast(sio=sio_game, game_id=game_id, event='movement_cards', data=player_move_cards)
+        await channel.send_to_player(sio=sio_game, player_id=player_id, event='movement_cards', data=player_move_cards)
