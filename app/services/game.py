@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.schemas.game import GameCreateSchema, GameListSchema, ListSchema, StartResponseSchema
 from app.schemas.player import PlayerResponseSchema
-from app.db.db import Game, Player, GameStatus, Turn
+from app.db.db import Game, Player, GameStatus, Turn, Board, SquarePiece, Color
+import random
 
 def create_game(data: GameCreateSchema, db: Session):
     owner_name = data.ownerName
