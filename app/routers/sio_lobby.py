@@ -1,4 +1,4 @@
-from app.db.db import db_context, Game, Player
+from app.db.db import db_context, Game, Player, GameStatus
 from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
 from app.schemas.player import PlayerResponseSchema
@@ -16,13 +16,16 @@ async def connect(sid, environ, auth):
 
     print(f'Player {player_id} connected to lobby {game_id}')
 
-    # Example to use the database
     with db_context() as db:
         game = db.query(Game).filter(Game.id == game_id).first()
 
         if game is None:
             print(f'Game {game_id} does not exist')
             return # Game does not exist, then disconnect the player
+        
+        if game.status != GameStatus.LOBBY:
+            print(f'Game {game_id} is not in lobby status')
+            return # Game is not in lobby status, then disconnect the player
         
         # check if the player is part of the game
         player = db.query(Player).filter_by(id=player_id, game_id=game.id).first()
