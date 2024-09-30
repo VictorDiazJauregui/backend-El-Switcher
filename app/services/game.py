@@ -95,7 +95,7 @@ def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerRes
         playerName=player.name
     )
 
-def start_game(game_id: int, db: Session) -> StartResponseSchema:
+async def start_game(game_id: int, db: Session) -> StartResponseSchema:
     game = get_game(game_id, db)
     if game.status != GameStatus.LOBBY:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is already in progress.")
@@ -104,6 +104,9 @@ def start_game(game_id: int, db: Session) -> StartResponseSchema:
 
     game.status = GameStatus.INGAME
     db.commit()
+
+    # Notify all players that the game has started
+    await lobby_events.emit_game_started(game_id)
 
     return StartResponseSchema(gameId=game.id, status=game.status)
 
