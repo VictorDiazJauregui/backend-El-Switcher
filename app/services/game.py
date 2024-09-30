@@ -7,6 +7,8 @@ from app.schemas.player import PlayerResponseSchema
 from app.schemas.board import PieceResponseSchema
 from app.db.db import Game, Player, GameStatus, Turn, Board, SquarePiece, Color
 import random
+from app.services import lobby_events, game_events
+
 
 def create_game(data: GameCreateSchema, db: Session):
     owner_name = data.ownerName
@@ -130,7 +132,7 @@ def end_turn(game_id: int, player_id: int, db: Session):
     db.commit()
     return {'message' : f"Player {player.name} has ended their turn."}
 
-def remove_player_from_game(game_id: int, player_id: int, db: Session):
+async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
     
@@ -147,6 +149,12 @@ def remove_player_from_game(game_id: int, player_id: int, db: Session):
         db.commit()
 
         message = message + f" Player {game.players[0].name} has won the game!"
+
+    if game.status == GameStatus.LOBBY:
+        await lobby_events.emit_players_lobby(game_id, db)
+        await lobby_events.emit_can_start_game(game_id, db)
+
+    if game.status == GameStatus.INGAME:
+        await game_events.emit_players_game(game_id, db)
+
     return {"message": message}
-
-
