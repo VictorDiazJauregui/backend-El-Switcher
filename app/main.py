@@ -8,6 +8,7 @@ import socketio
 
 from app.routers import game, list, join, start, end_turn, leave
 from app.routers.sio_game import sio_game
+from app.routers.sio_lobby import sio_lobby
 from app.errors.handlers import value_error_handler, generic_exception_handler, validation_exception_handler
 
 @asynccontextmanager
@@ -61,6 +62,9 @@ app.include_router(leave.router)
 # Mount the Socket.IO app
 socket_app = socketio.ASGIApp(sio_game, other_asgi_app=app, socketio_path="/game/ws")
 app.mount("/game/ws", socket_app)
+
+socket_app = socketio.ASGIApp(sio_lobby, other_asgi_app=app, socketio_path="/game/lobby/ws")
+app.mount("/game/lobby/ws", socket_app)
 
 @app.get("/")
 def read_root():

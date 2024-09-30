@@ -1,5 +1,5 @@
 from app.db.db import db_context, Game, Player
-from app.utils.parse_sio_query import parse_query_string
+from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
 import socketio
 
