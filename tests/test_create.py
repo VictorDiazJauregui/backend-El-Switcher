@@ -24,6 +24,10 @@ app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 # Create the database tables
+# Borra todas las tablas
+Base.metadata.drop_all(bind=engine)
+
+# Crea las tablas de nuevo
 Base.metadata.create_all(bind=engine)
 
 @pytest.fixture(scope="module")
