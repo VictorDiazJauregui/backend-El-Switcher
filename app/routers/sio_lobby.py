@@ -40,10 +40,9 @@ async def connect(sid, environ, auth):
 
         #convert every player in player response schema
         PlayerResponseSchemaList = []
+
         for player in players:
-            PlayerResponseSchemaList.append(PlayerResponseSchema(id=player.id, playerName=player.name))
+            PlayerResponseSchemaList.append(PlayerResponseSchema(playerId=player.id, playerName=player.name).model_dump())
 
-        await broadcast.broadcast( sio_lobby, game_id, 'player_list',  PlayerResponseSchemaList)
-
-        # Example to broadcast to all players in the game
-        await broadcast.broadcast(sio_lobby, game_id, 'start_game', {'canStart': False})
+        # send the player list to all players in the lobby
+        await broadcast.broadcast(sio_lobby, game_id, 'player_list', PlayerResponseSchemaList)
