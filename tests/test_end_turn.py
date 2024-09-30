@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.db.db import Base, get_db
+import logging
 
 # Create a test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -52,9 +53,12 @@ def test_end_turn_success(test_client):
 
     # Add min players to the game
     response = test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player"})
-    assert response.status_code == 200
+
+    assert response.status_code == 200, "Could not add player to game."
+
     test_player_data = response.json()
     test_player_id = test_player_data["playerId"]
+    test_player_name = test_player_data["playerName"]
 
     #Start the game
     response = test_client.post(f"/game/{game_id}/start")
@@ -62,7 +66,9 @@ def test_end_turn_success(test_client):
 
     response = client.post(f"/game/{game_id}/end_turn/{test_player_id}")
     assert response.status_code == 200
+
     assert response.json() ==  {'message': "Player test_player has ended their turn."}
+
 
 def test_end_turn_invalid_game_id(test_client):
     response = client.post("/game/999/end_turn/1")
@@ -111,7 +117,6 @@ def test_end_turn_game_not_started(test_client):
         })
     game_data = response.json()
     game_id = game_data["gameId"]
-    owner_id = game_data["ownerId"]
 
     # Add min players to the game
     response = test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player"})

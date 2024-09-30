@@ -1,9 +1,12 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List, Dict
 
 from app.schemas.game import GameCreateSchema, GameListSchema, ListSchema, StartResponseSchema
 from app.schemas.player import PlayerResponseSchema
-from app.db.db import Game, Player, GameStatus, Turn
+from app.schemas.board import PieceResponseSchema
+from app.db.db import Game, Player, GameStatus, Turn, Board, SquarePiece, Color
+import random
 
 def create_game(data: GameCreateSchema, db: Session):
     owner_name = data.ownerName
@@ -40,8 +43,6 @@ def create_game(data: GameCreateSchema, db: Session):
         "gameId": db_game.id,
         "ownerId": db_player.id 
     }
-
-from typing import List, Dict
 
 def get_game_list(db: Session) -> List[Dict[str, any]]:
     games = db.query(Game).filter(Game.status == GameStatus.LOBBY).all()
@@ -138,6 +139,7 @@ def remove_player_from_game(game_id: int, player_id: int, db: Session):
     
     db.delete(player)
     db.commit()
+    
     message = f"message player {player.name} eliminated succesfully"
     if game.status == GameStatus.INGAME and len(game.players) == 1:
         # if there is only one player left in the game, the game is over and that player wins
@@ -146,3 +148,5 @@ def remove_player_from_game(game_id: int, player_id: int, db: Session):
 
         message = message + f" Player {game.players[0].name} has won the game!"
     return {"message": message}
+
+
