@@ -143,3 +143,27 @@ def remove_player_from_game(game_id: int, player_id: int, db: Session):
     db.commit()
 
     return {"message": "player eliminated succesfully"}
+
+def create_board(game_id: int, db: Session):
+    board = Board(game_id=game_id)
+    db.add(board)
+    db.commit()
+    db.refresh(board)
+
+    possible_colors = list(Color)
+    # 6x6 board
+    for row in range(6):
+        for column in range(6):
+            # Elegir un color aleatorio para cada pieza
+            random_color = random.choice(possible_colors)
+
+            # Crear una instancia de SquarePiece
+            square_piece = SquarePiece(
+                color=random_color,
+                row=row,
+                column=column,
+                board_id=game_id  
+            )
+
+            db.add(square_piece)
+    db.commit()
