@@ -7,7 +7,7 @@ from app.schemas.player import PlayerResponseSchema
 from app.schemas.board import PieceResponseSchema
 from app.db.db import Game, Player, GameStatus, Turn, Board, SquarePiece, Color
 import random
-from app.services import lobby_events
+from app.services import lobby_events, game_events
 
 
 def create_game(data: GameCreateSchema, db: Session):
@@ -144,9 +144,12 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     db.delete(player)
     db.commit()
 
-    await lobby_events.emit_players_lobby(game_id, db)
+    if game.status == GameStatus.LOBBY:
+        await lobby_events.emit_players_lobby(game_id, db)
+        await lobby_events.emit_can_start_game(game_id, db)
 
-    await lobby_events.emit_can_start_game(game_id, db)
+    if game.status == GameStatus.INGAME:
+        await game_events.emit_players_game(game_id, db)
 
     return {"message": "player eliminated succesfully"}
 
