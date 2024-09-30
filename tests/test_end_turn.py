@@ -53,7 +53,9 @@ def test_end_turn_success(test_client):
 
     # Add min players to the game
     response = test_client.post(f"/game/{game_id}/join", json={"playerName": "test_player"})
+
     assert response.status_code == 200, "Could not add player to game."
+
     test_player_data = response.json()
     test_player_id = test_player_data["playerId"]
     test_player_name = test_player_data["playerName"]
@@ -64,7 +66,9 @@ def test_end_turn_success(test_client):
 
     response = client.post(f"/game/{game_id}/end_turn/{test_player_id}")
     assert response.status_code == 200
-    assert response.json() == [f'Player {test_player_name} has ended their turn.']
+
+    assert response.json() ==  {'message': "Player test_player has ended their turn."}
+
 
 def test_end_turn_invalid_game_id(test_client):
     response = client.post("/game/999/end_turn/1")
