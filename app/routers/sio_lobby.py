@@ -1,4 +1,4 @@
-from app.db.db import db_context, Game, Player, GameStatus
+from app.db.db import db_context, Game, Player, GameStatus, Turn
 from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
 from app.schemas.player import PlayerResponseSchema
@@ -49,3 +49,13 @@ async def connect(sid, environ, auth):
 
         # send the player list to all players in the lobby
         await broadcast.broadcast(sio_lobby, game_id, 'player_list', PlayerResponseSchemaList)
+
+
+        # Check if the game can start
+        can_start = len(players) >= game.min_players and len(players) <= game.max_players
+
+        # Get the owner of the game
+        owner_id = [player.id for player in players if player.turn == Turn.P1][0]
+
+        # Send that the game can start to the owner
+        await broadcast.send_to_player(sio_lobby, owner_id, 'start_game', {'canStart': can_start})
