@@ -16,7 +16,6 @@ async def connect(sid, environ, auth):
 
     print(f'Player {player_id} connected to game {game_id}')
     
-    # Example to use the database
     with db_context() as db:
         game = db.query(Game).filter(Game.id == game_id).first()
 
@@ -32,16 +31,11 @@ async def connect(sid, environ, auth):
             return # Player is not part of the game, then disconnect the player
 
         # Register the player's socket
-        broadcast = Broadcast()
+        channel = Broadcast()
         
-        await broadcast.register_player_socket(sio_game, player_id, game_id, sid)
-        
-        # Example to broadcast to all players in the game
-        await broadcast.broadcast(sio_game, game_id, 'player_connected', {'playerId': player_id, 'playerName': player.name})
+        await channel.register_player_socket(sio_game, player_id, game_id, sid)
 
         # Board
-
         board = get_board(game.id, db)
 
-        channel = Broadcast()
         await channel.broadcast(sio_game, game_id, 'board', board)
