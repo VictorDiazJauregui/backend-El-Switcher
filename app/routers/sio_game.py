@@ -1,7 +1,8 @@
-from app.db.db import db_context, Game, Player
+from app.db.db import db_context, Game, Player, GameStatus
 from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
 from app.services.board import get_board
+from app.services import game_events
 import socketio
 
 # Create a new Socket.IO server
@@ -23,6 +24,10 @@ async def connect(sid, environ, auth):
             print(f'Game {game_id} does not exist')
             return # Game does not exist, then disconnect the player
         
+        if game.status != GameStatus.INGAME:
+            print(f'Game {game_id} is not started')
+            return # Game is not started, then disconnect the player
+        
         # check if the player is part of the game
         player = db.query(Player).filter_by(id=player_id, game_id=game.id).first()
 
@@ -39,3 +44,5 @@ async def connect(sid, environ, auth):
         board = get_board(game.id, db)
 
         await channel.broadcast(sio_game, game_id, 'board', board)
+
+        await game_events.emit_players_game(game_id, db)
