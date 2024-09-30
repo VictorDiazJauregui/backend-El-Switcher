@@ -1,6 +1,7 @@
 from app.db.db import db_context, Game, Player
 from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
+from app.services.board import get_board
 import socketio
 
 # Create a new Socket.IO server
@@ -37,3 +38,10 @@ async def connect(sid, environ, auth):
         
         # Example to broadcast to all players in the game
         await broadcast.broadcast(sio_game, game_id, 'player_connected', {'playerId': player_id, 'playerName': player.name})
+
+        # Board
+
+        board = get_board(game.id, db)
+
+        channel = Broadcast()
+        await channel.broadcast(sio_game, game_id, 'board', board)

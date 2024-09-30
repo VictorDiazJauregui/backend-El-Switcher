@@ -1,8 +1,10 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List, Dict
 
 from app.schemas.game import GameCreateSchema, GameListSchema, ListSchema, StartResponseSchema
 from app.schemas.player import PlayerResponseSchema
+from app.schemas.board import PieceResponseSchema
 from app.db.db import Game, Player, GameStatus, Turn, Board, SquarePiece, Color
 import random
 
@@ -41,8 +43,6 @@ def create_game(data: GameCreateSchema, db: Session):
         "gameId": db_game.id,
         "ownerId": db_player.id 
     }
-
-from typing import List, Dict
 
 def get_game_list(db: Session) -> List[Dict[str, any]]:
     games = db.query(Game).filter(Game.status == GameStatus.LOBBY).all()
@@ -144,26 +144,3 @@ def remove_player_from_game(game_id: int, player_id: int, db: Session):
 
     return {"message": "player eliminated succesfully"}
 
-def create_board(game_id: int, db: Session):
-    board = Board(game_id=game_id)
-    db.add(board)
-    db.commit()
-    db.refresh(board)
-
-    possible_colors = list(Color)
-    # 6x6 board
-    for row in range(6):
-        for column in range(6):
-            # Elegir un color aleatorio para cada pieza
-            random_color = random.choice(possible_colors)
-
-            # Crear una instancia de SquarePiece
-            square_piece = SquarePiece(
-                color=random_color,
-                row=row,
-                column=column,
-                board_id=game_id  
-            )
-
-            db.add(square_piece)
-    db.commit()
