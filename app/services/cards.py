@@ -28,8 +28,8 @@ def add_cards_to_db(game_id: int, db: Session) -> int:
     return 1 # success i guess...
 
 
-def search_for_cards_to_deal(MovOrFig, number_of_cards_to_deal, db):
-    available_cards = db.query(MovOrFig).filter(MovOrFig.owner_id == None) \
+def search_for_cards_to_deal(MovOrFig, game_id, number_of_cards_to_deal, db):
+    available_cards = db.query(MovOrFig).filter(MovOrFig.owner_id == None, MovOrFig.game_id == game_id) \
                      .order_by(func.random()).limit(number_of_cards_to_deal).all()
 
     return available_cards
@@ -48,7 +48,7 @@ def deal_movement_cards(game_id: int, player_id: int, db: Session):
     # Add more cards if the player has less than 3 cards and doesn't have a blocked card
     if len(cards_in_hand) < 3:
         number_of_cards_to_deal = 3 - len(cards_in_hand)
-        random_cards = search_for_cards_to_deal(CardMove, number_of_cards_to_deal, db)
+        random_cards = search_for_cards_to_deal(CardMove, game_id, number_of_cards_to_deal, db)
 
         for card in random_cards:
             card.owner_id = player.id
@@ -86,7 +86,7 @@ def deal_figure_cards(game_id: int, db: Session):
         # Add more cards if the player has less than 3 cards and doesn't have a blocked card
         if player['card_figs_count'] < 3 and not player['has_blocked_card']:
             number_of_cards_to_deal = 3 - player['card_figs_count']
-            random_cards = search_for_cards_to_deal(CardFig, number_of_cards_to_deal, db)
+            random_cards = search_for_cards_to_deal(CardFig, game_id, number_of_cards_to_deal, db)
 
             for card in random_cards:
                 card.owner_id = player['id']
