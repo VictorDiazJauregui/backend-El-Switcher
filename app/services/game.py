@@ -130,19 +130,25 @@ def end_turn(game_id: int, player_id: int, db: Session):
     # Assign the new value for turn
     game.turn = Turn(next_turn_value)
     db.commit()
-    return {f"Player {player.name} has ended their turn."}
+    return {'message' : f"Player {player.name} has ended their turn."}
 
 async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
-    player = db.query(Player).filter_by(id=player_id, game_id=game.id).first()
-    if not player:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Player with id {player_id} not found in game {game_id}.")
+    player = get_player(player_id, db)
     
     if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Host does not have permission to leave the lobby")
     
     db.delete(player)
     db.commit()
+    
+    message = f"message player {player.name} eliminated succesfully"
+    if game.status == GameStatus.INGAME and len(game.players) == 1:
+        # if there is only one player left in the game, the game is over and that player wins
+        game.status = GameStatus.FINISHED
+        db.commit()
+
+        message = message + f" Player {game.players[0].name} has won the game!"
 
     if game.status == GameStatus.LOBBY:
         await lobby_events.emit_players_lobby(game_id, db)
@@ -151,5 +157,4 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     if game.status == GameStatus.INGAME:
         await game_events.emit_players_game(game_id, db)
 
-    return {"message": "player eliminated succesfully"}
-
+    return {"message": message}
