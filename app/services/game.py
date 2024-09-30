@@ -148,6 +148,8 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
         game.status = GameStatus.FINISHED
         db.commit()
 
+        await game_events.emit_winner(game_id,game.players[0].id, db)
+
         message = message + f" Player {game.players[0].name} has won the game!"
 
     if game.status == GameStatus.LOBBY:
