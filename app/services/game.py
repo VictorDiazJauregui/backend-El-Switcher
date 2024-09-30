@@ -135,12 +135,12 @@ def remove_player_from_game(game_id: int, player_id: int, db: Session):
     player = get_player(player_id, db)
     
     if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Host does not have permission to leave the lobby")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Host does not have permission to leave the lobby.")
     
     db.delete(player)
     db.commit()
     
-    message = f"message player {player.name} eliminated succesfully"
+    message = f"Player {player.name} eliminated succesfully."
     if game.status == GameStatus.INGAME and len(game.players) == 1:
         # if there is only one player left in the game, the game is over and that player wins
         game.status = GameStatus.FINISHED

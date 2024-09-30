@@ -48,7 +48,7 @@ def test_leave_lobby(test_client):
     # Delete player from the lobby
     response = test_client.delete(f"/game/{game_id}/leave/{player_id}")
     assert response.status_code == 200
-    assert response.json()["message"] == "player eliminated succesfully"
+    assert response.json()["message"] == f"""Player {player_data["playerName"]} eliminated succesfully."""
 
 def test_leave_lobby_host(test_client):
     response = test_client.post("/game_create", json={
@@ -64,7 +64,7 @@ def test_leave_lobby_host(test_client):
     # Try to delete the owner from the lobby
     response = test_client.delete(f"/game/{game_id}/leave/{owner_id}")
     assert response.status_code == 403
-    assert response.json()["detail"] == "Host does not have permission to leave the lobby"
+    assert response.json()["detail"] == "Host does not have permission to leave the lobby."
 
 def test_leave_in_game_host(test_client):
     response = test_client.post("/game_create", json={
@@ -76,9 +76,11 @@ def test_leave_in_game_host(test_client):
     data = response.json()
     game_id = data["gameId"]
     owner_id = data["ownerId"]
+    owner_name = "Agustin"
 
     # Add the minimum number of players
     response = test_client.post(f"/game/{game_id}/join", json={"playerName": "Agustin2"})
+    player2_name = response.json()["playerName"]
 
     # Start game
     response = test_client.post(f"/game/{game_id}/start", json={"playerId": owner_id})
@@ -87,7 +89,7 @@ def test_leave_in_game_host(test_client):
     # Remove host
     response = test_client.delete(f"/game/{game_id}/leave/{owner_id}")
     assert response.status_code == 200
-    assert response.json()["message"] == "player eliminated succesfully"
+    assert response.json()["message"] == f"Player {owner_name} eliminated succesfully. Player {player2_name} has won the game!"
 
 def test_delete_nonexistent_player(test_client):
     response = test_client.post("/game_create", json={
