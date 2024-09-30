@@ -1,6 +1,7 @@
 from app.db.db import db_context, Game, Player
 from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
+from app.schemas.player import PlayerResponseSchema
 import socketio
 
 # Create a new Socket.IO server
@@ -35,5 +36,14 @@ async def connect(sid, environ, auth):
         
         await broadcast.register_player_socket(sio_lobby, player_id, game_id, sid)
         
+        players = db.query(Player).filter(Player.game_id == game_id).all()
+
+        #convert every player in player response schema
+        PlayerResponseSchemaList = []
+        for player in players:
+            PlayerResponseSchemaList.append(PlayerResponseSchema(id=player.id, playerName=player.name))
+
+        await broadcast.broadcast( sio_lobby, game_id, 'player_list',  PlayerResponseSchemaList)
+
         # Example to broadcast to all players in the game
         await broadcast.broadcast(sio_lobby, game_id, 'start_game', {'canStart': False})
