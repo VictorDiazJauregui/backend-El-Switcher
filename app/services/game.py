@@ -7,6 +7,8 @@ from app.schemas.player import PlayerResponseSchema
 from app.schemas.board import PieceResponseSchema
 from app.db.db import Game, Player, GameStatus, Turn, Board, SquarePiece, Color
 import random
+from app.services import lobby_events
+
 
 def create_game(data: GameCreateSchema, db: Session):
     owner_name = data.ownerName
@@ -130,7 +132,7 @@ def end_turn(game_id: int, player_id: int, db: Session):
     db.commit()
     return {f"Player {player.name} has ended their turn."}
 
-def remove_player_from_game(game_id: int, player_id: int, db: Session):
+async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = db.query(Player).filter_by(id=player_id, game_id=game.id).first()
     if not player:
@@ -141,6 +143,10 @@ def remove_player_from_game(game_id: int, player_id: int, db: Session):
     
     db.delete(player)
     db.commit()
+
+    await lobby_events.emit_players_lobby(game_id, db)
+
+    await lobby_events.emit_can_start_game(game_id, db)
 
     return {"message": "player eliminated succesfully"}
 

@@ -1,7 +1,7 @@
 from app.db.db import db_context, Game, Player, GameStatus
 from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
-from app.services.lobby_events import emit_players_lobby, emit_can_start_game
+from app.services import lobby_events
 import socketio
 
 # Create a new Socket.IO server
@@ -39,6 +39,6 @@ async def connect(sid, environ, auth):
         
         await broadcast.register_player_socket(sio_lobby, player_id, game_id, sid)
         
-        await emit_players_lobby(game_id, db)
+        await lobby_events.emit_players_lobby(game_id, db)
 
-        await emit_can_start_game(game_id, db)
+        await lobby_events.emit_can_start_game(game_id, db)
