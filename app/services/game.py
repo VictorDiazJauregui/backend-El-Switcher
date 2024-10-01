@@ -142,7 +142,8 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     db.delete(player)
     db.commit()
     
-    message = f"Player {player.name} eliminated succesfully."
+
+    
     if game.status == GameStatus.INGAME and len(game.players) == 1:
         # if there is only one player left in the game, the game is over and that player wins
         game.status = GameStatus.FINISHED
@@ -150,7 +151,7 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
 
         await game_events.emit_winner(game_id,game.players[0].id, db)
 
-        message = message + f" Player {game.players[0].name} has won the game!"
+        
 
     if game.status == GameStatus.LOBBY:
         await lobby_events.emit_players_lobby(game_id, db)
@@ -159,4 +160,4 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     if game.status == GameStatus.INGAME:
         await game_events.emit_players_game(game_id, db)
 
-    return {"message": message}
+    return {"message": f"Player {player.name} has left the game."}
