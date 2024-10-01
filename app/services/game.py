@@ -110,7 +110,7 @@ async def start_game(game_id: int, db: Session) -> StartResponseSchema:
 
     return StartResponseSchema(gameId=game.id, status=game.status)
 
-def end_turn(game_id: int, player_id: int, db: Session):
+async def end_turn(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
 
@@ -133,6 +133,10 @@ def end_turn(game_id: int, player_id: int, db: Session):
     # Assign the new value for turn
     game.turn = Turn(next_turn_value)
     db.commit()
+
+    # Notify all players the new turn info
+    await game_events.emit_turn_info(game_id, db)
+
     return {'message' : f"Player {player.name} has ended their turn."}
 
 async def remove_player_from_game(game_id: int, player_id: int, db: Session):
