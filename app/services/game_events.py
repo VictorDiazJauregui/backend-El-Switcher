@@ -1,5 +1,5 @@
 from app.db.db import Player, Game
-from app.schemas.player import PlayerResponseSchema
+from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.models.broadcast import Broadcast
 from app.routers import sio_game as sio
 
@@ -30,3 +30,14 @@ async def emit_turn_info(game_id, db):
 
     # send the turn info to all players in the lobby
     await broadcast.broadcast(sio.sio_game, game_id, 'turn', turn_info)
+
+async def emit_winner(game_id, winner_id, db):
+
+    winner = db.query(Player).filter(Player.id == winner_id).first()
+
+
+
+    broadcast = Broadcast()
+
+
+    await broadcast.broadcast(sio.sio_game, game_id, 'winner', WinnerSchema(idWinner=winner.id, nameWinner=winner.name).model_dump())

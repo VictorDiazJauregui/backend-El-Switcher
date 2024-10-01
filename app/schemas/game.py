@@ -23,3 +23,9 @@ class ListSchema(BaseModel):
 class StartResponseSchema(BaseModel):
     gameId: int
     status: str
+
+class GameInfoSchema(BaseModel):
+    gameId: int
+    gameName: str
+    maxPlayers: int
+    minPlayers: int
