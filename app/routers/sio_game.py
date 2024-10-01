@@ -46,3 +46,5 @@ async def connect(sid, environ, auth):
         await channel.broadcast(sio_game, game_id, 'board', board)
 
         await game_events.emit_players_game(game_id, db)
+
+        await game_events.emit_turn_info(game_id, db)

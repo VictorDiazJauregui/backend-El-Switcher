@@ -8,8 +8,8 @@ from app.db.db import get_db
 router = APIRouter()
 
 @router.post("/game/{game_id}/end_turn/{player_id}")
-def end_turn_endpoint(game_id: int, player_id: int, db: Session = Depends(get_db)):
-    response = end_turn(game_id, player_id, db)
+async def end_turn_endpoint(game_id: int, player_id: int, db: Session = Depends(get_db)):
+    response = await end_turn(game_id, player_id, db)
     return response
 
     
