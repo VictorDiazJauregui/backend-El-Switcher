@@ -10,6 +10,7 @@ Este repositorio corresponde al backend del juego "El Switcher", desarrollado pa
 2. [Ejecutar el código del proyecto](#ejecutar-el-código-del-proyecto)
 3. [Actualizar requirements.txt](#actualizar-requirementstxt)
 4. [Dependencias necesarias para el proyecto](#dependencias-necesarias-para-el-proyecto)
+5. [TLDR](#TLDR)
 
 ## Requisitos previos.
 
@@ -101,3 +102,84 @@ A continuación se dará una lista de las dependencias más importantes y cuál 
 * `Uvicorn`: Es un servidor que utilizamos para ejecutar las aplicaciones creadas con FastAPI.
 
 * `Pydantic`: Es una biblioteca que FastAPI utiliza para la validación y serialización de datos. Se descarga automáticamente junto con `FastAPI`.
+
+## TLDR
+Happy path desde un clone limpio hasta ejecutar el proyecto.
+
+1. ### Crear venv
+    ```bash
+    python -m venv .venv
+    ```
+
+2. ### Entrar en venv:
+    Linux:
+    ```bash
+    source .venv/bin/activate
+    ```
+    Windows:
+    ```bash
+    .venv\Scripts\activate
+    ```
+
+3. ### Instalar dependencias
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4. ### Correr tests:
+    Se pueden correr los tests definidos con
+    ```bash
+    pytest
+    ```
+    Se pueden limpiar los archivos residuales de tests con el script
+    ```bash
+    python .\cleanup.py
+    ```
+
+5. ### Instalar Docker para manejar MySQL
+
+    Crear un volumen en Docker para obtener persistencia en la db:
+    ```bash
+    docker volume create mysql-db-data
+    ```
+    Crear contenedor Docker: Descargará MySQL la primera vez que se ejecute (Puede ser que haya que modificar el puerto especificado, por ejemplo de 33060 pasar a 33061 arreglaba crashes, leer documentación y testear si falla.)
+    ```bash
+    docker run -d -p 33061:3306 --name mysql-db -e MYSQL_ROOT_PASSWORD=secret --mount src=mysql-db-data,dst=/var/lib/mysql mysql
+    ```
+    Visualizar todos los contenedores existentes de Docker:
+    ```bash
+    docker ps -a
+    ```
+    Detener un contenedor activo de Docker (CONTAINER_ID obtenido en 'docker ps -a'):
+    ```bash
+    docker stop CONTAINER_ID
+    ```
+    Comando para eliminar forzosamente el contenedor de Docker:
+    ```bash
+    docker rm -f mysql-db
+    ```
+
+    Eliminar todos los contenedores inactivos de Docker
+    ```bash
+    docker container prune
+    ```
+    Correr el docker para ingresar a MySQL (Debe haber 1 contenedor Docker creado y corriendo):
+    ```bash
+    docker exec -it mysql-db mysql -p
+    ```
+    Crear la database:
+    ```bash
+    CREATE DATABASE `switcher`;
+    ```
+    Para salir de la command line de MySQL en Docker:
+    ```bash
+    exit
+    ```
+
+    Así ya podemos operar una database persistente para correr el proyecto
+
+6. ### Correr uvicorn
+    Iniciamos el programa
+    ```bash
+    uvicorn app.main:app --reload
+    ```
