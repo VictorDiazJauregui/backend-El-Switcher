@@ -44,11 +44,12 @@ def test_leave_lobby(test_client):
     response = test_client.post(f"/game/{game_id}/join", json={ "playerName": "Agustin2"})
     player_data = response.json()
     player_id = player_data["playerId"]
+    response = test_client.post(f"/game/{game_id}/join", json={"playerName": "Agustin3"})
 
     # Delete player from the lobby
     response = test_client.delete(f"/game/{game_id}/leave/{player_id}")
     assert response.status_code == 200
-    assert response.json()["message"] == f"""Player {player_data["playerName"]} eliminated succesfully."""
+    assert response.json()["message"] == f"""Player {player_data["playerName"]} has left the game."""
 
 def test_leave_lobby_host(test_client):
     response = test_client.post("/game_create", json={
@@ -89,7 +90,7 @@ def test_leave_in_game_host(test_client):
     # Remove host
     response = test_client.delete(f"/game/{game_id}/leave/{owner_id}")
     assert response.status_code == 200
-    assert response.json()["message"] == f"Player {owner_name} eliminated succesfully. Player {player2_name} has won the game!"
+    assert response.json()["message"] == f"Player {owner_name} has left the game."
 
 def test_delete_nonexistent_player(test_client):
     response = test_client.post("/game_create", json={
