@@ -20,10 +20,12 @@ async def emit_players_game(game_id, db):
 async def emit_turn_info(game_id, db):
     game = db.query(Game).filter(Game.id == game_id).first()
 
+    player = db.query(Player).filter(Player.game_id == game_id, Player.turn == game.turn).first()
+
     broadcast = Broadcast()
 
     turn_info = {
-        "playerTurnId": game.turn.value
+        "playerTurnId": player.id,
     }
 
     # send the turn info to all players in the lobby
