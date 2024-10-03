@@ -137,7 +137,8 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
     
-    await game_events.delete_player_broadcast(player_id, game_id)
+    # Disconnect the player's socket from the game room
+    await game_events.disconnect_player_socket(player_id, game_id)
     
     if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Host does not have permission to leave the lobby.")
