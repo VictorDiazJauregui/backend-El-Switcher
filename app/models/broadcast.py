@@ -25,6 +25,10 @@ class Broadcast:
       self.add_sid(player_id, sid)
       await sio.enter_room(sid, str(game_id))
 
+    async def unregister_player_socket(self, sio, player_id, game_id):
+      await sio.leave_room(self.get_sid(player_id), str(game_id))
+      self.remove_sid(player_id)
+
     async def broadcast(self, sio, game_id, event, data):
       await sio.emit(event, data, room=str(game_id))
 
@@ -35,8 +39,4 @@ class Broadcast:
         return
       
       await sio.emit(event, data, room=sid)
-
-    
-    
-
     
