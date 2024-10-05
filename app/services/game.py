@@ -119,20 +119,14 @@ async def end_turn(game_id: int, player_id: int, db: Session):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game.id} is not in progress.")
     if game.turn != player.turn:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"It's not {player.id} turn.")
-    # obtain the current turn value
-    current_turn_value = game.turn.value
-    # obtain the max turn value
-    max_turn_value = len(game.players) +1 #The value starts at 1
     
-    # Calculate the next turn value
-    next_turn_value = ((current_turn_value + 1) % max_turn_value)
+    current_turn_index = [index for index, player in enumerate(game.players) if player.turn == game.turn][0]
 
-    # If the next turn value is 0, then the next turn is 1
-    if next_turn_value == 0:
-        next_turn_value = 1
-    
-    # Assign the new value for turn
-    game.turn = Turn(next_turn_value)
+    next_turn_index = (current_turn_index + 1) % len(game.players)
+
+    game.turn = game.players[next_turn_index].turn
+
+    print(f"Player {player.name} has ended their turn")
     db.commit()
 
     # Notify all players the new turn info
@@ -144,22 +138,25 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
     
+    # Disconnect the player's socket from the game room
+    await game_events.disconnect_player_socket(player_id, game_id)
+    
     if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Host does not have permission to leave the lobby.")
     
+    if game.status == GameStatus.INGAME and player.turn == game.turn:
+        # if the player leaving is the current player, end their turn
+        await end_turn(game_id, player_id, db)
+
     db.delete(player)
     db.commit()
-    
-
-    
+        
     if game.status == GameStatus.INGAME and len(game.players) == 1:
         # if there is only one player left in the game, the game is over and that player wins
         game.status = GameStatus.FINISHED
         db.commit()
 
         await game_events.emit_winner(game_id,game.players[0].id, db)
-
-        
 
     if game.status == GameStatus.LOBBY:
         await lobby_events.emit_players_lobby(game_id, db)
