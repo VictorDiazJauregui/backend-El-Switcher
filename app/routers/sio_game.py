@@ -43,11 +43,10 @@ async def connect(sid, environ, auth):
         await channel.register_player_socket(sio_game, player_id, game_id, sid)
 
         # Broadcast Board
-        
+        await game_events.emit_board(game_id, db)
         
         # Broadcast cards
-        await game_events.emit_cards(game_id, db)
-
+        await game_events.emit_cards(game_id, player_id, db)
 
         await game_events.emit_players_game(game_id, db)
 
