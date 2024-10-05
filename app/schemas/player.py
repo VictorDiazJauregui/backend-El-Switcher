@@ -6,3 +6,7 @@ class PlayerCreateRequest(BaseModel):
 class PlayerResponseSchema(BaseModel):
     playerId: int
     playerName: str
+
+class WinnerSchema(BaseModel):
+    idWinner: int
+    nameWinner: str

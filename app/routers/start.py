@@ -7,6 +7,6 @@ from app.services.game import start_game
 router = APIRouter()
 
 @router.post("/game/{game_id}/start", response_model=StartResponseSchema)
-def start(game_id: int, db: Session = Depends(get_db)):
-        response = start_game(game_id, db)
-        return response
+async def start(game_id: int, db: Session = Depends(get_db)):
+    response = await start_game(game_id, db)
+    return response

@@ -32,3 +32,9 @@ async def emit_can_start_game(game_id, db):
 
     # Send that the game can start to the owner
     await broadcast.send_to_player(sio.sio_lobby, owner_id, 'start_game', {'canStart': can_start})
+
+async def emit_game_started(game_id):
+    broadcast = Broadcast()
+
+    # Send that the game has started to all players in the lobby
+    await broadcast.broadcast(sio.sio_lobby, game_id, 'game_started', {"gameStarted": True})

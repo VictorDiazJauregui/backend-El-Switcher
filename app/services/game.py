@@ -96,9 +96,7 @@ def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerRes
         playerName=player.name
     )
 
-
-
-def start_game(game_id: int, db: Session) -> StartResponseSchema:
+async def start_game(game_id: int, db: Session) -> StartResponseSchema:
     game = get_game(game_id, db)
     if game.status != GameStatus.LOBBY:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is already in progress.")
@@ -108,9 +106,12 @@ def start_game(game_id: int, db: Session) -> StartResponseSchema:
     game.status = GameStatus.INGAME
     db.commit()
 
+    # Notify all players that the game has started
+    await lobby_events.emit_game_started(game_id)
+
     return StartResponseSchema(gameId=game.id, status=game.status)
 
-def end_turn(game_id: int, player_id: int, db: Session):
+async def end_turn(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
 
@@ -133,6 +134,10 @@ def end_turn(game_id: int, player_id: int, db: Session):
     # Assign the new value for turn
     game.turn = Turn(next_turn_value)
     db.commit()
+
+    # Notify all players the new turn info
+    await game_events.emit_turn_info(game_id, db)
+
     return {'message' : f"Player {player.name} has ended their turn."}
 
 async def remove_player_from_game(game_id: int, player_id: int, db: Session):
@@ -145,13 +150,16 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     db.delete(player)
     db.commit()
     
-    message = f"Player {player.name} eliminated succesfully."
+
+    
     if game.status == GameStatus.INGAME and len(game.players) == 1:
         # if there is only one player left in the game, the game is over and that player wins
         game.status = GameStatus.FINISHED
         db.commit()
 
-        message = message + f" Player {game.players[0].name} has won the game!"
+        await game_events.emit_winner(game_id,game.players[0].id, db)
+
+        
 
     if game.status == GameStatus.LOBBY:
         await lobby_events.emit_players_lobby(game_id, db)
@@ -160,4 +168,4 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     if game.status == GameStatus.INGAME:
         await game_events.emit_players_game(game_id, db)
 
-    return {"message": message}
+    return {"message": f"Player {player.name} has left the game."}
