@@ -56,7 +56,7 @@ class Game(Base):
     status = Column(Enum(GameStatus), nullable=False)
     turn = Column(Enum(Turn), nullable=True)
 
-    players = relationship("Player", back_populates="game")
+    players = relationship("Player", back_populates="game", order_by="Player.turn")
     board = relationship("Board", uselist=False, back_populates="game")
 
 #    def end_game():

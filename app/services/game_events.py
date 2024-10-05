@@ -3,6 +3,10 @@ from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.models.broadcast import Broadcast
 from app.routers import sio_game as sio
 
+async def disconnect_player_socket(player_id, game_id):
+    broadcast = Broadcast()
+    await broadcast.unregister_player_socket(sio.sio_game, player_id, game_id)
+
 async def emit_players_game(game_id, db):
     players = db.query(Player).filter(Player.game_id == game_id).all()
 
