@@ -90,7 +90,8 @@ def deal_figure_cards(game_id: int, db: Session):
         for card in cards_in_hand:
             dealt_cards.append(CardFigSchema(
                 figureCardId=card.id,
-                difficulty="easy" if "EASY" in card.figure.name else "hard"
+                difficulty="easy" if "EASY" in card.figure.name else "hard",
+                figureType=card.figure.value[0]
             ))
 
         # Add more cards if the player has less than 3 cards and doesn't have a blocked card
@@ -102,7 +103,8 @@ def deal_figure_cards(game_id: int, db: Session):
                 card.owner_id = player['id']
                 figurecard = CardFigSchema(
                     figureCardId=card.id,
-                    difficulty="easy" if "EASY" in card.figure.name else "hard"
+                    difficulty="easy" if "EASY" in card.figure.name else "hard",
+                    figureType=card.figure.value[0]
                 )
                 dealt_cards.append(figurecard)
 
