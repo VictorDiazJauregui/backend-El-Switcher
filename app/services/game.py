@@ -46,18 +46,6 @@ def create_game(data: GameCreateSchema, db: Session):
         "ownerId": db_player.id 
     }
 
-def get_game_list(db: Session) -> List[Dict[str, any]]:
-    games = db.query(Game).filter(Game.status == GameStatus.LOBBY).all()
-    response = [
-        {
-            "gameId": game.id,
-            "gameName": game.name,
-            "connectedPlayers": len(game.players),
-            "maxPlayers": game.max_players
-        }
-        for game in games
-    ]
-    return response
 
 def get_game(game_id: int, db: Session) -> Game:
     game = db.query(Game).filter(Game.id == game_id).first()
