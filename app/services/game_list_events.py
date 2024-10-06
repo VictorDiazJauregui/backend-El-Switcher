@@ -1,6 +1,4 @@
-from app.db.db import Player, Game, GameStatus
-from app.schemas.player import PlayerResponseSchema, WinnerSchema
-from app.models.broadcast import Broadcast
+from app.db.db import Game, GameStatus
 from app.routers import sio_game_list as sio
 
 async def emit_game_list(db):
@@ -15,5 +13,5 @@ async def emit_game_list(db):
         for game in games
     ]
 
-    await sio.emit('game_list', response)
+    await sio.sio_game_list.emit('game_list', response)
 
