@@ -7,10 +7,10 @@ from app.schemas.player import PlayerResponseSchema
 from app.schemas.board import PieceResponseSchema
 from app.db.db import Game, Player, GameStatus, Turn, Board, SquarePiece, Color
 import random
-from app.services import lobby_events, game_events
+from app.services import lobby_events, game_events, game_list_events
 
 
-def create_game(data: GameCreateSchema, db: Session):
+async def create_game(data: GameCreateSchema, db: Session):
     owner_name = data.ownerName
     game_name = data.gameName
     max_players = data.maxPlayers
@@ -41,23 +41,13 @@ def create_game(data: GameCreateSchema, db: Session):
     db.commit()
     db.refresh(db_player)
 
+    await game_list_events.emit_game_list(db)
+
     return {
         "gameId": db_game.id,
         "ownerId": db_player.id 
     }
 
-def get_game_list(db: Session) -> List[Dict[str, any]]:
-    games = db.query(Game).filter(Game.status == GameStatus.LOBBY).all()
-    response = [
-        {
-            "gameId": game.id,
-            "gameName": game.name,
-            "connectedPlayers": len(game.players),
-            "maxPlayers": game.max_players
-        }
-        for game in games
-    ]
-    return response
 
 def get_game(game_id: int, db: Session) -> Game:
     game = db.query(Game).filter(Game.id == game_id).first()
@@ -72,7 +62,7 @@ def get_player(player_id: int, db: Session) -> Player:
     return player
 
 
-def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerResponseSchema:
+async def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerResponseSchema:
     game = get_game(game_id, db)
     
     if game.status != GameStatus.LOBBY: 
@@ -89,6 +79,8 @@ def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerRes
     db.add(player)
     db.commit()
     db.refresh(player)
+
+    await game_list_events.emit_game_list(db)
 
     return PlayerResponseSchema(
         playerId=player.id,
@@ -107,6 +99,8 @@ async def start_game(game_id: int, db: Session) -> StartResponseSchema:
 
     # Notify all players that the game has started
     await lobby_events.emit_game_started(game_id)
+
+    await game_list_events.emit_game_list(db)
 
     return StartResponseSchema(gameId=game.id, status=game.status)
 
@@ -160,6 +154,7 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     if game.status == GameStatus.LOBBY:
         await lobby_events.emit_players_lobby(game_id, db)
         await lobby_events.emit_can_start_game(game_id, db)
+        await game_list_events.emit_game_list(db)
 
     if game.status == GameStatus.INGAME:
         await game_events.emit_players_game(game_id, db)

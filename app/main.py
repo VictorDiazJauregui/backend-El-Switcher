@@ -6,9 +6,10 @@ from app.db.db import Base, engine
 from pydantic import ValidationError
 import socketio
 
-from app.routers import game, list, join, start, end_turn, leave
+from app.routers import game, join, start, end_turn, leave
 from app.routers.sio_game import sio_game
 from app.routers.sio_lobby import sio_lobby
+from app.routers.sio_game_list import sio_game_list
 from app.errors.handlers import value_error_handler, generic_exception_handler, validation_exception_handler
 
 @asynccontextmanager
@@ -53,7 +54,6 @@ app.add_middleware(
 # No es necesario cargar ni guardar ningún estado, ya que no hay persistencia
 
 app.include_router(game.router)
-app.include_router(list.router)
 app.include_router(join.router)
 app.include_router(start.router)
 app.include_router(end_turn.router)
@@ -65,6 +65,9 @@ app.mount("/game/ws", socket_app)
 
 socket_app = socketio.ASGIApp(sio_lobby, other_asgi_app=app, socketio_path="/game/lobby/ws")
 app.mount("/game/lobby/ws", socket_app)
+
+socket_app = socketio.ASGIApp(sio_game_list, other_asgi_app=app, socketio_path="/game_list/ws")
+app.mount("/game_list/ws", socket_app)
 
 @app.get("/")
 def read_root():
