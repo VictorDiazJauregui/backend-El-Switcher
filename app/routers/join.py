@@ -9,6 +9,6 @@ router = APIRouter()
 
 @router.post("/game/{game_id}/join", response_model=PlayerResponseSchema)
 async def join_game(game_id: int, player: PlayerCreateRequest, db: Session = Depends(get_db)):
-    response = add_player_to_game(player.playerName, game_id, db)
+    response = await add_player_to_game(player.playerName, game_id, db)
     
     return response
