@@ -1,0 +1,80 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Paso 1: Checkout del repositorio
+    - name: Checkout del repositorio
+      uses: actions/checkout@v2
+
+    # Paso 2: Crear volumen Docker para MySQL
+    - name: Crear volumen Docker para MySQL
+      run: docker volume create mysql-db-data
+
+    # Paso 3: Ejecutar contenedor MySQL
+    - name: Ejecutar contenedor MySQL
+      run: docker run -d -p 33061:3306 --name mysql-db -e MYSQL_ROOT_PASSWORD=secret --mount src=mysql-db-data,dst=/var/lib/mysql mysql
+
+    # Paso 4: Esperar a que MySQL inicie
+    - name: Esperar a que MySQL inicie
+      run: sleep 20
+
+    # Paso 5: Crear base de datos switcher
+    - name: Crear base de datos switcher
+      run: |
+        docker exec -i mysql-db mysql -uroot -psecret -e "CREATE DATABASE switcher;"
+
+    # Paso 6: Configurar Python 3.12
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.12
+
+    # Paso 7: Cachear dependencias de pip
+    - name: Cachear dependencias de pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    # Paso 8: Crear y activar entorno virtual
+    - name: Crear y activar entorno virtual
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+
+    # Paso 9: Corregir importación de pytest_verbose_parametrize
+    - name: Corregir importación de pytest_verbose_parametrize
+      run: |
+        sed -i 's/from collections import Iterable/from collections.abc import Iterable/' venv/lib/python3.12/site-packages/pytest_verbose_parametrize.py
+
+    # Paso 10: Crear tablas en la base de datos de prueba
+    - name: Crear tablas en la base de datos de prueba
+      run: |
+        source venv/bin/activate
+        python -c "from app.db.db import Base, engine; Base.metadata.create_all(bind=engine)"
+
+    # Paso 11: Ejecutar pruebas con pytest
+    - name: Ejecutar pruebas con pytest
+      run: |
+        source venv/bin/activate
+        pytest .
+        deactivate
