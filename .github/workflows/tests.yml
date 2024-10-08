@@ -22,9 +22,14 @@ jobs:
     - name: Checkout del repositorio
       uses: actions/checkout@v2
 
-    # Paso 2: Crear volumen Docker para MySQL
-    - name: Crear volumen Docker para MySQL
-      run: docker volume create mysql-db-data
+    # Paso 2: Cachear volumen Docker para MySQL
+    - name: Cachear volumen Docker para MySQL
+      uses: actions/cache@v2
+      with:
+        path: /var/lib/docker/volumes/mysql-db-data
+        key: ${{ runner.os }}-docker-mysql-${{ hashFiles('Dockerfile') }}
+        restore-keys: |
+          ${{ runner.os }}-docker-mysql-
 
     # Paso 3: Ejecutar contenedor MySQL
     - name: Ejecutar contenedor MySQL
@@ -37,7 +42,7 @@ jobs:
     # Paso 5: Crear base de datos switcher
     - name: Crear base de datos switcher
       run: |
-        docker exec -i mysql-db mysql -uroot -psecret -e "CREATE DATABASE switcher;"
+        docker exec -i mysql-db mysql -uroot -psecret -e "CREATE DATABASE IF NOT EXISTS switcher;"
 
     # Paso 6: Configurar Python 3.12
     - name: Configurar Python 3.12
