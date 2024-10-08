@@ -10,13 +10,19 @@ def create_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
     db.commit()
     db.refresh(board)
 
-    possible_colors = list(Color)
+
+    #debe ser una lista con los colores posibles, siendo 9 de cada uno 
+    possible_colors = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW] * 9
+
+
+
     list_of_pieces = []
     # 6x6 board
     for row in range(6):
         for column in range(6):
             # Elegir un color aleatorio para cada pieza
             random_color = random.choice(possible_colors)
+            possible_colors.remove(random_color)
 
             # Crear una instancia de SquarePiece
             square_piece = SquarePiece(

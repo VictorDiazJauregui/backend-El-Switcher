@@ -11,7 +11,7 @@ router = APIRouter()
 
 @router.post("/game_create", response_model=GameResponseSchema)
 async def create_game_endpoint(game_data: GameCreateSchema, db: Session = Depends(get_db)):
-    response = create_game(game_data, db)
+    response = await create_game(game_data, db)
     create_board(response["gameId"], db)
     add_cards_to_db(game_id=response["gameId"], db=db)
     
