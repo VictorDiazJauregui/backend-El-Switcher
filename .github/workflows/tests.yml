@@ -26,14 +26,14 @@ jobs:
     - name: Cachear volumen Docker para MySQL
       uses: actions/cache@v2
       with:
-        path: /var/lib/docker/volumes/mysql-db-data
+        path: /tmp/mysql-db-data
         key: ${{ runner.os }}-docker-mysql-${{ hashFiles('Dockerfile') }}
         restore-keys: |
           ${{ runner.os }}-docker-mysql-
 
     # Paso 3: Ejecutar contenedor MySQL
     - name: Ejecutar contenedor MySQL
-      run: docker run -d -p 33061:3306 --name mysql-db -e MYSQL_ROOT_PASSWORD=secret --mount src=mysql-db-data,dst=/var/lib/mysql mysql
+      run: docker run -d -p 33061:3306 --name mysql-db -e MYSQL_ROOT_PASSWORD=secret --mount src=/tmp/mysql-db-data,dst=/var/lib/mysql mysql
 
     # Paso 4: Esperar a que MySQL inicie
     - name: Esperar a que MySQL inicie
