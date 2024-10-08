@@ -9,6 +9,7 @@ from app.schemas.board import PieceResponseSchema
 from app.db.db import Game, Player, GameStatus, Turn, CardMove, CardFig, MoveType, FigureType, Board, SquarePiece, Color
 import random
 from app.services import lobby_events, game_events, game_list_events
+from app.services.cards import deal_figure_cards, deal_movement_cards
 
 
 async def create_game(data: GameCreateSchema, db: Session):
@@ -125,6 +126,11 @@ async def end_turn(game_id: int, player_id: int, db: Session):
 
     # Notify all players the new turn info
     await game_events.emit_turn_info(game_id, db)
+
+    # Deal new cards if needed
+    deal_movement_cards(game_id=game_id, player_id=player_id, db=db)
+    deal_figure_cards(game_id, db)
+
 
     return {'message' : f"Player {player.name} has ended their turn."}
 
