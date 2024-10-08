@@ -1,12 +1,12 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func, select, case
+from sqlalchemy import func, select, case, exists
 from typing import List, Dict
 
 
 from app.schemas.cards import CardFigSchema, CardFigResponseSchema, CardMoveResponseSchema
 from app.db.db import Player, CardMove, CardFig, MoveType, FigureType, Game
-
+separador = "---------------------------------------------------------------------------------------------------"
 
 def add_cards_to_db(game_id: int, db: Session) -> int:
     # If game exists
@@ -55,7 +55,7 @@ def deal_movement_cards(game_id: int, player_id: int, db: Session):
             type=card.move.value[1]
         ).model_dump())
 
-    # Add more cards if the player has less than 3 cards and doesn't have a blocked card
+    # Add more cards if the player has less than 3 cards
     if len(cards_in_hand) < 3:
         number_of_cards_to_deal = 3 - len(cards_in_hand)
         random_cards = search_for_cards_to_deal(CardMove, game_id, number_of_cards_to_deal, db)
@@ -68,51 +68,60 @@ def deal_movement_cards(game_id: int, player_id: int, db: Session):
             ).model_dump()
             dealt_cards.append(movecard)
 
+
+
     db.commit()
     return dealt_cards
 
-def deal_figure_cards(game_id: int, db: Session):
-    players_info = db.execute(select(
-        Player.id,
-        func.count(CardFig.id).label('card_figs_count'),
-        func.max(case((CardFig.block == True, 1), else_=0)).label('has_blocked_card')
-    ).outerjoin(CardFig, CardFig.owner_id == Player.id)
-    .where(Player.game_id == game_id)
-    .group_by(Player.id, Player.name)).mappings().all()
+def fetch_figure_cards(game_id: int, player_id: int, db: Session):
+    player = db.execute(select(Player).where(Player.id == player_id)).scalars().first()
 
-    all_responses = []  # responses fro al;l players
-
-    for player in players_info:
-        dealt_cards = []
-
-        # Get the current cards of the player
-        cards_in_hand = db.query(CardFig).filter(CardFig.owner_id == player["id"]).all()
-        for card in cards_in_hand:
-            dealt_cards.append(CardFigSchema(
+    # Get the current cards of the player
+    dealt_cards = []
+    cards_in_hand = db.query(CardFig).filter(CardFig.owner_id == player.id).all()
+    for card in cards_in_hand:
+        dealt_cards.append(CardFigSchema(
                 figureCardId=card.id,
                 difficulty="easy" if "EASY" in card.figure.name else "hard",
                 figureType=card.figure.value[0]
-            ))
+            ).model_dump())
 
-        # Add more cards if the player has less than 3 cards and doesn't have a blocked card
-        if player['card_figs_count'] < 3 and not player['has_blocked_card']:
-            number_of_cards_to_deal = 3 - player['card_figs_count']
-            random_cards = search_for_cards_to_deal(CardFig, game_id, number_of_cards_to_deal, db)
+    hasBlock = db.execute(select(exists().where(CardFig.owner_id == player_id).where(CardFig.block == True))).scalar()
 
-            for card in random_cards:
-                card.owner_id = player['id']
-                figurecard = CardFigSchema(
-                    figureCardId=card.id,
-                    difficulty="easy" if "EASY" in card.figure.name else "hard",
-                    figureType=card.figure.value[0]
-                )
-                dealt_cards.append(figurecard)
+    # Add more cards if the player has less than 3 cards and doesn't have a blocked card
+    if len(cards_in_hand) < 3 and not hasBlock:
+        number_of_cards_to_deal = 3 - len(cards_in_hand)
+        random_cards = search_for_cards_to_deal(CardFig, game_id, number_of_cards_to_deal, db)
 
-        
-        response = CardFigResponseSchema(ownerId=player["id"], cards=dealt_cards)
-        all_responses.append(response)
+        for card in random_cards:
+            card.owner_id = player.id
+            movecard = CardFigSchema(
+                figureCardId=card.id,
+                difficulty="easy" if "EASY" in card.figure.name else "hard",
+                figureType=card.figure.value[0]
+            ).model_dump()
+            dealt_cards.append(movecard)
+
 
     db.commit()
-    return [response.model_dump() for response in all_responses]
+    print(dealt_cards)
+    return dealt_cards
+
+
+def deal_figure_cards(game_id: int, db: Session):
+    list_of_ids = db.execute(select(Player.id).where(Player.game_id == game_id)).scalars().all()
+    response = []
+    for player_id in list_of_ids:
+        player_cards = {
+            "ownerId": player_id,
+            "cards": fetch_figure_cards(game_id, player_id, db)
+        }
+        response.append(player_cards)
+    
+
+    return response
+
+    
+
             
 

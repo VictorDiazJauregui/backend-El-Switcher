@@ -48,8 +48,8 @@ async def emit_winner(game_id, winner_id, db):
 async def emit_cards(game_id, player_id, db):
     channel = Broadcast()
 
-    total_figure_cards = deal_figure_cards(game_id=game_id, db=db)
-    player_move_cards = deal_movement_cards(game_id=game_id, player_id=player_id, db=db)
+    total_figure_cards = deal_figure_cards(game_id, db)
+    player_move_cards = deal_movement_cards(game_id, player_id, db)
 
     await channel.broadcast(sio=sio.sio_game, game_id=game_id, event='figure_cards', data=total_figure_cards)
     await channel.send_to_player(sio=sio.sio_game, player_id=player_id, event='movement_cards', data=player_move_cards)
