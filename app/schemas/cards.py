@@ -14,3 +14,4 @@ class CardFigResponseSchema(BaseModel):
 class CardMoveResponseSchema(BaseModel):
     movementcardId: int
     type: str
+    moveType: int

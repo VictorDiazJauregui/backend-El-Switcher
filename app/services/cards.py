@@ -58,7 +58,8 @@ def deal_movement_cards(game_id: int, player_id: int, db: Session):
     for card in cards_in_hand:
         dealt_cards.append(CardMoveResponseSchema(
             movementcardId=card.id,
-            type=card.move.value[1]
+            type=card.move.value[1],
+            moveType=card.move.value[0]
         ).model_dump())
 
     # Add more cards if the player has less than 3 cards
@@ -70,10 +71,10 @@ def deal_movement_cards(game_id: int, player_id: int, db: Session):
             card.owner_id = player.id
             movecard = CardMoveResponseSchema(
                 movementcardId=card.id,
-                type=card.move.value[1]
+                type=card.move.value[1],
+                moveType=card.move.value[0]
             ).model_dump()
             dealt_cards.append(movecard)
-
 
 
     db.commit()
