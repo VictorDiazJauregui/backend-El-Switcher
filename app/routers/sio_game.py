@@ -1,8 +1,6 @@
 from app.db.db import db_context, Game, Player, GameStatus
 from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
-from app.services.board import get_board
-from app.services.cards import deal_figure_cards, deal_movement_cards
 from app.services import game_events
 
 import socketio
