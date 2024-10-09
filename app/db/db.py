@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, Enum, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Enum, ForeignKey, Text
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from contextlib import contextmanager
 import enum
@@ -76,6 +76,7 @@ class Player(Base):
     game = relationship("Game", back_populates="players")
     card_moves = relationship("CardMove", back_populates="owner")
     card_figs = relationship("CardFig", back_populates="owner")
+    parallel_boards = relationship("ParallelBoard", back_populates="player")
 
 #    def join():
 #    def leave():
@@ -89,9 +90,23 @@ class Board(Base):
     
     game = relationship("Game", back_populates="board")
     square_pieces = relationship("SquarePiece", back_populates="board")
+    parallel_boards = relationship("ParallelBoard", back_populates="board")
 
 #    def update_color():
 #    def mover_fichas():
+
+# Modelo ParallelBoard
+class ParallelBoard(Base):
+    __tablename__ = 'parallel_boards'
+    
+    id = Column(Integer, primary_key=True)  # This is the parallel_board_id
+    board_id = Column(Integer, ForeignKey('boards.game_id'))
+    player_id = Column(Integer, ForeignKey('players.id'))
+    state_id = Column(Integer, nullable=False)  # This is the state_id
+    state_data = Column(Text, nullable=False)  # Assuming state_data is a JSON string or similar
+
+    board = relationship("Board", back_populates="parallel_boards")
+    player = relationship("Player", back_populates="parallel_boards")
 
 # Modelo CardMove
 class CardMove(Base):
@@ -133,5 +148,3 @@ class SquarePiece(Base):
     board_id = Column(Integer, ForeignKey('boards.game_id'))
 
     board = relationship("Board", back_populates="square_pieces")
-
-#    def change_pos():
