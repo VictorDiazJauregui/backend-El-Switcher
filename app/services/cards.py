@@ -6,9 +6,12 @@ from typing import List, Dict
 
 from app.schemas.cards import CardFigSchema, CardFigResponseSchema, CardMoveResponseSchema
 from app.db.db import Player, CardMove, CardFig, MoveType, FigureType, Game
-separador = "---------------------------------------------------------------------------------------------------"
 
 def add_cards_to_db(game_id: int, db: Session) -> int:
+    """
+    Adds all cards to be used in the game to the database.
+    """
+
     # If game exists
     game = db.query(Game).filter_by(id=game_id).first() is not None
     if game:
@@ -39,6 +42,9 @@ def add_cards_to_db(game_id: int, db: Session) -> int:
 
 
 def search_for_cards_to_deal(MovOrFig, game_id, number_of_cards_to_deal, db):
+    """
+    Searches the db for cards belonging to this game without an owner.
+    """
     available_cards = db.query(MovOrFig).filter(MovOrFig.owner_id == None, MovOrFig.game_id == game_id) \
                      .order_by(func.random()).limit(number_of_cards_to_deal).all()
 
@@ -74,6 +80,9 @@ def deal_movement_cards(game_id: int, player_id: int, db: Session):
     return dealt_cards
 
 def assign_figure_cards(game_id: int, player_id: int, db: Session):
+    """
+    Assigns ownership of a card(s) to a player.
+    """
     player = db.execute(select(Player).where(Player.id == player_id)).scalars().first()
 
     # Get the current cards of the player
@@ -94,7 +103,10 @@ def assign_figure_cards(game_id: int, player_id: int, db: Session):
     return 1
 
 
-def deal_figure_cards(game_id: int, db: Session):
+def fetch_figure_cards(game_id: int, db: Session):
+    """
+    Fetches via queries the figure cards of every player and returns a format ready to be emitted.
+    """
     list_of_ids = db.execute(select(Player.id).where(Player.game_id == game_id)).scalars().all()
 
     response = []
@@ -118,7 +130,12 @@ def deal_figure_cards(game_id: int, db: Session):
     return response
 
 def initialize_cards(game_id: int, db: Session):
+    """
+    Called at the start of the game. Assigns 3 cards to each player.
+    """
     list_of_ids = db.execute(select(Player.id).where(Player.game_id == game_id)).scalars().all()
-    print(f"LISTA DE IDS: {list_of_ids}")
+
     for player_id in list_of_ids:
         assign_figure_cards(game_id, player_id, db)
+    
+    return 1

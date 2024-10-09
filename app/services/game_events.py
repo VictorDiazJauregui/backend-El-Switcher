@@ -46,6 +46,9 @@ async def emit_winner(game_id, winner_id, db):
     await broadcast.broadcast(sio.sio_game, game_id, 'winner', WinnerSchema(idWinner=winner.id, nameWinner=winner.name).model_dump())
 
 async def emit_cards(game_id, player_id, db):
+    """
+    Emits to specified player their own movement cards and all other player's figure cards.
+    """
     channel = Broadcast()
 
     total_figure_cards = deal_figure_cards(game_id, db)
@@ -55,6 +58,9 @@ async def emit_cards(game_id, player_id, db):
     await channel.send_to_player(sio=sio.sio_game, player_id=player_id, event='movement_cards', data=player_move_cards)
 
 async def emit_board(game_id, db):
+    """
+    Emits the current board.
+    """
     channel = Broadcast()
     board = get_board(game_id, db)
     
