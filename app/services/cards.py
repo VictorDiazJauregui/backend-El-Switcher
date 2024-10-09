@@ -73,18 +73,11 @@ def deal_movement_cards(game_id: int, player_id: int, db: Session):
     db.commit()
     return dealt_cards
 
-def fetch_figure_cards(game_id: int, player_id: int, db: Session):
+def assign_figure_cards(game_id: int, player_id: int, db: Session):
     player = db.execute(select(Player).where(Player.id == player_id)).scalars().first()
 
     # Get the current cards of the player
-    dealt_cards = []
     cards_in_hand = db.query(CardFig).filter(CardFig.owner_id == player.id).all()
-    for card in cards_in_hand:
-        dealt_cards.append(CardFigSchema(
-                figureCardId=card.id,
-                difficulty="easy" if "EASY" in card.figure.name else "hard",
-                figureType=card.figure.value[0]
-            ).model_dump())
 
     hasBlock = db.execute(select(exists().where(CardFig.owner_id == player_id).where(CardFig.block == True))).scalar()
 
@@ -95,33 +88,37 @@ def fetch_figure_cards(game_id: int, player_id: int, db: Session):
 
         for card in random_cards:
             card.owner_id = player.id
-            movecard = CardFigSchema(
-                figureCardId=card.id,
-                difficulty="easy" if "EASY" in card.figure.name else "hard",
-                figureType=card.figure.value[0]
-            ).model_dump()
-            dealt_cards.append(movecard)
 
 
     db.commit()
-    print(dealt_cards)
-    return dealt_cards
+    return 1
 
 
 def deal_figure_cards(game_id: int, db: Session):
     list_of_ids = db.execute(select(Player.id).where(Player.game_id == game_id)).scalars().all()
+
     response = []
+    dealt_cards = []
     for player_id in list_of_ids:
+        cards_in_hand = db.query(CardFig).filter(CardFig.owner_id == player_id).all()
+        for card in cards_in_hand:
+            dealt_cards.append(CardFigSchema(
+                    figureCardId=card.id,
+                    difficulty="easy" if "EASY" in card.figure.name else "hard",
+                    figureType=card.figure.value[0]
+                ).model_dump())
         player_cards = {
             "ownerId": player_id,
-            "cards": fetch_figure_cards(game_id, player_id, db)
+            "cards": dealt_cards
         }
+        dealt_cards = []
         response.append(player_cards)
     
 
     return response
 
-    
-
-            
-
+def initialize_cards(game_id: int, db: Session):
+    list_of_ids = db.execute(select(Player.id).where(Player.game_id == game_id)).scalars().all()
+    print(f"LISTA DE IDS: {list_of_ids}")
+    for player_id in list_of_ids:
+        assign_figure_cards(game_id, player_id, db)

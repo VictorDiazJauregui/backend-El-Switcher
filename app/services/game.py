@@ -9,6 +9,7 @@ from app.schemas.board import PieceResponseSchema
 from app.db.db import Game, Player, GameStatus, Turn, CardMove, CardFig, MoveType, FigureType, Board, SquarePiece, Color
 import random
 from app.services import lobby_events, game_events, game_list_events
+from app.services.cards import assign_figure_cards
 
 
 
@@ -106,15 +107,10 @@ async def start_game(game_id: int, db: Session) -> StartResponseSchema:
 
     return StartResponseSchema(gameId=game.id, status=game.status)
 
-async def end_turn(game_id: int, player_id: int, db: Session):
+async def pass_turn(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
 
-    if game.status != GameStatus.INGAME:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game.id} is not in progress.")
-    if game.turn != player.turn:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"It's not {player.id} turn.")
-    
     current_turn_index = [index for index, player in enumerate(game.players) if player.turn == game.turn][0]
 
     next_turn_index = (current_turn_index + 1) % len(game.players)
@@ -127,8 +123,20 @@ async def end_turn(game_id: int, player_id: int, db: Session):
     # Notify all players the new turn info
     await game_events.emit_turn_info(game_id, db)
 
+async def end_turn(game_id: int, player_id: int, db: Session):
+    game = get_game(game_id, db)
+    player = get_player(player_id, db)
+
+    if game.status != GameStatus.INGAME:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game.id} is not in progress.")
+    if game.turn != player.turn:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"It's not {player.id} turn.")
+    
+    await pass_turn(game_id, player_id, db)
+
     # Deal new cards if needed
-    await game_events.emit_cards(game_id=game_id, player_id=player_id, db=db)
+    assign_figure_cards(game_id, player_id, db)
+    await game_events.emit_cards(game_id, player_id, db)
 
 
     return {'message' : f"Player {player.name} has ended their turn."}

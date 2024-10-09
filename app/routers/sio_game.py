@@ -46,6 +46,7 @@ async def connect(sid, environ, auth):
         await game_events.emit_board(game_id, db)
         
         # Broadcast cards
+
         await game_events.emit_cards(game_id, player_id, db)
 
         await game_events.emit_players_game(game_id, db)
