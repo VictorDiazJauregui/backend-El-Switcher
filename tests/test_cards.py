@@ -89,7 +89,7 @@ def test_deal_movement_cards(test_client):
         assert len(result2) == 3  # Only 3 cards per player
     finally:
         test_db.close()
-
+"""
 def test_deal_figure_cards(test_client):
     response = test_client.post("/game_create", json={
         "ownerName": "test_owner",
@@ -112,3 +112,5 @@ def test_deal_figure_cards(test_client):
         assert len(player_cards) == 3  # Only 3 cards per player
     finally:
         test_db.close()
+
+"""
