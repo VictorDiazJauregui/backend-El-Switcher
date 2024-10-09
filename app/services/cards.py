@@ -7,6 +7,7 @@ from typing import List, Dict
 from app.schemas.cards import CardFigSchema, CardFigResponseSchema, CardMoveResponseSchema
 from app.db.db import Player, CardMove, CardFig, MoveType, FigureType, Game
 
+
 def add_cards_to_db(game_id: int, db: Session) -> int:
     """
     Adds all cards to be used in the game to the database.
@@ -50,35 +51,50 @@ def search_for_cards_to_deal(MovOrFig, game_id, number_of_cards_to_deal, db):
 
     return available_cards
 
-def deal_movement_cards(game_id: int, player_id: int, db: Session):
-    player = db.execute(select(Player).where(Player.id == player_id)).scalars().first()
-    # Get the current cards of the player
-    dealt_cards = []
-    cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player.id).all()
-    for card in cards_in_hand:
-        dealt_cards.append(CardMoveResponseSchema(
-            movementcardId=card.id,
-            type=card.move.value[1],
-            moveType=card.move.value[0]
-        ).model_dump())
 
-    # Add more cards if the player has less than 3 cards
+def assign_movement_cards(game_id: int, player_id: int, db: Session):
+    """
+    Assigns ownership of a card(s) to a player.
+    """
+    player = db.execute(select(Player).where(Player.id == player_id)).scalars().first()
+
+    # Get the current cards of the player
+    cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player.id).all()
+
+    # Add more cards if the player has less than 3 cards and doesn't have a blocked card
     if len(cards_in_hand) < 3:
         number_of_cards_to_deal = 3 - len(cards_in_hand)
         random_cards = search_for_cards_to_deal(CardMove, game_id, number_of_cards_to_deal, db)
 
         for card in random_cards:
             card.owner_id = player.id
-            movecard = CardMoveResponseSchema(
+
+
+    db.commit()
+    return 1
+
+
+def fetch_movement_cards(game_id: int, db: Session):
+    """
+    Fetches via queries the figure cards of every player and returns a format ready to be emitted.
+    """
+    list_of_ids = db.execute(select(Player.id).where(Player.game_id == game_id)).scalars().all()
+
+    # Get the current cards of the player
+    for player_id in list_of_ids:
+        dealt_cards = []
+        cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player_id).all()
+        for card in cards_in_hand:
+            dealt_cards.append(CardMoveResponseSchema(
                 movementcardId=card.id,
                 type=card.move.value[1],
                 moveType=card.move.value[0]
-            ).model_dump()
-            dealt_cards.append(movecard)
+            ).model_dump())
 
 
     db.commit()
     return dealt_cards
+
 
 def assign_figure_cards(game_id: int, player_id: int, db: Session):
     """
@@ -120,10 +136,7 @@ def fetch_figure_cards(game_id: int, db: Session):
                     difficulty="easy" if "EASY" in card.figure.name else "hard",
                     figureType=card.figure.value[0]
                 ).model_dump())
-        player_cards = {
-            "ownerId": player_id,
-            "cards": dealt_cards
-        }
+        player_cards = CardFigResponseSchema(ownerId=player_id, cards=dealt_cards).model_dump()
         dealt_cards = []
         response.append(player_cards)
     
@@ -138,5 +151,6 @@ def initialize_cards(game_id: int, db: Session):
 
     for player_id in list_of_ids:
         assign_figure_cards(game_id, player_id, db)
-    
+        assign_movement_cards(game_id, player_id, db)
+
     return 1
