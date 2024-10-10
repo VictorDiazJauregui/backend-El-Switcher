@@ -6,7 +6,7 @@ from app.db.db import Base, engine
 from pydantic import ValidationError
 import socketio
 
-from app.routers import game, join, start, end_turn, leave
+from app.routers import game, join, start, end_turn, leave, figures
 from app.routers.sio_game import sio_game
 from app.routers.sio_lobby import sio_lobby
 from app.routers.sio_game_list import sio_game_list
@@ -58,6 +58,12 @@ app.include_router(join.router)
 app.include_router(start.router)
 app.include_router(end_turn.router)
 app.include_router(leave.router)
+
+
+# Register the figures router
+app.include_router(figures.router)
+
+
 
 # Mount the Socket.IO app
 socket_app = socketio.ASGIApp(sio_game, other_asgi_app=app, socketio_path="/game/ws")
