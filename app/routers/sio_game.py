@@ -1,8 +1,8 @@
 from app.db.db import db_context, Game, Player, GameStatus
 from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
-from app.services.board import get_board
 from app.services import game_events
+
 import socketio
 
 # Create a new Socket.IO server
@@ -40,11 +40,14 @@ async def connect(sid, environ, auth):
         
         await channel.register_player_socket(sio_game, player_id, game_id, sid)
 
-        # Board
-        board = get_board(game.id, db)
+        # Broadcast Board
+        await game_events.emit_board(game_id, db)
+        
+        # Broadcast cards
 
-        await channel.broadcast(sio_game, game_id, 'board', board)
+        await game_events.emit_cards(game_id, player_id, db)
 
         await game_events.emit_players_game(game_id, db)
 
         await game_events.emit_turn_info(game_id, db)
+
