@@ -74,25 +74,21 @@ def assign_movement_cards(game_id: int, player_id: int, db: Session):
     return 1
 
 
-def fetch_movement_cards(game_id: int, db: Session):
+def fetch_movement_cards(player_id: int, db: Session):
     """
     Fetches via queries the figure cards of every player and returns a format ready to be emitted.
     """
-    list_of_ids = db.execute(select(Player.id).where(Player.game_id == game_id)).scalars().all()
-
     # Get the current cards of the player
-    for player_id in list_of_ids:
-        dealt_cards = []
-        cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player_id).all()
-        for card in cards_in_hand:
-            dealt_cards.append(CardMoveResponseSchema(
-                movementcardId=card.id,
-                type=card.move.value[1],
-                moveType=card.move.value[0]
-            ).model_dump())
+    dealt_cards = []
+    cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player_id).all()
+    for card in cards_in_hand:
+        dealt_cards.append(CardMoveResponseSchema(
+            movementcardId=card.id,
+            type=card.move.value[1],
+            moveType=card.move.value[0]
+        ).model_dump())
 
 
-    db.commit()
     return dealt_cards
 
 
