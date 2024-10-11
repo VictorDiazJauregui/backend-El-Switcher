@@ -16,31 +16,31 @@ import numpy as np
 
 
 
-def get_matrix(game_id: int, db: Session) -> np.matrix:
+def get_matrix(game_id: int, db: Session) -> np.ndarray:
     """
     Obtener la matriz de colores de un tablero.
     """
     board = db.query(Board).filter(Board.game_id == game_id).first()
     if board is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Board for game {game_id} does not exist.")
-    matrix = []
+    matrix = np.ndarray((6, 6), dtype=Color)
     for i in range(6):
-        row = []
+        row = np.ndarray(6, dtype=Color)
         for piece in board.square_pieces:
             if piece.row == i:
-                row.append(piece.color)
-        matrix.append(row)
+                row[piece.column] = piece.color
+        matrix[i] = row
 
-    matrix = np.matrix(matrix)    
+       
     return matrix
 
 
-def filter_board_by_color(board: np.matrix, color: str) -> np.matrix:
+def filter_board_by_color(board: np.ndarray, color: Color) -> np.matrix:
     return np.where(board == color, board, None)
 
 
 
-def depth_first_search(filtered_board: np.matrix, visited: np.matrix, row: int, col: int, color: Color):
+def depth_first_search(filtered_board: np.ndarray, visited: np.ndarray, row: int, col: int, color: Color):
     rows, cols = filtered_board.shape
 
     # Lista para almacenar las posiciones del componente conexo
@@ -88,7 +88,7 @@ def depth_first_search(filtered_board: np.matrix, visited: np.matrix, row: int, 
 
 
 
-def find_connected_components(filtered_board: np.matrix, color: str) -> list:
+def find_connected_components(filtered_board: np.ndarray, color: str) -> list:
     rows, cols = filtered_board.shape
 
     visited = np.zeros((rows, cols), dtype=bool)  # Matriz de visitados
@@ -107,7 +107,7 @@ def find_connected_components(filtered_board: np.matrix, color: str) -> list:
 
 
 
-def find_all_color_components(board: np.matrix) -> list:
+def find_all_color_components(board: np.ndarray) -> list:
     all_connected_components = []
 
     for color in [Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW]:
@@ -119,9 +119,10 @@ def find_all_color_components(board: np.matrix) -> list:
 
 
 
-def extract_figures_from_board(board: np.matrix) -> dict:
+def extract_figures_from_board(board: np.ndarray) -> dict:
     """Encuentra todas las figuras en el tablero y retorna un diccionario de figuras agrupadas por tipo."""
     all_connected_components = find_all_color_components(board)
+
 
     figures_by_type = defaultdict(list)
 
@@ -129,15 +130,51 @@ def extract_figures_from_board(board: np.matrix) -> dict:
         for figure in get_all_figures():
             if figure.matches_any_rotation(component):
                 figures_by_type[figure.type_name].append(component)
+            
+            
 
     return figures_by_type
 
 
 
-def testing(game_id: int, db: Session) -> list:
+def convert_to_serializable(figures_by_type: defaultdict) -> dict:
+    """Convierte el defaultdict a un formato serializable."""
+    serializable_dict = {}
+
+    for figure_type, components in figures_by_type.items():
+        serializable_components = []
+        
+        for component in components:
+            # Convertir cada subarray en una estructura serializable
+            serializable_component = []
+            for row in component:
+                serializable_row = []
+                for cell in row:
+                    if cell is None:
+                        serializable_row.append(None)
+                    else:
+                        color, r, c = cell
+                        # Convertimos el color a su representación de cadena
+                        serializable_row.append({
+                            "color": color.name,  # Convertir el objeto Color a una cadena
+                            "row": r,
+                            "col": c
+                        })
+                serializable_component.append(serializable_row)
+            
+            serializable_components.append(serializable_component)
+        
+        serializable_dict[figure_type] = serializable_components
+    
+    return serializable_dict
+
+
+
+def figures_event(game_id: int, db: Session) -> list:
     #test de funciones anteriormente nombradas
     matrix = get_matrix(game_id, db)
-    figures_by_type = extract_figures_from_board(matrix)
+    figures = extract_figures_from_board(matrix)
+    figures = convert_to_serializable(figures)
 
-
-    return figures_by_type
+    
+    return figures

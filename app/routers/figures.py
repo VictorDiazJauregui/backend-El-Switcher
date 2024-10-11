@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.services.figures import testing
+from app.services.figures import figures_event
 from app.db.db import Color, get_db
+from fastapi.encoders import jsonable_encoder
+import numpy as np
 
 
 #from app.db.db import get_db
@@ -22,9 +24,9 @@ def figures(game_id: int, db: Session = Depends(get_db) ):
         dict: A dictionary containing the figures.
     """
 
-    response = testing(game_id, db)
+    response = figures_event(game_id, db)
 
-    #mostrar el diccionario con las figuras
+
     return response
-    
+     
  
