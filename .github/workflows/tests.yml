@@ -60,28 +60,38 @@ jobs:
       with:
         path: |
           ~/.cache/pip
-          venv
+          .venv
         key: ${{ runner.os }}-pip-venv-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-venv-
 
-    # Paso 8: Crear y activar entorno virtual
-    - name: Crear y activar entorno virtual
+    # Paso 8: Instalar virtualenv y crear entorno virtual
+    - name: Instalar virtualenv y crear entorno virtual
       run: |
-        if [ ! -d "venv" ]; then
-          python -m venv venv
+        pip install virtualenv
+        if [ ! -d ".venv" ]; then
+          virtualenv -p python3.12 .venv
         fi
-        source venv/bin/activate
+
+    # Paso 9: Activar entorno virtual e instalar dependencias
+    - name: Activar entorno virtual e instalar dependencias
+      run: |
+        source .venv/bin/activate
         pip install -r requirements.txt
 
-    # Paso 9: Corregir importación de pytest_verbose_parametrize
+    # Paso 10: Corregir importación de pytest_verbose_parametrize
     - name: Corregir importación de pytest_verbose_parametrize
-      run: sed -i 's/from collections import Iterable/from collections.abc import Iterable/' venv/lib/python3.12/site-packages/pytest_verbose_parametrize.py
+      run: sed -i 's/from collections import Iterable/from collections.abc import Iterable/' .venv/lib/python3.12/site-packages/pytest_verbose_parametrize.py
 
-    # Paso 10: Crear tablas en la base de datos de prueba y ejecutar pruebas con pytest
-    - name: Crear tablas y ejecutar pruebas
+    # Paso 11: Crear tablas en la base de datos de prueba
+    - name: Crear tablas en la base de datos de prueba
       run: |
-        source venv/bin/activate
+        source .venv/bin/activate
         python -c "from app.db.db import Base, engine; Base.metadata.create_all(bind=engine)"
+
+    # Paso 12: Ejecutar pruebas con pytest
+    - name: Ejecutar pruebas con pytest
+      run: |
+        source .venv/bin/activate
         pytest .
         deactivate
