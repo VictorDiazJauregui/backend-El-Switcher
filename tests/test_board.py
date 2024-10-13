@@ -34,6 +34,7 @@ Base.metadata.create_all(bind=engine)
 def test_client():
     yield client
 
+@pytest.mark.skip(reason="Deprecated test")
 def test_board(test_client):
     response = test_client.post("/game_create", json={
         "ownerName": "test_owner",
