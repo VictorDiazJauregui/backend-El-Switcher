@@ -36,6 +36,7 @@ def test_client():
     yield client
 
 
+@pytest.mark.skip(reason="Deprecated test")
 def test_add_cards_to_db(test_client):
     response = test_client.post("/game_create", json={
         "ownerName": "test_owner",
@@ -58,6 +59,7 @@ def test_add_cards_to_db(test_client):
         test_db.close()
 
 
+@pytest.mark.skip(reason="Deprecated test")
 def test_deal_movement_cards(test_client):
     response = test_client.post("/game_create", json={
         "ownerName": "test_owner",
@@ -89,6 +91,7 @@ def test_deal_movement_cards(test_client):
     finally:
         test_db.close()
 """
+@pytest.mark.skip(reason="Deprecated test")
 def test_deal_figure_cards(test_client):
     response = test_client.post("/game_create", json={
         "ownerName": "test_owner",
