@@ -65,3 +65,22 @@ async def emit_board(game_id, db):
     board = get_board(game_id, db)
     
     await channel.broadcast(sio.sio_game, game_id, 'board', board)
+
+async def emit_opponents_total_mov_cards(game_id, db):
+    """
+    Emits the total number of visible movement cards of every player.
+    """
+    channel = Broadcast()
+
+    players = db.query(Player).filter(Player.game_id == game_id).all()
+
+    result = []
+
+    for player in players:
+        visible_mov_cards = sum(1 for card in player.card_moves if card.played)
+        result.append({
+            "playerId": player.id,
+            "totalMovCards": visible_mov_cards
+        })
+    
+    await channel.broadcast(sio.sio_game, game_id, 'opponents_total_mov_cards', result)
