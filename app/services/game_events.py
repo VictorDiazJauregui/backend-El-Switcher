@@ -68,7 +68,7 @@ async def emit_board(game_id, db):
 
 async def emit_opponents_total_mov_cards(game_id, db):
     """
-    Emits the total number of visible movement cards of every player.
+    Emits the number of each user's movement cards that have not been played
     """
     channel = Broadcast()
 
