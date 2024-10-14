@@ -46,7 +46,7 @@ def get_pieces(game_id: int, db: Session):
 def get_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
     square_pieces = get_pieces(game_id, db)
     return [PieceResponseSchema(
-                squarePieceId=piece.squarePieceId,
+                squarePieceId=piece.id,
                 color=piece.color.name,  # Enum to string
                 row=piece.row,
                 column=piece.column
