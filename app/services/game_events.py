@@ -77,7 +77,7 @@ async def emit_opponents_total_mov_cards(game_id, db):
     result = []
 
     for player in players:
-        visible_mov_cards = sum(1 for card in player.card_moves if card.played)
+        visible_mov_cards = sum(1 for card in player.card_moves if not card.played)
         result.append({
             "playerId": player.id,
             "totalMovCards": visible_mov_cards

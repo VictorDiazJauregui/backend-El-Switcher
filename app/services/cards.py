@@ -68,7 +68,6 @@ def assign_movement_cards(game_id: int, player_id: int, db: Session):
 
         for card in random_cards:
             card.owner_id = player.id
-            card.played = True
 
 
     db.commit()
