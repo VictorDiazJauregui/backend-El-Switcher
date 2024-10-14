@@ -4,7 +4,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 from app.db.db import Base, get_db, CardMove, CardFig, FigureType, MoveType
 from app.main import app
-from app.services.cards import deal_movement_cards
 
 # Setup the test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
