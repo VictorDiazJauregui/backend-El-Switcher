@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from app.schemas.board import PieceResponseSchema
 from app.schemas.move import MakeMoveSchema
 from app.db.db import Board, Color, SquarePiece, ParallelBoard, CardMove, Player
+from app.services.game_events import emit_board
 from typing import List
 import random
 
@@ -52,54 +54,66 @@ def get_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
                 column=piece.column
             ).model_dump() for piece in square_pieces]
 
-def make_move(move_data: MakeMoveSchema, db:Session):
+def make_move(move_data: MakeMoveSchema, db: Session):
+    try:
+        card_move = db.query(CardMove).filter(CardMove.id == move_data.movementCardId).first()
+        if not card_move:
+            raise ValueError("Invalid movementCardId")
+        
+        player_id = card_move.owner_id
+        player = db.query(Player).filter(Player.id == player_id).first()
+        if not player:
+            raise ValueError("Player not found")
+        game_id = player.game_id
+        
+        save_board(game_id, player_id, db)
+        switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, db)
+        emit_board(game_id, db)
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise RuntimeError(f"Error making move: {e}")
+    except ValueError as e:
+        raise RuntimeError(f"Validation error: {e}")
 
-    card_move = db.query(CardMove).filter(CardMove.id == move_data.movementCardId).first()
-    if not card_move:
-        raise ValueError("Invalid movementCardId")
-    
-    # Get the owner's player ID and the game ID
-    player_id = card_move.owner_id
-    player = db.query(Player).filter(Player.id == player_id).first()
-    game_id = player.game_id
-    
-    # Save the current board state
-    save_board(game_id, player_id, db)
-    
-    # Handle the piece switch logic
-    switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, db)
-
-    #emit board
-
-    #?
     return 200
 
 def save_board(game_id: int, player_id: int, db: Session):
-    # Retrieve the current board state
-    state_data = get_board(game_id, db)
-    
-    # Determine the state_id (1 to 3)
-    existing_states = db.query(ParallelBoard).filter_by(board_id=game_id).order_by(ParallelBoard.state_id).all()
-    if existing_states:
-        latest_state_id = (existing_states[-1].state_id % 3) + 1
-    else:
-        latest_state_id = 1
-    
-    # Create and save the ParallelBoard object
-    parallel_board = ParallelBoard(
-        board_id=game_id,
-        player_id=player_id,
-        state_id=latest_state_id,
-        state_data=state_data
-    )
-    db.add(parallel_board)
-    db.commit()
+    try:
+        state_data = get_board(game_id, db)
+        
+        existing_states = db.query(ParallelBoard).filter_by(board_id=game_id).order_by(ParallelBoard.state_id).all()
+        if existing_states:
+            latest_state_id = (existing_states[-1].state_id % 3) + 1
+        else:
+            latest_state_id = 1
+        
+        parallel_board = ParallelBoard(
+            board_id=game_id,
+            player_id=player_id,
+            state_id=latest_state_id,
+            state_data=state_data
+        )
+        db.add(parallel_board)
+        db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise RuntimeError(f"Error saving board state: {e}")
 
 def switch_pieces(piece_id1: int, piece_id2: int, db: Session):
-    piece1 = db.query(SquarePiece).filter(SquarePiece.id == piece_id1).first()
-    piece2 = db.query(SquarePiece).filter(SquarePiece.id == piece_id2).first()
-    
-    if piece1 and piece2:
+    try:
+        piece1 = db.query(SquarePiece).filter(SquarePiece.id == piece_id1).first()
+        piece2 = db.query(SquarePiece).filter(SquarePiece.id == piece_id2).first()
+        
+        if not piece1:
+            raise ValueError("Piece 1 not found")
+        if not piece2:
+            raise ValueError("Piece 2 not found")
+
         piece1.row, piece2.row = piece2.row, piece1.row
         piece1.column, piece2.column = piece2.column, piece1.column
         db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise RuntimeError(f"Error switching pieces: {e}")
+    except ValueError as e:
+        raise RuntimeError(f"Validation error: {e}")

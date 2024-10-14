@@ -1,6 +1,7 @@
 from app.db.db import Player, Game
 from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.models.broadcast import Broadcast
+from app.services.board import get_board
 from app.routers import sio_game as sio
 
 async def disconnect_player_socket(player_id, game_id):
@@ -45,3 +46,12 @@ async def emit_winner(game_id, winner_id, db):
 
 
     await broadcast.broadcast(sio.sio_game, game_id, 'winner', WinnerSchema(idWinner=winner.id, nameWinner=winner.name).model_dump())
+
+async def emit_board(game_id, db):
+    """
+    Emits the current board.
+    """
+    channel = Broadcast()
+    board = get_board(game_id, db)
+    
+    await channel.broadcast(sio.sio_game, game_id, 'board', board)
