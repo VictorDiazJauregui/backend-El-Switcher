@@ -3,8 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
-from app.db.db import Base, get_db, Board, Color, SquarePiece, CardMove, Player, Game , Turn, GameStatus
-from app.schemas.move import MakeMoveSchema
+from app.db.db import Base, get_db, Board, Color, SquarePiece, CardMove, Player, Game , Turn, GameStatus, MoveType
 
 # Setup the test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -104,7 +103,7 @@ def create_player(db, game_id):
     return player
 
 def create_card_move(db, player_id):
-    card_move = CardMove(owner_id=player_id, type_move="edit")
+    card_move = CardMove(owner_id=player_id, move=MoveType.MOV_1)
     db.add(card_move)
     db.commit()
     db.refresh(card_move)
@@ -125,7 +124,7 @@ def test_make_move(test_client):
         squarePieceId1=piece1.id
         squarePieceId2=piece2.id
         
-        response = test_client.post(f"/game/{game.id}/move", json={
+        response = test_client.post(f"/game/{game.id}/move/{player.id}", json={
             "movementCardId": movementCardId,
             "squarePieceId1": squarePieceId1,
             "squarePieceId2": squarePieceId2

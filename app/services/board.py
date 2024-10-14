@@ -49,17 +49,14 @@ def get_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
                 column=piece.column
             ).model_dump() for piece in square_pieces]
 
-async def make_move(move_data: MakeMoveSchema, db: Session):
+async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db: Session):
     try:
         card_move = db.query(CardMove).filter(CardMove.id == move_data.movementCardId).first()
         if not card_move:
             raise ValueError("Invalid movementCardId")
-
-        player_id = card_move.owner_id
         player = db.query(Player).filter(Player.id == player_id).first()
         if not player:
             raise ValueError("Player not found")
-        game_id = player.game_id
 
         save_board(game_id, player_id, db)
         switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, db)  
