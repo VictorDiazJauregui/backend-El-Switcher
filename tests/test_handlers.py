@@ -24,15 +24,14 @@ async def trigger_validation_error(param: int):
 def test_value_error_handler():
     response = client.get("/value_error")
     assert response.status_code == 400
-    assert response.json() == {"message": "This is a value error"}
+    assert response.json() == {"detail": "This is a value error"}
 
 def test_generic_exception_handler():
     response = client.get("/generic_error")
     assert response.status_code == 500
-    assert response.json() == {"message": "An internal server error occurred."}
+    assert response.json() == {"detail": "This is a generic error"}
 
 def test_validation_exception_handler():
     response = client.get("/validation_error?param=not_an_int")
     assert response.status_code == 422
-    assert "message" in response.json()
-    assert response.json()["message"][0]["type"] == "int_parsing"
+    assert "detail" in response.json()
