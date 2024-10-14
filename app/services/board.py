@@ -40,12 +40,13 @@ def create_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
 
     return list_of_pieces
 
-def get_board_repository(game_id: int, db: Session): # capaz que a futuro hacemos lo de repositories?...
+def get_pieces(game_id: int, db: Session):
     return db.query(SquarePiece).filter(SquarePiece.board_id == game_id).all()
 
 def get_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
-    square_pieces = get_board_repository(game_id, db)
+    square_pieces = get_pieces(game_id, db)
     return [PieceResponseSchema(
+                squarePieceId=piece.squarePieceId,
                 color=piece.color.name,  # Enum to string
                 row=piece.row,
                 column=piece.column
