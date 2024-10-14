@@ -1,0 +1,97 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Paso 1: Checkout del repositorio
+    - name: Checkout del repositorio
+      uses: actions/checkout@v2
+
+    # Paso 2: Cachear volumen Docker para MySQL
+    - name: Cachear volumen Docker para MySQL
+      uses: actions/cache@v2
+      with:
+        path: /var/lib/docker/volumes/mysql-db-data
+        key: ${{ runner.os }}-docker-volume-mysql-db-data
+
+    # Paso 3: Ejecutar contenedor MySQL
+    - name: Ejecutar contenedor MySQL
+      run: docker run -d -p 33061:3306 --name mysql-db -e MYSQL_ROOT_PASSWORD=secret --mount src=mysql-db-data,dst=/var/lib/mysql mysql
+
+    # Paso 4: Esperar a que MySQL inicie
+    - name: Esperar a que MySQL inicie
+      run: |
+        for i in {30..0}; do
+          if docker exec mysql-db mysql -uroot -psecret -e "SELECT 1" &> /dev/null; then
+            break
+          fi
+          echo 'MySQL no está listo, esperando...'
+          sleep 1
+        done
+
+    # Paso 5: Crear base de datos switcher
+    - name: Crear base de datos switcher
+      run: docker exec -i mysql-db mysql -uroot -psecret -e "CREATE DATABASE IF NOT EXISTS switcher;"
+
+    # Paso 6: Configurar Python 3.12
+    - name: Configurar Python 3.12
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.12
+
+    # Paso 7: Cachear entorno virtual y dependencias de pip
+    - name: Cachear entorno virtual y dependencias de pip
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/pip
+          .venv
+        key: ${{ runner.os }}-pip-venv-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-venv-
+
+    # Paso 8: Instalar virtualenv y crear entorno virtual
+    - name: Instalar virtualenv y crear entorno virtual
+      run: |
+        pip install virtualenv
+        if [ ! -d ".venv" ]; then
+          virtualenv -p python3.12 .venv
+        fi
+
+    # Paso 9: Activar entorno virtual e instalar dependencias
+    - name: Activar entorno virtual e instalar dependencias
+      run: |
+        source .venv/bin/activate
+        pip install -r requirements.txt
+
+    # Paso 10: Corregir importación de pytest_verbose_parametrize
+    - name: Corregir importación de pytest_verbose_parametrize
+      run: sed -i 's/from collections import Iterable/from collections.abc import Iterable/' .venv/lib/python3.12/site-packages/pytest_verbose_parametrize.py
+
+    # Paso 11: Crear tablas en la base de datos de prueba
+    - name: Crear tablas en la base de datos de prueba
+      run: |
+        source .venv/bin/activate
+        python -c "from app.db.db import Base, engine; Base.metadata.create_all(bind=engine)"
+
+    # Paso 12: Ejecutar pruebas con pytest
+    - name: Ejecutar pruebas con pytest
+      run: |
+        source .venv/bin/activate
+        pytest .
+        deactivate
