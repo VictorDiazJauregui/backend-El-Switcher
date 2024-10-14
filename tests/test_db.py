@@ -40,10 +40,6 @@ def test_get_db():
         pass  # Expected behavior, session closed successfully
 
     # Clean up
-    # Eliminate dependent records in card_figs first
-    db.query(CardFig).filter(CardFig.owner_id == retrieved_record.id).delete()
-    db.commit()
-
     # Now delete the test record in players
     db.query(Player).filter(Player.id == retrieved_record.id).delete()
     db.commit()
