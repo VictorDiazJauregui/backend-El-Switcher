@@ -137,6 +137,7 @@ class CardMove(Base):
     game_id = Column(Integer, ForeignKey('games.id'))
     owner_id = Column(Integer, ForeignKey('players.id'))
     move = Column(Enum(MoveType), nullable=False)
+    played = Column(Boolean, default=False)
 
     owner = relationship("Player", back_populates="card_moves")
     game = relationship("Game", back_populates="cardmoves")
