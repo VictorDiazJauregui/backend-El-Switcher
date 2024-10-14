@@ -9,7 +9,7 @@ from app.schemas.board import PieceResponseSchema
 from app.db.db import Game, Player, GameStatus, Turn, CardMove, CardFig, MoveType, FigureType, Board, SquarePiece, Color
 import random
 from app.services import lobby_events, game_events, game_list_events
-from app.services.cards import assign_figure_cards
+from app.services.cards import assign_figure_cards, assign_movement_cards
 
 
 
@@ -136,6 +136,7 @@ async def end_turn(game_id: int, player_id: int, db: Session):
 
     # Deal new cards if needed
     assign_figure_cards(game_id, player_id, db)
+    assign_movement_cards(game_id, player_id, db)
     await game_events.emit_cards(game_id, player_id, db)
 
 
