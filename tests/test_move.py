@@ -235,7 +235,6 @@ def test_move_types_fail(test_client, move_type, pieces, expected):
             })
             assert expected == True
         except Exception as e:
-            print(e)
             assert expected == False
                 
     finally:
