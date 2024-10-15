@@ -162,7 +162,7 @@ test_cases = {
         "fail": (generate_square_piece(0, 0), generate_square_piece(1, 1))
     },
     MoveType.MOV_7: { #CRUCE EN LINEA AL LATERAL
-        "pass": (generate_square_piece(0, 0), generate_square_piece(0, 4)),
+        "pass": (generate_square_piece(0, 2), generate_square_piece(0, 5)),
         "fail": (generate_square_piece(0, 0), generate_square_piece(1, 1))
     }
 }
