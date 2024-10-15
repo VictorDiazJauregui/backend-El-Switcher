@@ -65,6 +65,7 @@ async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db:
         save_board(game_id, player_id, db)
         switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, db)  
         
+        await game_events.emit_cards(game_id, player_id, db)
         await game_events.emit_board(game_id, db)
         
     except SQLAlchemyError as e:
