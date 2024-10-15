@@ -15,3 +15,4 @@ class CardMoveResponseSchema(BaseModel):
     movementcardId: int
     type: str
     moveType: int
+    played: bool
