@@ -188,6 +188,6 @@ class SquarePiece(Base):
     row = Column(Integer, nullable=False)
     column = Column(Integer, nullable=False)
     board_id = Column(Integer, ForeignKey('boards.game_id'))
-    partial_id = Column(Integer, ForeignKey('parallel_boards.state_id'),  nullable=True)
+    partial_id = Column(Integer, nullable=True)
 
     board = relationship("Board", back_populates="square_pieces")
