@@ -154,7 +154,7 @@ test_cases = {
         "fail": (generate_square_piece(0, 0), generate_square_piece(2, 2))
     },
     MoveType.MOV_5: { #CRUCE EN L A LA IZQUIERDA CON DOS ESPACIOS
-        "pass": (generate_square_piece(0, 1), generate_square_piece(2, 0)),
+        "pass": (generate_square_piece(2, 1), generate_square_piece(0, 0)),
         "fail": (generate_square_piece(0, 0), generate_square_piece(1, 1))
     },
     MoveType.MOV_6: { #CRUCE EN L A LA DERECHA CON DOS ESPACIOS
@@ -162,7 +162,7 @@ test_cases = {
         "fail": (generate_square_piece(0, 0), generate_square_piece(1, 1))
     },
     MoveType.MOV_7: { #CRUCE EN LINEA AL LATERAL
-        "pass": (generate_square_piece(0, 0), generate_square_piece(0, 5)),
+        "pass": (generate_square_piece(0, 0), generate_square_piece(0, 4)),
         "fail": (generate_square_piece(0, 0), generate_square_piece(1, 1))
     }
 }

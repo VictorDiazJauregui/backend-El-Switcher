@@ -102,12 +102,12 @@ def switch_pieces(piece_id1: int, piece_id2: int, move_type:MoveType, db: Sessio
         if not piece2:
             raise ValueError("Piece 2 not found")
         
-        if not validate_move(piece1, piece2, move_type):
+        if validate_move(piece1, piece2, move_type):
+            piece1.row, piece2.row = piece2.row, piece1.row
+            piece1.column, piece2.column = piece2.column, piece1.column
+            db.commit()
+        else:
             raise ValueError("Invalid move")
-
-        piece1.row, piece2.row = piece2.row, piece1.row
-        piece1.column, piece2.column = piece2.column, piece1.column
-        db.commit()
     except SQLAlchemyError as e:
         db.rollback()
         raise RuntimeError(f"Error switching pieces: {e}")
@@ -118,7 +118,7 @@ def validate_move(piece1, piece2, move_type: MoveType):
     row_diff = abs(piece1.row - piece2.row)
     col_diff = abs(piece1.column - piece2.column)
 
-    col_rdiff = piece1.column - piece2.column
+    row_rdiff = piece1.row - piece2.row
 
     if move_type == MoveType.MOV_1:
         return row_diff == 2 and col_diff == 2
@@ -129,9 +129,9 @@ def validate_move(piece1, piece2, move_type: MoveType):
     elif move_type == MoveType.MOV_4:
         return row_diff == 1 and col_diff == 1
     elif move_type == MoveType.MOV_5:
-        return (row_diff == 2 and col_rdiff == 1) or (row_diff == 1 and col_rdiff == 2)
+        return ((row_rdiff == 2 and col_diff == 1) or (row_rdiff == 1 and col_diff == 2))
     elif move_type == MoveType.MOV_6:
-        return (row_diff == 2 and col_rdiff == -1) or (row_diff == 1 and col_rdiff == -2)
+        return ((row_rdiff == -2 and col_diff == 1) or (row_rdiff == -1 and col_diff == 2))
     elif move_type == MoveType.MOV_7:
-        return row_diff == 0 or col_diff == 0
+        return row_diff == 4 or col_diff == 4
     return False
