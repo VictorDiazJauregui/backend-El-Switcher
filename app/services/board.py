@@ -67,6 +67,7 @@ async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db:
         
         await game_events.emit_cards(game_id, player_id, db)
         await game_events.emit_board(game_id, db)
+        await game_events.emit_found_figures(game_id, db)
         
     except SQLAlchemyError as e:
         db.rollback()
