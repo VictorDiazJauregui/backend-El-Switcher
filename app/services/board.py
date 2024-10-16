@@ -138,5 +138,9 @@ def validate_move(piece1, piece2, move_type: MoveType):
     elif move_type == MoveType.MOV_6:
         return ((row_rdiff == -2 and col_diff == 1) or (row_rdiff == -1 and col_diff == 2))
     elif move_type == MoveType.MOV_7:
-        return ((piece2.row == 0 or 5) and piece1.column == piece2.column) or ((piece2.column == 0 or 5) and piece1.row == piece2.row)
+            return (
+                (piece2.row == 0 or piece2.row == 5) and piece1.column == piece2.column
+            ) or ((piece2.column == 0 or piece2.column == 5) and piece1.row == piece2.row
+            ) or ((piece1.row == 0 or piece1.row == 5) and piece1.column == piece2.column
+            ) or ((piece1.column == 0 or piece1.column == 5) and piece1.row == piece2.row)
     return False
