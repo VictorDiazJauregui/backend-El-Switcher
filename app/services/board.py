@@ -124,20 +124,23 @@ def validate_move(piece1, piece2, move_type: MoveType):
     col_diff = abs(piece1.column - piece2.column)
 
     row_rdiff = piece1.row - piece2.row
+    col_rdiff = piece1.column - piece2.column
 
-    if move_type == MoveType.MOV_1:
+    if move_type == MoveType.MOV_1: # CRUCE DIAGONAL CON UN ESPACIO
         return row_diff == 2 and col_diff == 2
-    elif move_type == MoveType.MOV_2:
+    elif move_type == MoveType.MOV_2: # CRUCE EN LINEA CON UN ESPACIOS
         return (row_diff == 2 and col_diff == 0) or (row_diff == 0 and col_diff == 2)
-    elif move_type == MoveType.MOV_3:
+    elif move_type == MoveType.MOV_3: # CRUCE EN LINEA CONTIGUO
         return (row_diff == 1 and col_diff == 0) or (row_diff == 0 and col_diff == 1)
-    elif move_type == MoveType.MOV_4:
+    elif move_type == MoveType.MOV_4: # CRUCE DIAGONAL CONTIGUO
         return row_diff == 1 and col_diff == 1
-    elif move_type == MoveType.MOV_5:
-        return ((row_rdiff == 2 and col_diff == 1) or (row_rdiff == 1 and col_diff == 2))
-    elif move_type == MoveType.MOV_6:
-        return ((row_rdiff == -2 and col_diff == 1) or (row_rdiff == -1 and col_diff == 2))
-    elif move_type == MoveType.MOV_7:
+    elif move_type == MoveType.MOV_5: # CRUCE EN L A LA IZQUIERDA CON DOS ESPACIOS)
+        return ((row_rdiff == -2 and col_rdiff == 1) or (row_rdiff == 2 and col_rdiff == -1)
+                ) or ((row_rdiff == 1 and col_rdiff == 2) or (row_rdiff == -1 and col_rdiff == -2))
+    elif move_type == MoveType.MOV_6: # CRUCE EN L A LA DERECHA CON DOS ESPACIOS
+        return ((row_rdiff == -2 and col_rdiff == -1) or (row_rdiff == 2 and col_rdiff == 1)
+                ) or ((row_rdiff == 1 and col_rdiff == -2) or (row_rdiff == -1 and col_rdiff == 2))
+    elif move_type == MoveType.MOV_7: # CRUCE EN LINEA AL LATERAL
             return (
                 (piece2.row == 0 or piece2.row == 5) and piece1.column == piece2.column
             ) or ((piece2.column == 0 or piece2.column == 5) and piece1.row == piece2.row
