@@ -110,3 +110,22 @@ def switch_pieces(piece_id1: int, piece_id2: int, db: Session):
         raise RuntimeError(f"Error switching pieces: {e}")
     except ValueError as e:
         raise RuntimeError(f"Validation error: {e}")
+    
+async def cancel_move(game_id: int, player_id: int, db: Session):
+    try:
+        parallel_board = db.query(ParallelBoard).filter_by(board_id=game_id).order_by(ParallelBoard.state_id.desc()).first()
+        if not parallel_board:
+            raise ValueError("No board state to revert")
+
+        previous_states = db.query(ParallelBoard).filter_by(board_id=game_id, state_id=parallel_board.state_id).all()
+        for state in previous_states:
+            db.delete(state)
+        db.commit()
+
+        from app.services.game_events import emit_board
+        await emit_board(game_id, db)
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise RuntimeError(f"Error canceling move: {e}")
+    except ValueError as e:
+        raise RuntimeError(f"Validation error: {e}")
