@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.db.db import get_db, Base
-from app.db.db import Player  # Import the actual model
+from app.db.db import Player, CardFig  # Import the actual models
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -40,5 +40,6 @@ def test_get_db():
         pass  # Expected behavior, session closed successfully
 
     # Clean up
-    db.query(Player).delete()  # Delete the test record
+    # Now delete the test record in players
+    db.query(Player).filter(Player.id == retrieved_record.id).delete()
     db.commit()

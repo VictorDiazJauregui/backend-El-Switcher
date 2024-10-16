@@ -1,7 +1,7 @@
 from app.db.db import Player, Game
 from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.models.broadcast import Broadcast
-from app.services.cards import fetch_figure_cards, deal_movement_cards
+from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board
 from app.routers import sio_game as sio
 
@@ -52,7 +52,7 @@ async def emit_cards(game_id, player_id, db):
     channel = Broadcast()
 
     total_figure_cards = fetch_figure_cards(game_id, db)
-    player_move_cards = deal_movement_cards(game_id, player_id, db)
+    player_move_cards = fetch_movement_cards(player_id, db)
 
     await channel.broadcast(sio=sio.sio_game, game_id=game_id, event='figure_cards', data=total_figure_cards)
     await channel.send_to_player(sio=sio.sio_game, player_id=player_id, event='movement_cards', data=player_move_cards)
@@ -65,3 +65,22 @@ async def emit_board(game_id, db):
     board = get_board(game_id, db)
     
     await channel.broadcast(sio.sio_game, game_id, 'board', board)
+
+async def emit_opponents_total_mov_cards(game_id, db):
+    """
+    Emits the number of each user's movement cards that have not been played
+    """
+    channel = Broadcast()
+
+    players = db.query(Player).filter(Player.game_id == game_id).all()
+
+    result = []
+
+    for player in players:
+        visible_mov_cards = sum(1 for card in player.card_moves if not card.played)
+        result.append({
+            "playerId": player.id,
+            "totalMovCards": visible_mov_cards
+        })
+    
+    await channel.broadcast(sio.sio_game, game_id, 'opponents_total_mov_cards', result)

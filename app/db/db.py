@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, Enum, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Enum, ForeignKey, Text
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from contextlib import contextmanager
 import enum
@@ -64,12 +64,12 @@ class FigureType(enum.Enum):
 
 
 class MoveType(enum.Enum):
-    MOV_1 = (1, "CRUCE EN LINEA CONTIGUO")
+    MOV_1 = (1, "CRUCE DIAGONAL CON UN ESPACIO")
     MOV_2 = (2, "CRUCE EN LINEA CON UN ESPACIO")
-    MOV_3 = (3, "CRUCE DIAGONAL CONTIGUO")
-    MOV_4 = (4, "CRUCE DIAGONAL CON UN ESPACIO")
-    MOV_5 = (5, "CRUCE EN L A LA DERECHA CON DOS ESPACIOS")
-    MOV_6 = (6, "CRUCE EN L A LA IZQUIERDA CON DOS ESPACIOS")
+    MOV_3 = (3, "CRUCE EN LINEA CONTIGUO")
+    MOV_4 = (4, "CRUCE DIAGONAL CONTIGUO")
+    MOV_5 = (5, "CRUCE EN L A LA IZQUIERDA CON DOS ESPACIOS")
+    MOV_6 = (6, "CRUCE EN L A LA DERECHA CON DOS ESPACIOS")
     MOV_7 = (7, "CRUCE EN LINEA AL LATERAL")
 
 class Color(enum.Enum):
@@ -112,6 +112,7 @@ class Player(Base):
     game = relationship("Game", back_populates="players")
     card_moves = relationship("CardMove", back_populates="owner")
     card_figs = relationship("CardFig", back_populates="owner")
+    parallel_boards = relationship("ParallelBoard", back_populates="player")
 
 #    def join():
 #    def leave():
@@ -125,9 +126,24 @@ class Board(Base):
     
     game = relationship("Game", back_populates="board")
     square_pieces = relationship("SquarePiece", back_populates="board")
+    parallel_boards = relationship("ParallelBoard", back_populates="board")
 
 #    def update_color():
 #    def mover_fichas():
+
+# Modelo ParallelBoard
+class ParallelBoard(Base):
+    __tablename__ = 'parallel_boards'
+    
+    id = Column(Integer, primary_key=True) # This is the parallelboard unique id
+    board_id = Column(Integer, ForeignKey('boards.game_id')) # Same id as board and game
+    player_id = Column(Integer, ForeignKey('players.id')) # Player who made the move
+    state_id = Column(Integer, nullable=False)  # This is the state_id, abrazo.
+    # state_id = 1-3, 1 = Inicial, 2 = Primer movimiento, 3 = Segundo movimiento
+    state_data = Column(Text, nullable=False)  # JSON string
+
+    board = relationship("Board", back_populates="parallel_boards")
+    player = relationship("Player", back_populates="parallel_boards")
 
 # Modelo CardMove
 class CardMove(Base):
@@ -137,6 +153,7 @@ class CardMove(Base):
     game_id = Column(Integer, ForeignKey('games.id'))
     owner_id = Column(Integer, ForeignKey('players.id'))
     move = Column(Enum(MoveType), nullable=False)
+    played = Column(Boolean, default=False)
 
     owner = relationship("Player", back_populates="card_moves")
     game = relationship("Game", back_populates="cardmoves")
@@ -171,7 +188,6 @@ class SquarePiece(Base):
     row = Column(Integer, nullable=False)
     column = Column(Integer, nullable=False)
     board_id = Column(Integer, ForeignKey('boards.game_id'))
+    partial_id = Column(Integer, nullable=True)
 
     board = relationship("Board", back_populates="square_pieces")
-
-#    def change_pos():

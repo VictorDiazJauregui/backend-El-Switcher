@@ -3,14 +3,15 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.db.db import Base, engine
-from pydantic import ValidationError
 import socketio
 
-from app.routers import game, join, start, end_turn, leave, figures
+
+from app.routers import game, join, start, end_turn, leave, figures, move 
+
 from app.routers.sio_game import sio_game
 from app.routers.sio_lobby import sio_lobby
 from app.routers.sio_game_list import sio_game_list
-from app.errors.handlers import value_error_handler, generic_exception_handler, validation_exception_handler
+from app.errors.handlers import value_error_handler, runtime_error_handler, generic_exception_handler, validation_exception_handler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,9 +23,9 @@ app = FastAPI(lifespan=lifespan)
 
 # Register error handlers
 app.add_exception_handler(ValueError, value_error_handler)
+app.add_exception_handler(RuntimeError, runtime_error_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
-app.add_exception_handler(ValidationError, validation_exception_handler)
 
 # CORS configuration
 # Configuración no implementada, ejemplo:
@@ -58,6 +59,7 @@ app.include_router(join.router)
 app.include_router(start.router)
 app.include_router(end_turn.router)
 app.include_router(leave.router)
+app.include_router(move.router)
 
 
 # Register the figures router

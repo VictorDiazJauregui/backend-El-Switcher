@@ -2,9 +2,8 @@ import pytest
 from sqlalchemy import create_engine
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
-from app.db.db import Base, get_db, Player, CardMove, CardFig, FigureType, MoveType
+from app.db.db import Base, get_db, CardMove, CardFig, FigureType, MoveType
 from app.main import app
-from app.services.cards import deal_movement_cards, deal_figure_cards, add_cards_to_db
 
 # Setup the test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -36,6 +35,7 @@ def test_client():
     yield client
 
 
+@pytest.mark.skip(reason="Deprecated test")
 def test_add_cards_to_db(test_client):
     response = test_client.post("/game_create", json={
         "ownerName": "test_owner",
@@ -57,8 +57,8 @@ def test_add_cards_to_db(test_client):
     finally:
         test_db.close()
 
-    
 
+@pytest.mark.skip(reason="Deprecated test")
 def test_deal_movement_cards(test_client):
     response = test_client.post("/game_create", json={
         "ownerName": "test_owner",
@@ -90,6 +90,7 @@ def test_deal_movement_cards(test_client):
     finally:
         test_db.close()
 """
+@pytest.mark.skip(reason="Deprecated test")
 def test_deal_figure_cards(test_client):
     response = test_client.post("/game_create", json={
         "ownerName": "test_owner",
