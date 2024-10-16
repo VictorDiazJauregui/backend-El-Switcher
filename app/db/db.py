@@ -78,6 +78,9 @@ class Color(enum.Enum):
     BLUE = 'Blue'
     YELLOW = 'Yellow'
 
+
+
+
 # Modelo Game
 class Game(Base):
     __tablename__ = 'games'
@@ -95,9 +98,6 @@ class Game(Base):
     cardmoves = relationship("CardMove", back_populates="game")
     cardfigs = relationship("CardFig", back_populates="game")
 
-#    def end_game():
-#    def next_turn():
-
     
 
 # Modelo Player
@@ -114,8 +114,7 @@ class Player(Base):
     card_figs = relationship("CardFig", back_populates="owner")
     parallel_boards = relationship("ParallelBoard", back_populates="player")
 
-#    def join():
-#    def leave():
+
 
 # Modelo Board
 class Board(Base):
@@ -128,8 +127,7 @@ class Board(Base):
     square_pieces = relationship("SquarePiece", back_populates="board")
     parallel_boards = relationship("ParallelBoard", back_populates="board")
 
-#    def update_color():
-#    def mover_fichas():
+
 
 # Modelo ParallelBoard
 class ParallelBoard(Base):
@@ -145,6 +143,8 @@ class ParallelBoard(Base):
     board = relationship("Board", back_populates="parallel_boards")
     player = relationship("Player", back_populates="parallel_boards")
 
+
+
 # Modelo CardMove
 class CardMove(Base):
     __tablename__ = 'card_moves'
@@ -158,7 +158,7 @@ class CardMove(Base):
     owner = relationship("Player", back_populates="card_moves")
     game = relationship("Game", back_populates="cardmoves")
 
-#    def take():
+
 
 # Modelo CardFig
 class CardFig(Base):
@@ -167,6 +167,7 @@ class CardFig(Base):
     id = Column(Integer, primary_key=True)
     game_id = Column(Integer, ForeignKey('games.id'))
     owner_id = Column(Integer, ForeignKey('players.id'))
+    in_hand = Column(Boolean, default=False)
     figure = Column(Enum(FigureType), nullable=False)
     block = Column(Boolean, default=False)
     valid = Column(Boolean, default=True)
@@ -174,10 +175,7 @@ class CardFig(Base):
     owner = relationship("Player", back_populates="card_figs")
     game = relationship("Game", back_populates="cardfigs")
 
-#    def take():
-#    def block():
-#    def unblock():
-#    def check():
+
 
 # Modelo SquarePiece
 class SquarePiece(Base):
