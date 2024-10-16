@@ -139,7 +139,8 @@ def fetch_movement_cards(player_id: int, db: Session):
             dealt_cards.append(CardMoveResponseSchema(
                 movementcardId=card.id,
                 type=card.move.value[1],
-                moveType=card.move.value[0]
+                moveType=card.move.value[0],
+            played=card.played
             ).model_dump())
 
 

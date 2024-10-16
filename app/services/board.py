@@ -3,6 +3,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.schemas.board import PieceResponseSchema
 from app.schemas.move import MakeMoveSchema
 from app.db.db import Board, Color, SquarePiece, ParallelBoard, CardMove, Player, MoveType
+from app.services import game_events
+
 from typing import List
 import random
 import json
@@ -54,15 +56,17 @@ async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db:
         card_move = db.query(CardMove).filter(CardMove.id == move_data.movementCardId).first()
         if not card_move:
             raise ValueError("Invalid movementCardId")
+        card_move.played = True
+
         player = db.query(Player).filter(Player.id == player_id).first()
         if not player:
             raise ValueError("Player not found")
 
         state_id = save_board(game_id, player_id, db)
         switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, state_id, card_move.move, db)
-
-        from app.services.game_events import emit_board
-        await emit_board(game_id, db)
+        
+        await game_events.emit_cards(game_id, player_id, db)
+        await game_events.emit_board(game_id, db)
         
     except SQLAlchemyError as e:
         db.rollback()
