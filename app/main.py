@@ -5,7 +5,9 @@ from contextlib import asynccontextmanager
 from app.db.db import Base, engine
 import socketio
 
-from app.routers import game, join, start, end_turn, leave, move
+
+from app.routers import game, join, start, end_turn, leave, figures, move 
+
 from app.routers.sio_game import sio_game
 from app.routers.sio_lobby import sio_lobby
 from app.routers.sio_game_list import sio_game_list
@@ -58,6 +60,12 @@ app.include_router(start.router)
 app.include_router(end_turn.router)
 app.include_router(leave.router)
 app.include_router(move.router)
+
+
+# Register the figures router
+app.include_router(figures.router)
+
+
 
 # Mount the Socket.IO app
 socket_app = socketio.ASGIApp(sio_game, other_asgi_app=app, socketio_path="/game/ws")
