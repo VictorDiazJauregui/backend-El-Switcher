@@ -266,7 +266,7 @@ class fig18(Figure):
 
 class fig19(Figure):
     def __init__(self):
-        type_name = "Figura Facil 4"
+        type_name = "Figura Fácil 4"
         matrix_figure = np.array(
             [
                 ["*", "*", "*"],
@@ -274,6 +274,8 @@ class fig19(Figure):
             ]
         )
         super().__init__(type_name, matrix_figure)
+
+
 
 
 
