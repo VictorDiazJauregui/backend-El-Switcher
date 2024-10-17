@@ -83,3 +83,13 @@ async def emit_opponents_total_mov_cards(game_id, db):
         })
     
     await channel.broadcast(sio.sio_game, game_id, 'opponents_total_mov_cards', result)
+
+async def emit_found_figures(game_id, db):
+    """
+    Emits the figures found in the board
+    """
+    channel = Broadcast()
+
+    response = figures_event(game_id, db)
+
+    await channel.broadcast(sio.sio_game, game_id, 'found_figures', response)

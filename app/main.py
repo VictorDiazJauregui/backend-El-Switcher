@@ -17,6 +17,7 @@ from app.routers.sio_game import sio_game
 from app.routers.sio_lobby import sio_lobby
 from app.routers.sio_game_list import sio_game_list
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup event
@@ -64,10 +65,10 @@ app.include_router(start.router)
 app.include_router(end_turn.router)
 app.include_router(leave.router)
 app.include_router(move.router)
-
-
-# Register the figures router
 app.include_router(figures.router)
+
+#incluye el router de validate_figure
+app.include_router(validate_figure.router)
 
 
 
