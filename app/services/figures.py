@@ -10,7 +10,7 @@ from app.db.db import Game, Player, GameStatus, Turn, CardMove, CardFig, MoveTyp
 import random
 from app.services import lobby_events, game_events, game_list_events
 from app.services.cards import assign_figure_cards
-from app.models.figures import get_all_figures
+from app.models.figures import get_all_figures, get_figure_by_id
 from collections import defaultdict
 import numpy as np
 
@@ -162,6 +162,9 @@ def convert_to_serializable(figures_by_type: defaultdict) -> list:
 
 
 def figures_event(game_id: int, db: Session) -> list:
+    """
+    usa
+    """
     #test de funciones anteriormente nombradas
     matrix = get_matrix(game_id, db)
     figures = extract_figures_from_board(matrix)

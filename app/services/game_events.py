@@ -3,6 +3,7 @@ from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.models.broadcast import Broadcast
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board
+from app.services.figures import figures_event
 from app.routers import sio_game as sio
 
 async def disconnect_player_socket(player_id, game_id):
@@ -84,3 +85,13 @@ async def emit_opponents_total_mov_cards(game_id, db):
         })
     
     await channel.broadcast(sio.sio_game, game_id, 'opponents_total_mov_cards', result)
+
+async def emit_found_figures(game_id, db):
+    """
+    Emits the figures found in the board
+    """
+    channel = Broadcast()
+
+    response = figures_event(game_id, db)
+
+    await channel.broadcast(sio.sio_game, game_id, 'found_figures', response)
