@@ -1,12 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from app.services.figures import figures_event
-from app.db.db import Color, get_db
-from fastapi.encoders import jsonable_encoder
-import numpy as np
-
-
-#from app.db.db import get_db
+from app.db.db import get_db
 
 router = APIRouter()
 

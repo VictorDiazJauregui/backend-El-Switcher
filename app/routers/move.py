@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
-from app.schemas.move import MakeMoveSchema
 from sqlalchemy.orm import Session
+
+from app.schemas.move import MakeMoveSchema
 from app.db.db import get_db
 from app.services.board import make_move
 
