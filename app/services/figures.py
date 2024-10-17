@@ -129,7 +129,7 @@ def extract_figures_from_board(board: np.ndarray) -> dict:
     for component in all_connected_components:
         for figure in get_all_figures():
             if figure.matches_any_rotation(component):
-                figures_by_type[figure.type_name].append(component)
+                figures_by_type[figure].append(component)
             
             
 
@@ -152,7 +152,7 @@ def convert_to_serializable(figures_by_type: defaultdict) -> list:
                         serializable_components.append({
                             "color": color.name,  # Convertimos el objeto Color a su representación en cadena
                             "row": r,
-                            "col": c
+                            "column": c
                         })
         # Agregamos la lista de la figura a la lista final
         serializable_figures.append(serializable_components)
