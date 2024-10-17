@@ -4,6 +4,7 @@ from app.routers import sio_game as sio
 from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board
+from app.services.figures import figures_event
 
 async def disconnect_player_socket(player_id, game_id):
     broadcast = Broadcast()

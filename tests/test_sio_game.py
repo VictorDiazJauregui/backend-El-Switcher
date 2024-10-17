@@ -7,7 +7,8 @@ from .db_setup import (
     client,
     TestingSessionLocal,
     create_game,
-    create_player
+    create_player,
+    add_example_board
 )
 
 @pytest.fixture(scope="module")
@@ -22,7 +23,7 @@ def test_client():
 @patch('app.routers.sio_game.game_events.emit_players_game')
 @patch('app.routers.sio_game.game_events.emit_turn_info')
 @patch('app.routers.sio_game.game_events.emit_opponents_total_mov_cards')
-@patch('app.routers.sio_game.sio_game')
+@patch('app.routers.sio_game.sio_game', new_callable=AsyncMock)
 @patch('app.routers.sio_game.db_context')
 async def test_connect_success(mock_db_context, mock_sio_game,
                                 mock_emit_board, mock_emit_cards,
@@ -34,6 +35,7 @@ async def test_connect_success(mock_db_context, mock_sio_game,
     db = TestingSessionLocal()
     mock_db_context.return_value.__enter__.return_value = db
     game = create_game(db, GameStatus.INGAME)
+    add_example_board(db, game.id)
     player = create_player(db, game.id)
 
     mock_parse_query_string.return_value = (player.id, game.id)
