@@ -62,7 +62,7 @@ async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db:
         if not player:
             raise ValueError("Player not found")
 
-        state_id = save_board(game_id, player_id, db)
+        state_id = save_board(game_id, player_id, card_move.id, db)
         switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, state_id, card_move.move, db)
         
         await game_events.emit_cards(game_id, player_id, db)
@@ -74,7 +74,7 @@ async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db:
     except ValueError as e:
         raise RuntimeError(f"Validation error: {e}")
 
-def save_board(game_id: int, player_id: int, db: Session):
+def save_board(game_id: int, player_id: int, movCard_id: int, db: Session):
     try:
         state_data = json.dumps(get_board(game_id, db))
 
@@ -88,7 +88,8 @@ def save_board(game_id: int, player_id: int, db: Session):
             board_id=game_id,
             player_id=player_id,
             state_id=latest_state_id,
-            state_data=state_data
+            state_data=state_data,
+            move_asociated=movCard_id
         )
         db.add(parallel_board)
         db.commit()
@@ -164,8 +165,28 @@ async def cancel_move(game_id: int, player_id: int, db: Session):
             db.delete(state)
         db.commit()
 
-        from app.services.game_events import emit_board
-        await emit_board(game_id, db)
+        # Reemplazar el board por el parallel board
+        square_pieces = get_pieces(game_id, db)
+        for piece in square_pieces:
+            db.delete(piece)
+        db.commit()
+
+        for piece in json.loads(parallel_board.state_data):
+            square_piece = SquarePiece(
+                color=Color[piece["color"]],
+                row=piece["row"],
+                column=piece["column"],
+                board_id=game_id
+            )
+            db.add(square_piece)
+        db.commit()
+
+        # Devolverle la carta al jugador
+        used_card = db.query(CardMove).filter(CardMove.id == parallel_board.move_asociated, CardMove.owner_id == player_id, CardMove.played == True).first()
+        used_card.played = False
+
+        await game_events.emit_board(game_id, db)
+        await game_events.emit_opponents_total_mov_cards(game_id, db)
     except SQLAlchemyError as e:
         db.rollback()
         raise RuntimeError(f"Error canceling move: {e}")
