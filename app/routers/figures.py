@@ -6,8 +6,6 @@ from fastapi.encoders import jsonable_encoder
 import numpy as np
 
 
-#from app.db.db import get_db
-
 router = APIRouter()
 
 #responde con una matriz de colores

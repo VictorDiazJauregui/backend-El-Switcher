@@ -6,11 +6,12 @@ from app.db.db import Base, engine
 import socketio
 
 
-from app.routers import game, join, start, end_turn, leave, figures, move 
+from app.routers import game, join, start, end_turn, leave, figures, move, validate_figure
 
 from app.routers.sio_game import sio_game
 from app.routers.sio_lobby import sio_lobby
 from app.routers.sio_game_list import sio_game_list
+
 from app.errors.handlers import value_error_handler, runtime_error_handler, generic_exception_handler, validation_exception_handler
 
 @asynccontextmanager
@@ -60,10 +61,10 @@ app.include_router(start.router)
 app.include_router(end_turn.router)
 app.include_router(leave.router)
 app.include_router(move.router)
-
-
-# Register the figures router
 app.include_router(figures.router)
+
+#incluye el router de validate_figure
+app.include_router(validate_figure.router)
 
 
 
