@@ -152,7 +152,7 @@ def convert_to_serializable(figures_by_type: defaultdict) -> list:
                         serializable_components.append({
                             "color": color.name,  # Convertimos el objeto Color a su representación en cadena
                             "row": r,
-                            "col": c
+                            "column": c
                         })
         # Agregamos la lista de la figura a la lista final
         serializable_figures.append(serializable_components)
