@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.orm import Session
+
 from app.services.game_list_events import emit_game_list
 from app.db.db import Game, GameStatus
 

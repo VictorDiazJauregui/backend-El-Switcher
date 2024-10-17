@@ -2,7 +2,6 @@ import os
 
 def cleanup_test_files():
     files_to_delete = [
-        "test_get_db.db",
         "test.db",
         ".coverage"
     ]
