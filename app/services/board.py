@@ -179,16 +179,22 @@ async def cancel_move(game_id: int, player_id: int, db: Session):
                 board_id=game_id
             )
             db.add(square_piece)
-        db.commit()
+
 
         # Devolverle la carta al jugador
-        used_card = db.query(CardMove).filter(CardMove.id == parallel_board.move_asociated, CardMove.owner_id == player_id, CardMove.played == True).first()
+        used_card = db.query(CardMove).filter(CardMove.id == parallel_board.move_asociated,
+                                              CardMove.owner_id == player_id,
+                                              CardMove.played == True,
+                                              CardMove.game_id == game_id).first()
         used_card.played = False
+        db.commit()
+        print("User card played: ", used_card.played)
 
         await game_events.emit_board(game_id, db)
         await game_events.emit_opponents_total_mov_cards(game_id, db)
+        await game_events.emit_cards(game_id, player_id, db)
     except SQLAlchemyError as e:
         db.rollback()
         raise RuntimeError(f"Error canceling move: {e}")
     except ValueError as e:
-        raise RuntimeError(f"Validation error: {e}")
+        raise RuntimeError(f"Validation error: {e}") 
