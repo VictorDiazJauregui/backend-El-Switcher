@@ -1,20 +1,11 @@
-from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
-from typing import List, Dict
-from sqlalchemy import func, select
-
-from app.schemas.game import GameCreateSchema, GameListSchema, ListSchema, StartResponseSchema
-from app.schemas.player import PlayerResponseSchema
-from app.schemas.board import PieceResponseSchema
-from app.db.db import Game, Player, GameStatus, Turn, CardMove, CardFig, MoveType, FigureType, Board, SquarePiece, Color
-import random
-from app.services import lobby_events, game_events, game_list_events
-from app.services.cards import assign_figure_cards
-from app.models.figures import get_all_figures
-from collections import defaultdict
 import numpy as np
+from collections import defaultdict
 
+from sqlalchemy.orm import Session
 
+from app.db.db import Board, Color
+from app.errors.handlers import NotFoundError
+from app.models.figures import get_all_figures
 
 def get_matrix(game_id: int, db: Session) -> np.ndarray:
     """
@@ -22,7 +13,7 @@ def get_matrix(game_id: int, db: Session) -> np.ndarray:
     """
     board = db.query(Board).filter(Board.game_id == game_id).first()
     if board is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Board for game {game_id} does not exist.")
+        raise NotFoundError(f"Board for game {game_id} does not exist.")
     matrix = np.ndarray((6, 6), dtype=Color)
     for i in range(6):
         row = np.ndarray(6, dtype=Color)
