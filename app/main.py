@@ -1,17 +1,21 @@
-from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-from app.db.db import Base, engine
 import socketio
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
+from app.db.db import Base, engine
+from app.errors.handlers import (
+    NotFoundError,
+    ForbiddenError,
+    value_error_handler,
+    generic_exception_handler,
+    not_found_error_handler,
+    forbidden_error_handler)
 from app.routers import game, join, start, end_turn, leave, figures, move 
-
 from app.routers.sio_game import sio_game
 from app.routers.sio_lobby import sio_lobby
 from app.routers.sio_game_list import sio_game_list
-from app.errors.handlers import value_error_handler, runtime_error_handler, generic_exception_handler, validation_exception_handler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,9 +27,9 @@ app = FastAPI(lifespan=lifespan)
 
 # Register error handlers
 app.add_exception_handler(ValueError, value_error_handler)
-app.add_exception_handler(RuntimeError, runtime_error_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(NotFoundError, not_found_error_handler)
+app.add_exception_handler(ForbiddenError, forbidden_error_handler)
 
 # CORS configuration
 # Configuración no implementada, ejemplo:
