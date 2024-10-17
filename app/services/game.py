@@ -1,17 +1,11 @@
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Dict
-from sqlalchemy import func, select
 
-from app.schemas.game import GameCreateSchema, GameListSchema, ListSchema, StartResponseSchema
+from app.db.db import Game, Player, GameStatus, Turn
+from app.errors.handlers import ForbiddenError, NotFoundError
+from app.schemas.game import GameCreateSchema, StartResponseSchema
 from app.schemas.player import PlayerResponseSchema
-from app.schemas.board import PieceResponseSchema
-from app.db.db import Game, Player, GameStatus, Turn, CardMove, CardFig, MoveType, FigureType, Board, SquarePiece, Color
-import random
 from app.services import lobby_events, game_events, game_list_events
 from app.services.cards import assign_figure_cards, assign_movement_cards
-
-
 
 async def create_game(data: GameCreateSchema, db: Session):
     owner_name = data.ownerName
@@ -20,13 +14,13 @@ async def create_game(data: GameCreateSchema, db: Session):
     min_players = data.minPlayers
 
     if not owner_name or not game_name or not max_players or not min_players:
-        raise HTTPException(status_code=400, detail="All fields required")
+        raise ValueError("All fields required")
     if max_players < min_players:
-        raise HTTPException(status_code=400, detail="maxPlayers must be greater than or equal to minPlayers")
+        raise ValueError("maxPlayers must be greater than or equal to minPlayers")
     if min_players < 2 or min_players > 4:
-        raise HTTPException(status_code=400, detail="minPlayers must be at least 2 and at most 4")
+        raise ValueError("minPlayers must be at least 2 and at most 4")
     if max_players < 2 or max_players > 4:
-        raise HTTPException(status_code=400, detail="maxPlayers must be at least 2 and at most 4")
+        raise ValueError("maxPlayers must be at least 2 and at most 4")
 
     db_game = Game(
         name=game_name,
@@ -51,28 +45,26 @@ async def create_game(data: GameCreateSchema, db: Session):
         "ownerId": db_player.id 
     }
 
-
 def get_game(game_id: int, db: Session) -> Game:
     game = db.query(Game).filter(Game.id == game_id).first()
     if game is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Game with id {game_id} does not exist.")
+        raise NotFoundError(f"Game with id {game_id} does not exist.")
     return game
 
 def get_player(player_id: int, db: Session) -> Player:
     player = db.query(Player).filter(Player.id == player_id).first()
     if player is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Player with id {player_id} does not exist.")
+        raise NotFoundError(f"Player with id {player_id} does not exist.")
     return player
-
 
 async def add_player_to_game(player_name: str, game_id: int, db: Session) -> PlayerResponseSchema:
     game = get_game(game_id, db)
     
     if game.status != GameStatus.LOBBY: 
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is already in progress.")
+        raise ValueError(f"Game {game_id} is already in progress.")
     
     if len(game.players) >= game.max_players:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is full.")
+        raise ValueError(f"Game {game_id} is full.")
 
     # Determine the turn for the new player
     turn_order = len(game.players) + 1
@@ -93,9 +85,9 @@ async def add_player_to_game(player_name: str, game_id: int, db: Session) -> Pla
 async def start_game(game_id: int, db: Session) -> StartResponseSchema:
     game = get_game(game_id, db)
     if game.status != GameStatus.LOBBY:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game_id} is already in progress.")
+        raise ValueError(f"Game {game_id} is already in progress.")
     if game.min_players > len(game.players):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not enough players to start the game.")
+        raise ValueError("Not enough players to start the game.")
 
     game.status = GameStatus.INGAME
     db.commit()
@@ -128,9 +120,9 @@ async def end_turn(game_id: int, player_id: int, db: Session):
     player = get_player(player_id, db)
 
     if game.status != GameStatus.INGAME:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Game {game.id} is not in progress.")
+        raise ValueError(f"Game {game.id} is not in progress.")
     if game.turn != player.turn:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"It's not {player.id} turn.")
+        raise ValueError(f"It's not {player.id} turn.")
     
     await pass_turn(game_id, player_id, db)
 
@@ -138,7 +130,6 @@ async def end_turn(game_id: int, player_id: int, db: Session):
     assign_figure_cards(game_id, player_id, db)
     assign_movement_cards(game_id, player_id, db)
     await game_events.emit_cards(game_id, player_id, db)
-
 
     return {'message' : f"Player {player.name} has ended their turn."}
 
@@ -150,7 +141,7 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     await game_events.disconnect_player_socket(player_id, game_id)
     
     if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Host does not have permission to leave the lobby.")
+        raise ForbiddenError("Host does not have permission to leave the lobby.")
     
     if game.status == GameStatus.INGAME and player.turn == game.turn:
         # if the player leaving is the current player, end their turn

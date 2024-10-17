@@ -1,7 +1,7 @@
 from app.db.db import Player, Game, Turn
-from app.schemas.player import PlayerResponseSchema
 from app.models.broadcast import Broadcast
-from app.routers import sio_lobby as sio # avoid circular imports
+from app.routers import sio_lobby as sio
+from app.schemas.player import PlayerResponseSchema
 
 async def emit_players_lobby(game_id, db):
     players = db.query(Player).filter(Player.game_id == game_id).all()

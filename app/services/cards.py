@@ -1,14 +1,12 @@
-from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import func, select, case, exists
-from typing import List, Dict
 from random import shuffle
+
+from sqlalchemy.orm import Session
+from sqlalchemy import func, select, exists
 from sqlalchemy.exc import SQLAlchemyError
 
-
-from app.schemas.cards import CardFigSchema, CardFigResponseSchema, CardMoveResponseSchema
 from app.db.db import Player, CardMove, CardFig, MoveType, FigureType, Game
-
+from app.errors.handlers import NotFoundError
+from app.schemas.cards import CardFigSchema, CardFigResponseSchema, CardMoveResponseSchema
 
 def add_cards_to_db(game_id: int, db: Session) -> int:
     """
@@ -42,9 +40,9 @@ def add_cards_to_db(game_id: int, db: Session) -> int:
 
             return 1 # success i guess...
         else:
-            raise HTTPException("Game does not exist.")
+            raise NotFoundError("Game does not exist.")
     except SQLAlchemyError as e:
-        raise RuntimeError(f"Error adding cards: {e}")
+        raise Exception(f"Error adding cards: {e}")
     
 def distribute_cards_to_deck(game_id: int, db: Session):
     try:
@@ -71,12 +69,10 @@ def distribute_cards_to_deck(game_id: int, db: Session):
             easy_cards = easy_cards[num_of_easy_per_deck:] # We don't need the assigned cards anymore
             hard_cards = hard_cards[num_of_hard_per_deck:]
 
-
         db.commit()
+
     except SQLAlchemyError as e:
-        raise RuntimeError(f"Error creating decks: {e}")
-    
-           
+        raise Exception(f"Error creating decks: {e}") 
 
 def search_for_fig_cards_to_deal(CardFig, game_id: int, number_of_cards_to_deal: int, player_id: int, db: Session):
     """
@@ -87,8 +83,9 @@ def search_for_fig_cards_to_deal(CardFig, game_id: int, number_of_cards_to_deal:
                             .order_by(func.random()).limit(number_of_cards_to_deal).all()
 
         return available_cards
+    
     except SQLAlchemyError as e:
-        raise RuntimeError(f"Error searchig cards: {e}")
+        raise Exception(f"Error searchig cards: {e}")
 
 def search_for_mov_cards_to_deal(CardMove, game_id: int, number_of_cards_to_deal: int, db: Session):
     """
@@ -99,9 +96,9 @@ def search_for_mov_cards_to_deal(CardMove, game_id: int, number_of_cards_to_deal
                             .order_by(func.random()).limit(number_of_cards_to_deal).all()
 
         return available_cards
+    
     except SQLAlchemyError as e:
-        raise RuntimeError(f"Error searchig cards: {e}")
-
+        raise Exception(f"Error searchig cards: {e}")
 
 def assign_movement_cards(game_id: int, player_id: int, db: Session):
     """
@@ -121,17 +118,15 @@ def assign_movement_cards(game_id: int, player_id: int, db: Session):
             for card in random_cards:
                 card.owner_id = player.id
 
-
         db.commit()
-    except SQLAlchemyError as e:
-        raise RuntimeError(f"Error assigning cards: {e}")
 
+    except SQLAlchemyError as e:
+        raise Exception(f"Error assigning cards: {e}")
 
 def fetch_movement_cards(player_id: int, db: Session):
     """
     Fetches via queries the figure cards of every player and returns a format ready to be emitted.
     """
-    # Get the current cards of the player
     try:
         dealt_cards = []
         cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player_id).all()
@@ -143,10 +138,10 @@ def fetch_movement_cards(player_id: int, db: Session):
             played=card.played
             ).model_dump())
 
-
         return dealt_cards
+    
     except SQLAlchemyError as e:
-        raise RuntimeError(f"Error fetching cards: {e}")
+        raise Exception(f"Error fetching cards: {e}")
 
 def assign_figure_cards(game_id: int, player_id: int, db: Session):
     """
@@ -165,17 +160,16 @@ def assign_figure_cards(game_id: int, player_id: int, db: Session):
         if len(cards_in_hand) < 3 and not hasBlock:
             number_of_cards_to_deal = 3 - len(cards_in_hand)
             if number_of_cards_to_deal < 0:
-                raise RuntimeError("INVALID NUMBER OF CARDS TO DEAL")
+                raise Exception("INVALID NUMBER OF CARDS TO DEAL")
             random_cards = search_for_fig_cards_to_deal(CardFig, game_id, number_of_cards_to_deal, player_id, db)
 
             for card in random_cards:
                 card.in_hand = True
 
-
         db.commit()
-    except SQLAlchemyError as e:
-        raise RuntimeError(f"Error assigning cards: {e}")
 
+    except SQLAlchemyError as e:
+        raise Exception(f"Error assigning cards: {e}")
 
 def fetch_figure_cards(game_id: int, db: Session):
     """
@@ -198,10 +192,10 @@ def fetch_figure_cards(game_id: int, db: Session):
             dealt_cards = []
             response.append(player_cards)
         
-
         return response
+    
     except SQLAlchemyError as e:
-        raise RuntimeError(f"Error fetching cards: {e}")
+        raise Exception(f"Error fetching cards: {e}")
 
 def initialize_cards(game_id: int, db: Session):
     """
@@ -217,6 +211,4 @@ def initialize_cards(game_id: int, db: Session):
             assign_figure_cards(game_id, player_id, db)
             assign_movement_cards(game_id, player_id, db)
     except SQLAlchemyError as e:
-        raise RuntimeError(f"Error initializing cards: {e}")
-
-
+        raise Exception(f"Error initializing cards: {e}")
