@@ -129,7 +129,7 @@ def extract_figures_from_board(board: np.ndarray) -> dict:
     for component in all_connected_components:
         for figure in get_all_figures():
             if figure.matches_any_rotation(component):
-                figures_by_type[figure.type_name].append(component)
+                figures_by_type[figure].append(component)
             
             
 
@@ -137,36 +137,27 @@ def extract_figures_from_board(board: np.ndarray) -> dict:
 
 
 
-def convert_to_serializable(figures_by_type: defaultdict) -> dict:
-    """Convierte el defaultdict a un formato serializable."""
-    serializable_dict = {}
+def convert_to_serializable(figures_by_type: defaultdict) -> list:
+    """Convierte el defaultdict a un formato serializable, con una lista separada para cada figura."""
+    serializable_figures = []
 
     for figure_type, components in figures_by_type.items():
         serializable_components = []
-        
         for component in components:
-            # Convertir cada subarray en una estructura serializable
-            serializable_component = []
             for row in component:
-                serializable_row = []
                 for cell in row:
-                    if cell is None:
-                        serializable_row.append(None)
-                    else:
+                    if cell is not None:
                         color, r, c = cell
-                        # Convertimos el color a su representación de cadena
-                        serializable_row.append({
-                            "color": color.name,  # Convertir el objeto Color a una cadena
+                        # Agregamos cada celda serializable a la lista de esa figura
+                        serializable_components.append({
+                            "color": color.name,  # Convertimos el objeto Color a su representación en cadena
                             "row": r,
-                            "col": c
+                            "column": c
                         })
-                serializable_component.append(serializable_row)
-            
-            serializable_components.append(serializable_component)
-        
-        serializable_dict[figure_type] = serializable_components
-    
-    return serializable_dict
+        # Agregamos la lista de la figura a la lista final
+        serializable_figures.append(serializable_components)
+
+    return serializable_figures
 
 
 
