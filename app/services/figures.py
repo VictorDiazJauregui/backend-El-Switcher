@@ -171,6 +171,9 @@ def convert_to_serializable(figures_by_type: defaultdict) -> dict:
 
 
 def figures_event(game_id: int, db: Session) -> list:
+    """
+    usa
+    """
     #test de funciones anteriormente nombradas
     matrix = get_matrix(game_id, db)
     figures = extract_figures_from_board(matrix)
