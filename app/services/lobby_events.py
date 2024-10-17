@@ -1,7 +1,7 @@
 from app.db.db import Player, Game, Turn
-from app.schemas.player import PlayerResponseSchema
 from app.models.broadcast import Broadcast
-from app.routers import sio_lobby as sio # avoid circular imports
+from app.routers import sio_lobby as sio
+from app.schemas.player import PlayerResponseSchema
 
 async def emit_players_lobby(game_id, db):
     players = db.query(Player).filter(Player.game_id == game_id).all()
@@ -26,7 +26,7 @@ async def emit_can_start_game(game_id, db):
     can_start = len(players) >= game.min_players and len(players) <= game.max_players
 
     # Get the owner of the game
-    owner_id = [player.id for player in players if player.turn == Turn.P1][0]
+    owner_id = db.query(Player).filter(Player.game_id == game_id, Player.turn == Turn.P1).first().id
 
     broadcast = Broadcast()
 
