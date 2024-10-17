@@ -68,7 +68,6 @@ async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db:
         await game_events.emit_cards(game_id, player_id, db)
         await game_events.emit_board(game_id, db)
         await game_events.emit_found_figures(game_id, db)
-        await game_events.emit_opponents_total_mov_cards(game_id, db)
         
     except SQLAlchemyError as e:
         db.rollback()
@@ -190,11 +189,11 @@ async def cancel_move(game_id: int, player_id: int, db: Session):
                                               CardMove.game_id == game_id).first()
         used_card.played = False
         db.commit()
-        print("User card played: ", used_card.played)
 
         await game_events.emit_board(game_id, db)
         await game_events.emit_opponents_total_mov_cards(game_id, db)
         await game_events.emit_cards(game_id, player_id, db)
+        await game_events.emit_found_figures(game_id, db)
     except SQLAlchemyError as e:
         db.rollback()
         raise RuntimeError(f"Error canceling move: {e}")
