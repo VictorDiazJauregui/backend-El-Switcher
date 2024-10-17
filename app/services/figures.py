@@ -129,7 +129,7 @@ def extract_figures_from_board(board: np.ndarray) -> dict:
     for component in all_connected_components:
         for figure in get_all_figures():
             if figure.matches_any_rotation(component):
-                figures_by_type[figure.type_name].append(component)
+                figures_by_type[figure].append(component)
             
             
 
