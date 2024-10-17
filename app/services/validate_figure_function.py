@@ -69,7 +69,7 @@ def validate_figure_function(figures_info: FigureSchema, gameID: int, playerID: 
 
     selected_figure = select_figure_by_his_type(figure_type.value[1])
 
-    print(selected_figure)
+    
     
     if not selected_figure.matches_any_rotation(connected_components[0]):
         raise ValueError("Figure does not match connected component")
