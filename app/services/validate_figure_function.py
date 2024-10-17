@@ -1,7 +1,8 @@
 from app.services.figures import *
 from app.schemas.figures import FigureSchema
 
-def validate_figure_function(figures_info: FigureSchema, gameID: int, playerID: int, db : Session):
+
+def validate_figure_function(figures_info: FigureSchema, gameID: int, playerID: int, db : Session) :
     """
     Validate the figure of a given player in a game.
     
@@ -29,6 +30,45 @@ def validate_figure_function(figures_info: FigureSchema, gameID: int, playerID: 
 
     if game.status != GameStatus.INGAME:
         raise ValueError("Game is not in progress")
+    
+    #convertir figures_info a una lista con los atributos de FigureSchema
+    colorCards = []
+    for colorCard in figures_info.colorCards:
+        colorCards.append(colorCard.model_dump())
+    
+    matrix = np.full((6, 6), None, dtype=object)
+
+    # Iteramos sobre los diccionarios en colorCards
+    for figure in colorCards:
+    # Accedemos a los valores como un diccionario, no como atributos de un objeto
+        matrix[figure['row']][figure['column']] = figure['color']
+
+    print(matrix)
+
+    connected_components = find_connected_components(matrix, colorCards[0]['color'])
+    print(connected_components)
+    
+    if len(connected_components) == 0:
+        raise ValueError("No connected components found")
+    elif len(connected_components) > 1:
+        raise ValueError("More than one connected component found")
+    
+    
+    cardId = figures_info.figureCardId
+
+    figure = get_figure_by_id(cardId)
+    if figure is None:
+        raise ValueError("Figure not found")
+    
+    if not figure.matches_any_rotation(connected_components[0]):
+        raise ValueError("Figure does not match connected component")
+
+
+    
+
+
+
+
     
 
 

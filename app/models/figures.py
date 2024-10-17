@@ -3,9 +3,10 @@ from app.db.db import Color
 
 
 class Figure:
-    def __init__(self, type_name: str, matrix_figure: np.ndarray):
+    def __init__(self, type_name: str, matrix_figure: np.ndarray, figureCardId: int):
         self.matrix_figure = matrix_figure
         self.type_name = type_name
+        self.figureCardId = figureCardId
 
     def _to_binary(self, matrix: np.ndarray):
         """Convierte la matriz a una matriz binaria."""
@@ -46,7 +47,7 @@ class fig1(Figure):
                 [None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 1)
 
 
 class fig2(Figure):
@@ -58,7 +59,7 @@ class fig2(Figure):
                 [None, "*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 2)
 
 
 
@@ -72,7 +73,7 @@ class fig3(Figure):
                 ["*", "*", "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 3)
 
 
 class fig4(Figure):
@@ -85,7 +86,7 @@ class fig4(Figure):
                 [None, "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 4)
 
 
 class fig5(Figure):
@@ -96,7 +97,7 @@ class fig5(Figure):
                 ["*", "*", "*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 5)
 
 
 class fig6(Figure):
@@ -109,7 +110,7 @@ class fig6(Figure):
                 ["*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 6)
 
 
 class fig7(Figure):
@@ -121,7 +122,7 @@ class fig7(Figure):
                 [None, None, None, "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 7)
 
 
 class fig8(Figure):
@@ -133,7 +134,7 @@ class fig8(Figure):
                 ["*", "*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 8)
 
 
 class fig9(Figure):
@@ -146,7 +147,7 @@ class fig9(Figure):
                 [None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 9)
 
 
 class fig10(Figure):
@@ -159,7 +160,7 @@ class fig10(Figure):
                 ["*", None, None],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 10)
 
 class fig11(Figure):
     def __init__(self):
@@ -171,7 +172,7 @@ class fig11(Figure):
                 [None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 11)
 
 class fig12(Figure):
     def __init__(self):
@@ -183,7 +184,7 @@ class fig12(Figure):
                 [None, None, "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 12)
 
 class fig13(Figure):
     def __init__(self):
@@ -194,7 +195,7 @@ class fig13(Figure):
                 [None, None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 13)
 
 
 
@@ -207,7 +208,7 @@ class fig14(Figure):
                 ["*", "*", "*", "*"], 
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 14)
 
 
 
@@ -220,7 +221,7 @@ class fig15(Figure):
                 ["*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 15)
 
 
 class fig16(Figure):
@@ -232,7 +233,7 @@ class fig16(Figure):
                 ["*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 16)
 
 
 class fig17(Figure):
@@ -245,7 +246,7 @@ class fig17(Figure):
                 [None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 17)
 
 
 class fig18(Figure):
@@ -257,7 +258,7 @@ class fig18(Figure):
                 [None, "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 18)
 
 
 class fig19(Figure):
@@ -269,9 +270,12 @@ class fig19(Figure):
                 [None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure)
+        super().__init__(type_name, matrix_figure, 19)
 
 
 
 def get_all_figures():
     return [fig1(), fig2(), fig3(), fig4(), fig5(), fig6(), fig7(), fig8(), fig9(), fig10(), fig11(), fig12(), fig13(), fig14(), fig15(), fig16(), fig17(), fig18(), fig19()]
+
+def get_figure_by_id(figure_id: int):
+    return next((figure for figure in get_all_figures() if figure.figureCardId == figure_id), None)

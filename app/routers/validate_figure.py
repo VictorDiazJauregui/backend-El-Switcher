@@ -28,8 +28,8 @@ def validate_figure(figures_info: FigureSchema,
         details: The details of the response, if exists.
     """
 
-    print("Yes")
    
     response = validate_figure_function(figures_info, game_id, player_id, db)
+    print(response)
     return response
 
