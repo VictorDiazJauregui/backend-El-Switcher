@@ -1,12 +1,15 @@
 import numpy as np
 from app.db.db import Color
+from sqlalchemy.orm import Session
+from app.db.db import CardFig
+
 
 
 class Figure:
-    def __init__(self, type_name: str, matrix_figure: np.ndarray, figureCardId: int):
+    def __init__(self, type_name: str, matrix_figure: np.ndarray):
         self.matrix_figure = matrix_figure
         self.type_name = type_name
-        self.figureCardId = figureCardId
+
 
     def _to_binary(self, matrix: np.ndarray):
         """Convierte la matriz a una matriz binaria."""
@@ -39,7 +42,7 @@ class Figure:
 
 class fig1(Figure):
     def __init__(self):
-        type_name = "fig1"
+        type_name = "Figura Difícil 1"
         matrix_figure = np.array(
             [
                 ["*", "*", "*"],
@@ -47,38 +50,38 @@ class fig1(Figure):
                 [None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure, 1)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig2(Figure):
     def __init__(self):
-        type_name = "fig2"
+        type_name = "Figura Difícil 2"
         matrix_figure = np.array(
             [
                 ["*", "*", None, None],
                 [None, "*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure, 2)
+        super().__init__(type_name, matrix_figure)
 
 
 
 
 class fig3(Figure):
     def __init__(self):
-        type_name = "fig3"
+        type_name = "Figura Difícil 3"
         matrix_figure = np.array(
             [
                 [None, None, "*", "*"],
                 ["*", "*", "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure, 3)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig4(Figure):
     def __init__(self):
-        type_name = "fig4"
+        type_name = "Figura Difícil 4"
         matrix_figure = np.array(
             [
                 ["*", None, None],
@@ -86,23 +89,23 @@ class fig4(Figure):
                 [None, "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure, 4)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig5(Figure):
     def __init__(self):
-        type_name = "fig5"
+        type_name = "Figura Difícil 5"
         matrix_figure = np.array(
             [
                 ["*", "*", "*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure, 5)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig6(Figure):
     def __init__(self):
-        type_name = "fig6"
+        type_name = "Figura Difícil 6"
         matrix_figure = np.array(
             [
                 ["*", None, None],
@@ -110,36 +113,36 @@ class fig6(Figure):
                 ["*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure, 6)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig7(Figure):
     def __init__(self):
-        type_name = "fig7"
+        type_name = "Figura Difícil 7"
         matrix_figure = np.array(
             [
                 ["*", "*", "*", "*"],
                 [None, None, None, "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure, 7)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig8(Figure):
     def __init__(self):
-        type_name = "fig8"
+        type_name = "Figura Difícil 8"
         matrix_figure = np.array(
             [
                 [None, None, None, "*"],
                 ["*", "*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure, 8)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig9(Figure):
     def __init__(self):
-        type_name = "fig9"
+        type_name = "Figura Difícil 9"
         matrix_figure = np.array(
             [
                 [None, None, "*"],
@@ -147,12 +150,12 @@ class fig9(Figure):
                 [None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure, 9)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig10(Figure):
     def __init__(self):
-        type_name = "fig10"
+        type_name = "Figura Difícil 10"
         matrix_figure = np.array(
             [
                 [None, None, "*"],
@@ -160,11 +163,11 @@ class fig10(Figure):
                 ["*", None, None],
             ]
         )
-        super().__init__(type_name, matrix_figure, 10)
+        super().__init__(type_name, matrix_figure)
 
 class fig11(Figure):
     def __init__(self):
-        type_name = "fig11"
+        type_name = "Figura Difícil 11"
         matrix_figure = np.array(
             [
                 ["*", None, None],
@@ -172,11 +175,11 @@ class fig11(Figure):
                 [None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure, 11)
+        super().__init__(type_name, matrix_figure)
 
 class fig12(Figure):
     def __init__(self):
-        type_name = "fig12"
+        type_name = "Figura Difícil 12"
         matrix_figure = np.array(
             [
                 ["*", None, None],
@@ -184,61 +187,61 @@ class fig12(Figure):
                 [None, None, "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure, 12)
+        super().__init__(type_name, matrix_figure)
 
 class fig13(Figure):
     def __init__(self):
-        type_name = "fig13"
+        type_name = "Figura Difícil 13"
         matrix_figure = np.array(
             [
                 ["*", "*", "*", "*"],
                 [None, None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure, 13)
+        super().__init__(type_name, matrix_figure)
 
 
 
 class fig14(Figure):
     def __init__(self):
-        type_name = "fig14"
+        type_name = "Figura Difícil 14"
         matrix_figure = np.array(
             [
                 [None, None, "*", None],
                 ["*", "*", "*", "*"], 
             ]
         )
-        super().__init__(type_name, matrix_figure, 14)
+        super().__init__(type_name, matrix_figure)
 
 
 
 class fig15(Figure):
     def __init__(self):
-        type_name = "fig15"
+        type_name = "Figura Difícil 15"
         matrix_figure = np.array(
             [
                 [None, "*", "*"],
                 ["*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure, 15)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig16(Figure):
     def __init__(self):
-        type_name = "fig16"
+        type_name = "Figura Difícil 16"
         matrix_figure = np.array(
             [
                 ["*", None, "*"],
                 ["*", "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure, 16)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig17(Figure):
     def __init__(self):
-        type_name = "fig17"
+        type_name = "Figura Difícil 17"
         matrix_figure = np.array(
             [
                 [None, "*", None],
@@ -246,36 +249,81 @@ class fig17(Figure):
                 [None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure, 17)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig18(Figure):
     def __init__(self):
-        type_name = "fig18"
+        type_name = "Figura Difícil 18"
         matrix_figure = np.array(
             [
                 ["*", "*", "*"],
                 [None, "*", "*"],
             ]
         )
-        super().__init__(type_name, matrix_figure, 18)
+        super().__init__(type_name, matrix_figure)
 
 
 class fig19(Figure):
     def __init__(self):
-        type_name = "fig19"
+        type_name = "Figura Facil 4"
         matrix_figure = np.array(
             [
                 ["*", "*", "*"],
                 [None, "*", None],
             ]
         )
-        super().__init__(type_name, matrix_figure, 19)
+        super().__init__(type_name, matrix_figure)
 
 
 
 def get_all_figures():
     return [fig1(), fig2(), fig3(), fig4(), fig5(), fig6(), fig7(), fig8(), fig9(), fig10(), fig11(), fig12(), fig13(), fig14(), fig15(), fig16(), fig17(), fig18(), fig19()]
 
-def get_figure_by_id(figure_id: int):
-    return next((figure for figure in get_all_figures() if figure.figureCardId == figure_id), None)
+def get_figure_by_id(figure_id: int, db: Session):
+    return db.query(CardFig).filter(CardFig.id == figure_id).first()
+
+def get_figure_type_by_id(figure_id: int, db: Session):
+    return db.query(CardFig).filter(CardFig.id == figure_id).first().figure
+
+def select_figure_by_his_type(type_name: str):
+    if type_name == "Figura Difícil 1":
+        return fig1()
+    if type_name == "Figura Difícil 2":
+        return fig2()
+    if type_name == "Figura Difícil 3":
+        return fig3()
+    if type_name == "Figura Difícil 4":
+        return fig4()
+    if type_name == "Figura Difícil 5":
+        return fig5()
+    if type_name == "Figura Difícil 6":
+        return fig6()
+    if type_name == "Figura Difícil 7":
+        return fig7()
+    if type_name == "Figura Difícil 8":
+        return fig8()
+    if type_name == "Figura Difícil 9":
+        return fig9()
+    if type_name == "Figura Difícil 10":
+        return fig10()
+    if type_name == "Figura Difícil 11":
+        return fig11()
+    if type_name == "Figura Difícil 12":
+        return fig12()
+    if type_name == "Figura Difícil 13":
+        return fig13()
+    if type_name == "Figura Difícil 14":
+        return fig14()
+    if type_name == "Figura Difícil 15":
+        return fig15()
+    if type_name == "Figura Difícil 16":
+        return fig16()
+    if type_name == "Figura Difícil 17":
+        return fig17()
+    if type_name == "Figura Difícil 18":
+        return fig18()
+    if type_name == "Figura Fácil 4":
+        return fig19()
+    return None
+    

@@ -1,5 +1,6 @@
 from app.services.figures import *
 from app.schemas.figures import FigureSchema
+from app.models.figures import get_figure_type_by_id, select_figure_by_his_type
 
 
 def validate_figure_function(figures_info: FigureSchema, gameID: int, playerID: int, db : Session) :
@@ -43,10 +44,9 @@ def validate_figure_function(figures_info: FigureSchema, gameID: int, playerID: 
     # Accedemos a los valores como un diccionario, no como atributos de un objeto
         matrix[figure['row']][figure['column']] = figure['color']
 
-    print(matrix)
 
     connected_components = find_connected_components(matrix, colorCards[0]['color'])
-    print(connected_components)
+
     
     if len(connected_components) == 0:
         raise ValueError("No connected components found")
@@ -56,11 +56,22 @@ def validate_figure_function(figures_info: FigureSchema, gameID: int, playerID: 
     
     cardId = figures_info.figureCardId
 
-    figure = get_figure_by_id(cardId)
+    figure = get_figure_by_id(cardId, db)
     if figure is None:
         raise ValueError("Figure not found")
     
-    if not figure.matches_any_rotation(connected_components[0]):
+    figure_type = get_figure_type_by_id(cardId, db)
+
+
+
+    if figure_type is None:
+        raise ValueError("Figure type not found")
+
+    selected_figure = select_figure_by_his_type(figure_type.value[1])
+
+    print(selected_figure)
+    
+    if not selected_figure.matches_any_rotation(connected_components[0]):
         raise ValueError("Figure does not match connected component")
 
 
