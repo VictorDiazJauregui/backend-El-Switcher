@@ -1,117 +1,53 @@
 import pytest
-from sqlalchemy import create_engine
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import sessionmaker
-from app.db.db import Base, get_db, CardMove, CardFig, FigureType, MoveType
-from app.main import app
-
-# Setup the test database
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Override the get_db dependency
-def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-app.dependency_overrides[get_db] = override_get_db
-
-# Create the test client
-client = TestClient(app)
-
-# Borra todas las tablas
-Base.metadata.drop_all(bind=engine)
-
-# Crea las tablas de nuevo
-Base.metadata.create_all(bind=engine)
-
+from app.db.db import CardMove, MoveType
+from app.services import cards
+from .db_setup import (
+    client,
+    TestingSessionLocal,
+    create_player
+)
 
 @pytest.fixture(scope="module")
 def test_client():
     yield client
 
-
-@pytest.mark.skip(reason="Deprecated test")
-def test_add_cards_to_db(test_client):
-    response = test_client.post("/game_create", json={
-        "ownerName": "test_owner",
-        "gameName": "test_game",
-        "maxPlayers": 4,
-        "minPlayers": 2
-    })
-    assert response.status_code == 200
-    game_id = response.json().get("gameId")
-
-    test_db = TestingSessionLocal()
-
+def test_add_cards_to_db():
+    db = TestingSessionLocal()
     try:
-        moves = test_db.query(CardMove).filter_by(game_id=game_id).all()
-        figs = test_db.query(CardFig).filter_by(game_id=game_id).all()
-
-        assert len(moves) == len(MoveType) * 7  # 7 cards for each type of movement
-        assert len(figs) == len(FigureType) * 2  # 2 cards for each type of figure
-    finally:
-        test_db.close()
+        cards.add_cards_to_db(999, db)
+    except Exception as e:
+        assert str(e) == "Game does not exist."
 
 
-@pytest.mark.skip(reason="Deprecated test")
-def test_deal_movement_cards(test_client):
-    response = test_client.post("/game_create", json={
-        "ownerName": "test_owner",
-        "gameName": "test_game",
-        "maxPlayers": 4,
-        "minPlayers": 2
-    })
-    assert response.status_code == 200
-    game_id = response.json()["gameId"]
-    owner_id = response.json()["ownerId"]
+def test_fetch_movement_cards_no_cards():
+    db = TestingSessionLocal()
+    # Create a player
+    player = create_player(db, 1)
+    # Fetch movement cards for the player
+    result = cards.fetch_movement_cards(player.id, db)
 
-    response = test_client.post(f"/game/{game_id}/join", json={"playerName": "Player 2"})
-    player2_id = response.json()["playerId"]
+    # Assert that the result is an empty list
+    assert result == []
 
-    test_db = TestingSessionLocal()
-    try:
-        result1 = deal_movement_cards(game_id, owner_id, test_db)
-        result2 = deal_movement_cards(game_id, player2_id, test_db)
+def test_fetch_movement_cards_with_cards():
+    db = TestingSessionLocal()
+    # Create a player
+    player = create_player(db, 1)
 
-        assert len(result1) == 3  # Only 3 cards per player
-        assert len(result2) == 3  # Only 3 cards per player
+    # Add some movement cards to the player
+    card1 = CardMove(id=1, game_id=1, owner_id=player.id, move=MoveType.MOV_1)
+    card2 = CardMove(id=2, game_id=1, owner_id=player.id, move=MoveType.MOV_2)
+    db.add_all([card1, card2])
+    db.commit()
 
-        # Again!
-        result1 = deal_movement_cards(game_id, owner_id, test_db)
-        result2 = deal_movement_cards(game_id, player2_id, test_db)
+    # Fetch movement cards for the player
+    result = cards.fetch_movement_cards(player.id, db)
 
-        assert len(result1) == 3  # Only 3 cards per player
-        assert len(result2) == 3  # Only 3 cards per player
-    finally:
-        test_db.close()
-"""
-@pytest.mark.skip(reason="Deprecated test")
-def test_deal_figure_cards(test_client):
-    response = test_client.post("/game_create", json={
-        "ownerName": "test_owner",
-        "gameName": "test_game",
-        "maxPlayers": 4,
-        "minPlayers": 2
-    })
-    assert response.status_code == 200
-    game_id = response.json()["gameId"]
-
-    response = test_client.post(f"/game/{game_id}/join", json={"playerName": "Player 2"})
-
-    test_db = TestingSessionLocal()
-
-    try:
-        response = deal_figure_cards(game_id, test_db)
-
-        assert len(response) == 2  # Make sure that the response is for 2 players
-        player_cards = response[0]['cards']
-        assert len(player_cards) == 3  # Only 3 cards per player
-    finally:
-        test_db.close()
-
-"""
+    # Assert that the result contains the correct cards
+    assert len(result) == 2
+    assert result[0]['movementcardId'] == 1
+    assert result[0]['type'] == 'CRUCE DIAGONAL CON UN ESPACIO'
+    assert result[0]['moveType'] == 1
+    assert result[1]['movementcardId'] == 2
+    assert result[1]['type'] == 'CRUCE EN LINEA CON UN ESPACIO'
+    assert result[1]['moveType'] == 2

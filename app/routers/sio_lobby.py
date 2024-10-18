@@ -1,8 +1,9 @@
+import socketio
+
 from app.db.db import db_context, Game, Player, GameStatus
-from app.utils.parse_query_string import parse_query_string
 from app.models.broadcast import Broadcast
 from app.services import lobby_events
-import socketio
+from app.utils.parse_query_string import parse_query_string
 
 # Create a new Socket.IO server
 sio_lobby = socketio.AsyncServer(

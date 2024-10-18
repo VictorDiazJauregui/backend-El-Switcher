@@ -1,10 +1,10 @@
 from app.db.db import Player, Game
-from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.models.broadcast import Broadcast
+from app.routers import sio_game as sio
+from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board
 from app.services.figures import figures_event
-from app.routers import sio_game as sio
 
 async def disconnect_player_socket(player_id, game_id):
     broadcast = Broadcast()
@@ -42,7 +42,6 @@ async def emit_winner(game_id, winner_id, db):
     winner = db.query(Player).filter(Player.id == winner_id).first()
 
     broadcast = Broadcast()
-
 
     await broadcast.broadcast(sio.sio_game, game_id, 'winner', WinnerSchema(idWinner=winner.id, nameWinner=winner.name).model_dump())
 
