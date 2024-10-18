@@ -114,6 +114,7 @@ def assign_movement_cards(game_id: int, player_id: int, db: Session):
     for card in cards_in_hand:
         if card.played:
             card.owner_id = None
+            card.played = False
         else:
             remaining_cards.append(card)
     
