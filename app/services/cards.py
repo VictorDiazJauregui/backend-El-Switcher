@@ -206,9 +206,9 @@ def fetch_figure_cards(game_id: int, db: Session):
     except SQLAlchemyError as e:
         raise Exception(f"Error fetching cards: {e}")
     
-def delete_figure_card(figures_info: FigureSchema, db: Session):
+def delete_figure_card(figureCardId: int, db: Session):
     """
-    DELETES A FIGURE CARD PERMANENTLY
+    DELETES A FIGURE CARD PERMANENTLY \n
     ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⠿⠛⣛⣛⡛⠛⠿⠿⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
     ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⢛⣉⣥⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣬⣍⣛⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
     ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⣋⣤⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⣍⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿
@@ -236,7 +236,7 @@ def delete_figure_card(figures_info: FigureSchema, db: Session):
     ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣦⣬⣭⣭⣭⣭⣭⣤⣶⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀
     """
     try:
-        card_sacrifice = db.execute(select(CardFig).where(CardFig.id == figures_info.figureCardId)).scalars().first()
+        card_sacrifice = db.execute(select(CardFig).where(CardFig.id == figureCardId)).scalars().first()
         if not card_sacrifice:
             raise Exception(f"Error deleting figure card: {e}")
         db.delete(card_sacrifice)
