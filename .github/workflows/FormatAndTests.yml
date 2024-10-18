@@ -101,19 +101,23 @@ jobs:
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-    # Paso 14: Hacer commit de cambios si los hay
+    # Paso 14: Hacer pull de cambios remotos
+    - name: Hacer pull de cambios remotos
+      run: git pull origin ${{ github.head_ref || github.ref }}
+
+    # Paso 15: Hacer commit de cambios si los hay
     - name: Hacer commit de cambios
       run: |
         git add .
         git commit -m "Formato de código aplicado por GitHub Action" || echo "No changes to commit"
 
-    # Paso 15: Hacer push de cambios
+    # Paso 16: Hacer push de cambios
     - name: Hacer push de cambios
       run: git push origin HEAD:${{ github.head_ref || github.ref }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Paso 16: Ejecutar pruebas con pytest
+    # Paso 17: Ejecutar pruebas con pytest
     - name: Ejecutar pruebas con pytest
       run: |
         source .venv/bin/activate
