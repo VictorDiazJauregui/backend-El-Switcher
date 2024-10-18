@@ -109,10 +109,18 @@ async def pass_turn(game_id: int, player_id: int, db: Session):
 
     next_turn_index = (current_turn_index + 1) % len(game.players)
 
-    game.turn = game.players[next_turn_index].turn
+    next_player = game.players[next_turn_index]
+
+    game.turn = next_player.turn
 
     print(f"Player {player.name} has ended their turn")
     db.commit()
+
+    # Deal new cards if needed
+    assign_figure_cards(game_id, next_player.id, db)
+    assign_movement_cards(game_id, next_player.id, db)
+    await game_events.emit_cards(game_id, next_player.id, db)
+    await game_events.emit_opponents_total_mov_cards(game_id, db)
 
     # Notify all players the new turn info
     await game_events.emit_turn_info(game_id, db)
@@ -127,12 +135,6 @@ async def end_turn(game_id: int, player_id: int, db: Session):
         raise ValueError(f"It's not {player.id} turn.")
     
     await pass_turn(game_id, player_id, db)
-
-    # Deal new cards if needed
-    assign_figure_cards(game_id, player_id, db)
-    assign_movement_cards(game_id, player_id, db)
-    await game_events.emit_cards(game_id, player_id, db)
-    await game_events.emit_opponents_total_mov_cards(game_id, db)
 
     return {'message' : f"Player {player.name} has ended their turn."}
 
