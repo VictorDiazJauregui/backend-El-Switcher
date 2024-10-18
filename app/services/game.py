@@ -132,6 +132,7 @@ async def end_turn(game_id: int, player_id: int, db: Session):
     assign_figure_cards(game_id, player_id, db)
     assign_movement_cards(game_id, player_id, db)
     await game_events.emit_cards(game_id, player_id, db)
+    await game_events.emit_opponents_total_mov_cards(game_id, db)
 
     return {'message' : f"Player {player.name} has ended their turn."}
 

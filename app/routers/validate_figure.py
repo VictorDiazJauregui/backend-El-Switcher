@@ -5,6 +5,8 @@ from app.db.db import Color, get_db
 from fastapi.encoders import jsonable_encoder
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure_function import validate_figure_function
+from app.services.cards import delete_figure_card
+from app.services import game_events
 import numpy as np
 
 
@@ -12,7 +14,7 @@ router = APIRouter()
 
 
 @router.post("/game/{game_id}/play_figure/{player_id}")
-def validate_figure(figures_info: FigureSchema,
+async def validate_figure(figures_info: FigureSchema,
                     game_id: int, player_id: int,
                     db: Session = Depends(get_db)):
     """
@@ -30,6 +32,10 @@ def validate_figure(figures_info: FigureSchema,
 
    
     response = validate_figure_function(figures_info, game_id, player_id, db)
+    if response == 200:
+        delete_figure_card(figures_info, db)
+        await game_events.emit_cards(game_id, player_id, db)
+        
     print(response)
     return response
 
