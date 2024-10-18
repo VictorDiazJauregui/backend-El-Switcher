@@ -152,3 +152,13 @@ def validate_move(piece1, piece2, move_type: MoveType):
             ) or ((piece2.column == 0 or piece2.column == 5) and piece1.row == piece2.row
             ) or ((piece1.row == 0 or piece1.row == 5) and piece1.column == piece2.column
             ) or ((piece1.column == 0 or piece1.column == 5) and piece1.row == piece2.row)
+    
+# Delete all ParallelBoards and SquarePieces.partial_id
+def delete_partial_cache(game_id: int, db: Session):
+    try:
+        db.query(ParallelBoard).filter(ParallelBoard.board_id == game_id).delete()
+        db.query(SquarePiece).filter(SquarePiece.board_id == game_id).update({SquarePiece.partial_id: None})
+        db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception(f"Error deleting partial cache: {e}")
