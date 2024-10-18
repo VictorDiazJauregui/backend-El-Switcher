@@ -201,3 +201,13 @@ async def cancel_move(game_id: int, player_id: int, db: Session):
     except ValueError as e:
         raise RuntimeError(f"Validation error: {e}") 
 
+    
+# Delete all ParallelBoards and SquarePieces.partial_id
+def delete_partial_cache(game_id: int, db: Session):
+    try:
+        db.query(ParallelBoard).filter(ParallelBoard.board_id == game_id).delete()
+        db.query(SquarePiece).filter(SquarePiece.board_id == game_id).update({SquarePiece.partial_id: None})
+        db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception(f"Error deleting partial cache: {e}")

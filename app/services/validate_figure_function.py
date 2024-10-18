@@ -1,6 +1,7 @@
 from app.services.figures import *
 from app.schemas.figures import FigureSchema
-from app.models.figures import get_figure_type_by_id, select_figure_by_his_type
+from app.models.figures import get_figure_by_id, get_figure_type_by_id, select_figure_by_his_type 
+from app.db.db import Game, GameStatus, Player
 
 
 def validate_figure_function(figures_info: FigureSchema, gameID: int, playerID: int, db : Session) :
@@ -69,7 +70,6 @@ def validate_figure_function(figures_info: FigureSchema, gameID: int, playerID: 
 
     selected_figure = select_figure_by_his_type(figure_type.value[1])
 
-    
     
     if not selected_figure.matches_any_rotation(connected_components[0]):
         raise ValueError("Figure does not match connected component")
