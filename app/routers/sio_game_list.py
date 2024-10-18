@@ -1,6 +1,7 @@
+import socketio
+
 from app.db.db import db_context
 from app.services import game_list_events
-import socketio
 
 # Create a new Socket.IO server
 sio_game_list = socketio.AsyncServer(

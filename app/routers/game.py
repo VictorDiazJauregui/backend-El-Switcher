@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from app.schemas.game import GameCreateSchema, GameResponseSchema, GameInfoSchema
 from app.services.game import create_game, get_game
-from sqlalchemy.orm import Session
 from app.db.db import get_db
-
-
 
 router = APIRouter()
 

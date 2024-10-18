@@ -1,13 +1,15 @@
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
-from app.schemas.board import PieceResponseSchema
-from app.schemas.move import MakeMoveSchema
-from app.db.db import Board, Color, SquarePiece, ParallelBoard, CardMove, Player, MoveType
-from app.services import game_events
-
-from typing import List
 import random
 import json
+from typing import List
+
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
+
+from app.db.db import Board, Color, SquarePiece, ParallelBoard, CardMove, Player, MoveType
+from app.errors.handlers import NotFoundError
+from app.schemas.board import PieceResponseSchema
+from app.schemas.move import MakeMoveSchema
+from app.services import game_events
 
 def create_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
     board = Board(game_id=game_id)
@@ -15,10 +17,8 @@ def create_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
     db.commit()
     db.refresh(board)
 
-
     #debe ser una lista con los colores posibles, siendo 9 de cada uno 
     possible_colors = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW] * 9
-
 
     # 6x6 board
     for row in range(6):
@@ -60,7 +60,7 @@ async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db:
 
         player = db.query(Player).filter(Player.id == player_id).first()
         if not player:
-            raise ValueError("Player not found")
+            raise NotFoundError("Player not found")
 
         state_id = save_board(game_id, player_id, card_move.id, db)
         switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, state_id, card_move.move, db)
@@ -72,9 +72,9 @@ async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db:
         
     except SQLAlchemyError as e:
         db.rollback()
-        raise RuntimeError(f"Error making move: {e}")
+        raise Exception(f"Error making move: {e}")
     except ValueError as e:
-        raise RuntimeError(f"Validation error: {e}")
+        raise ValueError(f"{e}")
 
 def save_board(game_id: int, player_id: int, movCard_id: int, db: Session):
     try:
@@ -98,7 +98,7 @@ def save_board(game_id: int, player_id: int, movCard_id: int, db: Session):
         return latest_state_id
     except SQLAlchemyError as e:
         db.rollback()
-        raise RuntimeError(f"Error saving board state: {e}")
+        raise Exception(f"Error saving board state: {e}")
 
 def switch_pieces(piece_id1: int, piece_id2: int, state_id: int, move_type:MoveType, db: Session):
     try:
@@ -122,9 +122,9 @@ def switch_pieces(piece_id1: int, piece_id2: int, state_id: int, move_type:MoveT
             raise ValueError("Invalid move")
     except SQLAlchemyError as e:
         db.rollback()
-        raise RuntimeError(f"Error switching pieces: {e}")
+        raise Exception(f"Error switching pieces: {e}")
     except ValueError as e:
-        raise RuntimeError(f"Validation error: {e}")
+        raise ValueError(f"{e}")
 
 def validate_move(piece1, piece2, move_type: MoveType):
     row_diff = abs(piece1.row - piece2.row)
@@ -200,3 +200,4 @@ async def cancel_move(game_id: int, player_id: int, db: Session):
         raise RuntimeError(f"Error canceling move: {e}")
     except ValueError as e:
         raise RuntimeError(f"Validation error: {e}") 
+

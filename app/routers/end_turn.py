@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from app.services.game import end_turn
-
-
 from app.db.db import get_db
 
 router = APIRouter()

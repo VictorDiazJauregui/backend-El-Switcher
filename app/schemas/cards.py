@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List
-from app.db.db import FigureType
 
 class CardFigSchema(BaseModel):
     figureCardId: int

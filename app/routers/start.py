@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.schemas.game import StartResponseSchema
+
 from app.db.db import get_db
-from app.services.game import start_game
+from app.schemas.game import StartResponseSchema
 from app.services.board import create_board
-from app.services.cards import add_cards_to_db
-from app.services.cards import initialize_cards
+from app.services.cards import add_cards_to_db, initialize_cards
+from app.services.game import start_game
 
 router = APIRouter()
 
