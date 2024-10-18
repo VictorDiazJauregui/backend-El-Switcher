@@ -7,6 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.db.db import Player, CardMove, CardFig, MoveType, FigureType, Game
 from app.errors.handlers import NotFoundError
 from app.schemas.cards import CardFigSchema, CardFigResponseSchema, CardMoveResponseSchema
+from app.schemas.figures import FigureSchema
 
 def add_cards_to_db(game_id: int, db: Session) -> int:
     """
@@ -104,24 +105,32 @@ def assign_movement_cards(game_id: int, player_id: int, db: Session):
     """
     Assigns ownership of a card(s) to a player.
     """
-    try:
-        player = db.execute(select(Player).where(Player.id == player_id)).scalars().first()
+    #try:
+    player = db.execute(select(Player).where(Player.id == player_id)).scalars().first()
 
-        # Get the current cards of the player
-        cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player.id).all()
+    # Get the current cards that the player hasn't played
+    cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player.id).all()
+    remaining_cards = []
+    for card in cards_in_hand:
+        if card.played:
+            card.owner_id = None
+        else:
+            remaining_cards.append(card)
+    
+    cards_in_hand = remaining_cards
 
-        # Add more cards if the player has less than 3 cards and doesn't have a blocked card
-        if len(cards_in_hand) < 3:
-            number_of_cards_to_deal = 3 - len(cards_in_hand)
-            random_cards = search_for_mov_cards_to_deal(CardMove, game_id, number_of_cards_to_deal, db)
+    # Add more cards if the player has less than 3 cards and doesn't have a blocked card
+    if len(cards_in_hand) < 3:
+        number_of_cards_to_deal = 3 - len(cards_in_hand)
+        random_cards = search_for_mov_cards_to_deal(CardMove, game_id, number_of_cards_to_deal, db)
 
-            for card in random_cards:
-                card.owner_id = player.id
+        for card in random_cards:
+            card.owner_id = player.id
 
-        db.commit()
+    db.commit()
 
-    except SQLAlchemyError as e:
-        raise Exception(f"Error assigning cards: {e}")
+    #except SQLAlchemyError as e:
+    #    raise Exception(f"Error assigning movement cards: {e}")
 
 def fetch_movement_cards(player_id: int, db: Session):
     """
@@ -169,7 +178,7 @@ def assign_figure_cards(game_id: int, player_id: int, db: Session):
         db.commit()
 
     except SQLAlchemyError as e:
-        raise Exception(f"Error assigning cards: {e}")
+        raise Exception(f"Error assigning figure cards: {e}")
 
 def fetch_figure_cards(game_id: int, db: Session):
     """
@@ -196,6 +205,45 @@ def fetch_figure_cards(game_id: int, db: Session):
     
     except SQLAlchemyError as e:
         raise Exception(f"Error fetching cards: {e}")
+    
+def delete_figure_card(figureCardId: int, db: Session):
+    """
+    DELETES A FIGURE CARD PERMANENTLY \n
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⠿⠛⣛⣛⡛⠛⠿⠿⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⢛⣉⣥⣶⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣬⣍⣛⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⣋⣤⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⣍⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⡿⢋⠰⣾⣿⢿⣿⣿⣿⣿⣿⡿⠿⠟⢛⣛⣛⣛⣛⣛⠛⠿⠿⣿⣿⣿⣿⣿⠟⠻⣿⣦⣈⠻⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⡿⢋⣴⣿⡇⢠⣴⡄⣿⡿⢛⣩⣤⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣌⡙⠿⣿⣗⣤⣿⣿⣿⣷⡌⠻⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⠟⣠⣿⣿⣿⣥⣾⡿⢃⡀⠲⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠓⢠⡙⠻⣿⣿⣿⣿⣿⣦⡙⣿⣿⣿⣿
+    ⣿⣿⣿⠋⣼⣿⣿⣿⣿⡿⢋⣴⣿⣷⠀⠠⠙⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⡩⠂⠀⣾⣿⣷⡌⢻⣿⣿⣿⣿⣷⡌⢿⣿⣿
+    ⣿⣿⢃⣾⣿⣿⣿⣿⡟⣡⣾⣿⣿⣿⡆⠈⠀⢁⠈⠙⠿⣿⣿⣿⣿⣿⣿⠟⠋⠀⡠⠀⠀⣸⣿⣿⣿⣿⣦⠹⣿⣿⣿⣿⣿⡌⢿⣿
+    ⣿⠇⣼⣿⣿⣿⣿⡏⣰⣿⣿⣿⣿⣿⣿⡘⣆⢈⡒⢠⡀⠈⠛⢿⡿⢋⠁⣀⡦⣣⡔⣰⢡⣿⣿⣿⣿⣿⣿⣧⡘⣿⣿⣿⣿⣿⡈⣿
+    ⣿⢰⣿⣿⣿⣿⡟⢰⣿⣿⣿⣿⣿⣿⣿⣷⠸⣧⠙⣦⡑⠃⢈⠠⡈⠁⠆⣩⣾⠏⣼⠇⣾⣿⣿⣿⣿⣿⣿⣿⣧⠘⣿⣿⣿⣿⣧⢹
+    ⡇⣿⣿⣿⣿⣿⠁⣿⣿⣿⣿⣿⣿⣿⣿⣿⣇⢻⣧⠘⡉⣄⡻⣶⣶⡤⣠⡙⠋⢼⡟⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⢻⣿⣿⣿⣿⡸
+    ⠃⣿⣿⣿⣿⡟⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠈⡴⢀⣧⡙⣿⡎⢋⣴⡿⣱⡇⠠⠁⠻⣿⣿⣿⣿⣿⣿⣿⣿⢿⣿⢸⣿⣿⣿⣿⡇
+    ⠀⣿⣿⣿⣿⡇⢸⣿⣿⣿⣿⣿⣿⡿⢋⣵⠾⠃⠀⢺⡇⠻⣮⠻⢸⢫⡾⢋⣿⡆⣘⠳⠮⡙⢿⣿⣿⣿⣿⣿⣜⣿⢸⣿⣿⣿⣿⡇
+    ⡀⣿⣿⣿⣿⣧⢸⣿⣿⣿⡿⢟⠉⣠⠤⠖⣚⡋⠀⠸⣧⠀⠀⢀⣿⠀⠀⢀⡏⠀⣝⣛⣒⣀⠀⠈⡛⢿⣿⣿⡧⣿⢸⣿⣿⣿⣿⡇
+    ⡇⣿⣿⢿⢿⣿⡈⣿⠟⠋⠒⠡⠾⠒⢃⣈⣈⣠⣶⡄⠙⣷⡤⣾⣿⢢⣴⢋⢀⣷⣤⣈⣈⣉⢋⠑⢈⠓⠍⠻⡏⡇⣼⠿⠿⣿⣿⢡
+    ⣷⠸⣷⣤⢰⣿⣇⠠⣤⣤⣬⣭⣭⣭⣭⣭⣭⣭⣭⣥⠀⢨⡅⣭⣭⢨⡅⠈⣬⣭⣭⣭⣭⣭⣭⣭⣭⣥⣤⣥⡤⢠⣿⣦⢀⣿⡟⣸
+    ⣿⡆⢻⣏⠘⣿⣿⣆⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣆⠈⠳⣿⣿⡜⠁⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢁⣾⣿⣿⣼⣿⢃⣿
+    ⣿⣿⡌⢿⣆⣿⣿⣿⣦⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⠀⠉⡏⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⢡⣾⣿⣿⣿⣿⠃⣼⣿
+    ⣿⣿⣿⡄⢻⣿⣿⣿⣿⣷⡈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀⢲⡶⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢋⣴⣿⣻⣿⣿⡿⢃⣼⣿⣿
+    ⣿⣿⣿⣿⣆⠹⣿⣿⣿⣿⣿⣦⣌⠻⢿⣿⣿⣿⣿⣿⣿⣿⡆⢈⠁⢰⣿⣿⣿⣿⣿⣿⣿⣿⠿⢋⣴⣾⣿⣿⣿⣿⡟⢡⣾⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣷⡈⠻⣿⣿⣿⣿⣿⣿⣦⣍⡛⠿⣿⣿⣿⣿⣿⡜⢇⣿⣿⣿⣿⣿⡿⠟⣋⣥⣾⣿⣿⣿⣿⣿⡿⢋⣴⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣶⣌⠻⣿⣿⣿⣿⣿⣿⣿⣷⣶⣬⣭⣉⣛⣃⣘⣛⣉⣩⣭⣴⣶⣿⣿⣿⣿⣿⣿⣿⠿⢋⣴⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⣙⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠘⠛⠛⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⢋⣡⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⣍⣙⠻⠿⢿⣿⣿⣿⣷⣶⣿⣠⣿⣿⣿⣿⠿⠿⣛⣩⣤⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+    ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣦⣬⣭⣭⣭⣭⣭⣤⣶⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀
+    """
+    try:
+        card_sacrifice = db.execute(select(CardFig).where(CardFig.id == figureCardId)).scalars().first()
+        if not card_sacrifice:
+            raise Exception(f"Error deleting figure card: {e}")
+        db.delete(card_sacrifice)
+        db.commit()
+
+    except SQLAlchemyError as e:
+        raise Exception(f"Error deleting figure card: {e}")
 
 def initialize_cards(game_id: int, db: Session):
     """

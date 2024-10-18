@@ -23,11 +23,14 @@ app.dependency_overrides[get_db] = override_get_db
 # Create the test client
 client = TestClient(app)
 
-# Borra todas las tablas
-Base.metadata.drop_all(bind=engine)
+def reset_db():
+    # Borra todas las tablas
+    Base.metadata.drop_all(bind=engine)
 
-# Crea las tablas de nuevo
-Base.metadata.create_all(bind=engine)
+    # Crea las tablas de nuevo
+    Base.metadata.create_all(bind=engine)
+
+reset_db()
 
 def create_game(db, game_status):
     game = Game(
