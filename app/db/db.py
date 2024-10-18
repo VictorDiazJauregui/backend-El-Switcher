@@ -139,6 +139,7 @@ class ParallelBoard(Base):
     state_id = Column(Integer, nullable=False)  # This is the state_id, abrazo.
     # state_id = 1-3, 1 = Inicial, 2 = Primer movimiento, 3 = Segundo movimiento
     state_data = Column(Text, nullable=False)  # JSON string
+    move_asociated = Column(Integer, ForeignKey('card_moves.id'), nullable=True)
 
     board = relationship("Board", back_populates="parallel_boards")
     player = relationship("Player", back_populates="parallel_boards")
