@@ -65,6 +65,21 @@ def get_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
     ]
 
 
+def get_square_pieces(piece_id1: int, piece_id2: int, db: Session):
+    """Obtiene las piezas y valida su existencia."""
+    if not piece_id1 or not piece_id2:
+        raise ValueError("Both piece IDs must be provided")
+    if piece_id1 == piece_id2:
+        raise ValueError("Pieces are the same")
+
+    piece1 = db.query(SquarePiece).filter(SquarePiece.id == piece_id1).first()
+    piece2 = db.query(SquarePiece).filter(SquarePiece.id == piece_id2).first()
+
+    if not piece1 or not piece2:
+        raise ValueError("One or both pieces not found")
+
+    return piece1, piece2
+
 async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db: Session):
     try:
         card_move = db.query(CardMove).filter(CardMove.id == move_data.movementCardId).first()
@@ -75,11 +90,13 @@ async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db:
         if not player:
             raise NotFoundError("Player not found")
         
-        if not validate_move(move_data.squarePieceId1, move_data.squarePieceId2, card_move.move, db):
+        piece1, piece2 = get_square_pieces(move_data.squarePieceId1, move_data.squarePieceId2, db)
+        
+        if not validate_move(piece1, piece2, card_move.move):
             raise ValueError("Invalid move")
 
         state_id = save_board(game_id, player_id, card_move.id, db)
-        switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, state_id, db)
+        switch_pieces(piece1, piece2, state_id, db)
         
         card_move.played = True
         db.commit()
@@ -126,11 +143,8 @@ def save_board(game_id: int, player_id: int, movCard_id: int, db: Session):
         raise Exception(f"Error saving board state: {e}")
 
 
-def switch_pieces(piece_id1: int, piece_id2: int, state_id: int, db: Session):
-    try:
-        piece1 = db.query(SquarePiece).filter(SquarePiece.id == piece_id1).first()
-        piece2 = db.query(SquarePiece).filter(SquarePiece.id == piece_id2).first()
-        
+def switch_pieces(piece1: int, piece2: int, state_id: int, db: Session):
+    try:        
         piece1.row, piece2.row = piece2.row, piece1.row
         piece1.column, piece2.column = piece2.column, piece1.column
         piece1.partial_id = state_id
@@ -139,21 +153,9 @@ def switch_pieces(piece_id1: int, piece_id2: int, state_id: int, db: Session):
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception(f"Error switching pieces: {e}")
-    except ValueError as e:
-        raise ValueError(f"{e}")
 
 
-def validate_move(piece_id1: int, piece_id2: int, move_type: MoveType, db: Session):
-    if not piece_id1:
-        raise ValueError("Piece 1 not found")
-    if not piece_id2:
-        raise ValueError("Piece 2 not found")
-    if piece_id1 == piece_id2:
-        raise ValueError("Pieces are the same")
-    
-    piece1 = db.query(SquarePiece).filter(SquarePiece.id == piece_id1).first()
-    piece2 = db.query(SquarePiece).filter(SquarePiece.id == piece_id2).first()
-
+def validate_move(piece1: int, piece2: int, move_type: MoveType):
     row_diff = abs(piece1.row - piece2.row)
     col_diff = abs(piece1.column - piece2.column)
 
