@@ -4,23 +4,19 @@ from sqlalchemy.orm import Session
 from app.db.db import CardFig
 
 
-
 class Figure:
     def __init__(self, type_name: str, matrix_figure: np.ndarray):
         self.matrix_figure = matrix_figure
         self.type_name = type_name
 
-
     def _to_binary(self, matrix: np.ndarray):
         """Convierte la matriz a una matriz binaria."""
         return np.where(matrix != None, 1, 0)
 
-        
-
     def get_all_rotations(self):
         """Devuelve todas las rotaciones posibles de la figura (normal, 90°, 180°, 270°)."""
         rotations = [self.matrix_figure]  # Incluye la matriz original
-        
+
         for k in range(1, 4):  # Rotar 90°, 180°, 270°
             rotated_matrix = np.rot90(self.matrix_figure, k=k)
             rotations.append(rotated_matrix)
@@ -31,14 +27,15 @@ class Figure:
         Se abstrae del color de la componente conexa"""
 
         bin_connected_component = self._to_binary(connected_component)
-            
-
 
         for rotation in self.get_all_rotations():
 
-            if np.array_equal(self._to_binary(rotation), bin_connected_component):
+            if np.array_equal(
+                self._to_binary(rotation), bin_connected_component
+            ):
                 return True
         return False
+
 
 class fig1(Figure):
     def __init__(self):
@@ -63,8 +60,6 @@ class fig2(Figure):
             ]
         )
         super().__init__(type_name, matrix_figure)
-
-
 
 
 class fig3(Figure):
@@ -165,6 +160,7 @@ class fig10(Figure):
         )
         super().__init__(type_name, matrix_figure)
 
+
 class fig11(Figure):
     def __init__(self):
         type_name = "Figura Difícil 11"
@@ -176,6 +172,7 @@ class fig11(Figure):
             ]
         )
         super().__init__(type_name, matrix_figure)
+
 
 class fig12(Figure):
     def __init__(self):
@@ -189,6 +186,7 @@ class fig12(Figure):
         )
         super().__init__(type_name, matrix_figure)
 
+
 class fig13(Figure):
     def __init__(self):
         type_name = "Figura Difícil 13"
@@ -201,18 +199,16 @@ class fig13(Figure):
         super().__init__(type_name, matrix_figure)
 
 
-
 class fig14(Figure):
     def __init__(self):
         type_name = "Figura Difícil 14"
         matrix_figure = np.array(
             [
                 [None, None, "*", None],
-                ["*", "*", "*", "*"], 
+                ["*", "*", "*", "*"],
             ]
         )
         super().__init__(type_name, matrix_figure)
-
 
 
 class fig15(Figure):
@@ -263,6 +259,7 @@ class fig18(Figure):
         )
         super().__init__(type_name, matrix_figure)
 
+
 class fig20(Figure):
     def __init__(self):
         type_name = "Figura Fácil 1"
@@ -297,6 +294,8 @@ class fig22(Figure):
             ]
         )
         super().__init__(type_name, matrix_figure)
+
+
 class fig19(Figure):
     def __init__(self):
         type_name = "Figura Fácil 4"
@@ -307,8 +306,6 @@ class fig19(Figure):
             ]
         )
         super().__init__(type_name, matrix_figure)
-
-
 
 
 class fig23(Figure):
@@ -322,6 +319,7 @@ class fig23(Figure):
         )
         super().__init__(type_name, matrix_figure)
 
+
 class fig24(Figure):
     def __init__(self):
         type_name = "Figura Fácil 6"
@@ -331,6 +329,7 @@ class fig24(Figure):
             ]
         )
         super().__init__(type_name, matrix_figure)
+
 
 class fig25(Figure):
     def __init__(self):
@@ -345,13 +344,42 @@ class fig25(Figure):
 
 
 def get_all_figures():
-    return [fig1(), fig2(), fig3(), fig4(), fig5(), fig6(), fig7(), fig8(), fig9(), fig10(), fig11(), fig12(), fig13(), fig14(), fig15(), fig16(), fig17(), fig18(), fig19(), fig20(), fig21(), fig22(), fig23(), fig24(), fig25()]
+    return [
+        fig1(),
+        fig2(),
+        fig3(),
+        fig4(),
+        fig5(),
+        fig6(),
+        fig7(),
+        fig8(),
+        fig9(),
+        fig10(),
+        fig11(),
+        fig12(),
+        fig13(),
+        fig14(),
+        fig15(),
+        fig16(),
+        fig17(),
+        fig18(),
+        fig19(),
+        fig20(),
+        fig21(),
+        fig22(),
+        fig23(),
+        fig24(),
+        fig25(),
+    ]
+
 
 def get_figure_by_id(figure_id: int, db: Session):
     return db.query(CardFig).filter(CardFig.id == figure_id).first()
 
+
 def get_figure_type_by_id(figure_id: int, db: Session):
     return db.query(CardFig).filter(CardFig.id == figure_id).first().figure
+
 
 def select_figure_by_his_type(type_name: str):
     if type_name == "Figura Difícil 1":
@@ -405,4 +433,3 @@ def select_figure_by_his_type(type_name: str):
     if type_name == "Figura Fácil 7":
         return fig25()
     return None
-    

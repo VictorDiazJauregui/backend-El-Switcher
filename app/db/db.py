@@ -1,4 +1,13 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, Enum, ForeignKey, Text
+from sqlalchemy import (
+    create_engine,
+    Column,
+    Integer,
+    String,
+    Boolean,
+    Enum,
+    ForeignKey,
+    Text,
+)
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from contextlib import contextmanager
 import enum
@@ -9,6 +18,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+
 def get_db():
     db = SessionLocal()
     try:
@@ -16,21 +26,25 @@ def get_db():
     finally:
         db.close()
 
+
 # Context manager to get a database session
 db_context = contextmanager(get_db)
 
 # Enumeraciones
 
+
 class GameStatus(enum.Enum):
-    LOBBY = 'Lobby'
-    INGAME = 'Ingame'
-    FINISHED = 'Finished'
+    LOBBY = "Lobby"
+    INGAME = "Ingame"
+    FINISHED = "Finished"
+
 
 class Turn(enum.Enum):
     P1 = 1
     P2 = 2
     P3 = 3
     P4 = 4
+
 
 class FigureType(enum.Enum):
     # Easy figures
@@ -72,19 +86,18 @@ class MoveType(enum.Enum):
     MOV_6 = (6, "CRUCE EN L A LA DERECHA CON DOS ESPACIOS")
     MOV_7 = (7, "CRUCE EN LINEA AL LATERAL")
 
+
 class Color(enum.Enum):
-    RED = 'Red'
-    GREEN = 'Green'
-    BLUE = 'Blue'
-    YELLOW = 'Yellow'
-
-
+    RED = "Red"
+    GREEN = "Green"
+    BLUE = "Blue"
+    YELLOW = "Yellow"
 
 
 # Modelo Game
 class Game(Base):
-    __tablename__ = 'games'
-    
+    __tablename__ = "games"
+
     id = Column(Integer, primary_key=True)
     name = Column(String(25), nullable=False)
     password = Column(String(25), nullable=True)
@@ -93,66 +106,72 @@ class Game(Base):
     status = Column(Enum(GameStatus), nullable=False)
     turn = Column(Enum(Turn), nullable=True)
 
-    players = relationship("Player", back_populates="game", order_by="Player.turn")
+    players = relationship(
+        "Player", back_populates="game", order_by="Player.turn"
+    )
     board = relationship("Board", uselist=False, back_populates="game")
     cardmoves = relationship("CardMove", back_populates="game")
     cardfigs = relationship("CardFig", back_populates="game")
 
-    
 
 # Modelo Player
 class Player(Base):
-    __tablename__ = 'players'
+    __tablename__ = "players"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(25), nullable=False)
-    game_id = Column(Integer, ForeignKey('games.id'))
+    game_id = Column(Integer, ForeignKey("games.id"))
     turn = Column(Enum(Turn), nullable=True)
-    
+
     game = relationship("Game", back_populates="players")
     card_moves = relationship("CardMove", back_populates="owner")
     card_figs = relationship("CardFig", back_populates="owner")
     parallel_boards = relationship("ParallelBoard", back_populates="player")
 
 
-
 # Modelo Board
 class Board(Base):
-    __tablename__ = 'boards'
-    
-    game_id = Column(Integer, ForeignKey('games.id'), primary_key=True)
+    __tablename__ = "boards"
+
+    game_id = Column(Integer, ForeignKey("games.id"), primary_key=True)
     block_color = Column(Enum(Color))
-    
+
     game = relationship("Game", back_populates="board")
     square_pieces = relationship("SquarePiece", back_populates="board")
     parallel_boards = relationship("ParallelBoard", back_populates="board")
 
 
-
 # Modelo ParallelBoard
 class ParallelBoard(Base):
-    __tablename__ = 'parallel_boards'
-    
-    id = Column(Integer, primary_key=True) # This is the parallelboard unique id
-    board_id = Column(Integer, ForeignKey('boards.game_id')) # Same id as board and game
-    player_id = Column(Integer, ForeignKey('players.id')) # Player who made the move
+    __tablename__ = "parallel_boards"
+
+    id = Column(
+        Integer, primary_key=True
+    )  # This is the parallelboard unique id
+    board_id = Column(
+        Integer, ForeignKey("boards.game_id")
+    )  # Same id as board and game
+    player_id = Column(
+        Integer, ForeignKey("players.id")
+    )  # Player who made the move
     state_id = Column(Integer, nullable=False)  # This is the state_id, abrazo.
     # state_id = 1-3, 1 = Inicial, 2 = Primer movimiento, 3 = Segundo movimiento
     state_data = Column(Text, nullable=False)  # JSON string
-    move_asociated = Column(Integer, ForeignKey('card_moves.id'), nullable=True)
+    move_asociated = Column(
+        Integer, ForeignKey("card_moves.id"), nullable=True
+    )
 
     board = relationship("Board", back_populates="parallel_boards")
     player = relationship("Player", back_populates="parallel_boards")
 
 
-
 # Modelo CardMove
 class CardMove(Base):
-    __tablename__ = 'card_moves'
-    
+    __tablename__ = "card_moves"
+
     id = Column(Integer, primary_key=True)
-    game_id = Column(Integer, ForeignKey('games.id'))
-    owner_id = Column(Integer, ForeignKey('players.id'))
+    game_id = Column(Integer, ForeignKey("games.id"))
+    owner_id = Column(Integer, ForeignKey("players.id"))
     move = Column(Enum(MoveType), nullable=False)
     played = Column(Boolean, default=False)
 
@@ -160,14 +179,13 @@ class CardMove(Base):
     game = relationship("Game", back_populates="cardmoves")
 
 
-
 # Modelo CardFig
 class CardFig(Base):
-    __tablename__ = 'card_figs'
-    
+    __tablename__ = "card_figs"
+
     id = Column(Integer, primary_key=True)
-    game_id = Column(Integer, ForeignKey('games.id'))
-    owner_id = Column(Integer, ForeignKey('players.id'))
+    game_id = Column(Integer, ForeignKey("games.id"))
+    owner_id = Column(Integer, ForeignKey("players.id"))
     in_hand = Column(Boolean, default=False)
     figure = Column(Enum(FigureType), nullable=False)
     block = Column(Boolean, default=False)
@@ -177,16 +195,15 @@ class CardFig(Base):
     game = relationship("Game", back_populates="cardfigs")
 
 
-
 # Modelo SquarePiece
 class SquarePiece(Base):
-    __tablename__ = 'square_pieces'
-    
+    __tablename__ = "square_pieces"
+
     id = Column(Integer, primary_key=True)
     color = Column(Enum(Color), nullable=False)
     row = Column(Integer, nullable=False)
     column = Column(Integer, nullable=False)
-    board_id = Column(Integer, ForeignKey('boards.game_id'))
+    board_id = Column(Integer, ForeignKey("boards.game_id"))
     partial_id = Column(Integer, nullable=True)
 
     board = relationship("Board", back_populates="square_pieces")

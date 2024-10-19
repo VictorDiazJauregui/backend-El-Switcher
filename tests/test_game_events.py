@@ -3,18 +3,16 @@ from unittest.mock import AsyncMock, patch
 
 from app.services.game_events import emit_winner
 
-from .db_setup import (
-    client,
-    TestingSessionLocal,
-    create_player
-)
+from .db_setup import client, TestingSessionLocal, create_player
+
 
 @pytest.fixture(scope="module")
 def test_client():
     yield client
 
+
 @pytest.mark.asyncio
-@patch('app.services.game_events.Broadcast')
+@patch("app.services.game_events.Broadcast")
 async def test_emit_winner(mock_broadcast):
     db = TestingSessionLocal()
     player = create_player(db, 1)

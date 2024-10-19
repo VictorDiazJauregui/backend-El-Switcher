@@ -3,25 +3,30 @@ from unittest.mock import AsyncMock, patch
 
 from app.db.db import GameStatus
 from app.routers.sio_lobby import connect
-from .db_setup import (
-    client,
-    TestingSessionLocal,
-    create_game,
-    create_player
-)
+from .db_setup import client, TestingSessionLocal, create_game, create_player
+
 
 @pytest.fixture(scope="module")
 def test_client():
     yield client
 
+
 @pytest.mark.asyncio
-@patch('app.routers.sio_lobby.parse_query_string')
-@patch('app.routers.sio_lobby.Broadcast')
-@patch('app.routers.sio_lobby.lobby_events.emit_players_lobby')
-@patch('app.routers.sio_lobby.lobby_events.emit_can_start_game')
-@patch('app.routers.sio_lobby.sio_lobby')
-@patch('app.routers.sio_lobby.db_context')
-async def test_connect_success(mock_db_context, mock_sio_lobby, mock_emit_can_start_game, mock_emit_players_lobby, mock_broadcast, mock_parse_query_string, test_client):
+@patch("app.routers.sio_lobby.parse_query_string")
+@patch("app.routers.sio_lobby.Broadcast")
+@patch("app.routers.sio_lobby.lobby_events.emit_players_lobby")
+@patch("app.routers.sio_lobby.lobby_events.emit_can_start_game")
+@patch("app.routers.sio_lobby.sio_lobby")
+@patch("app.routers.sio_lobby.db_context")
+async def test_connect_success(
+    mock_db_context,
+    mock_sio_lobby,
+    mock_emit_can_start_game,
+    mock_emit_players_lobby,
+    mock_broadcast,
+    mock_parse_query_string,
+    test_client,
+):
 
     # Create game and player in the database
     db = TestingSessionLocal()
@@ -33,7 +38,7 @@ async def test_connect_success(mock_db_context, mock_sio_lobby, mock_emit_can_st
     mock_broadcast_instance = AsyncMock()
     mock_broadcast.return_value = mock_broadcast_instance
 
-    sid = 'test_sid'
+    sid = "test_sid"
     environ = {}
     auth = {}
 
@@ -41,19 +46,29 @@ async def test_connect_success(mock_db_context, mock_sio_lobby, mock_emit_can_st
 
     mock_parse_query_string.assert_called_once_with(environ)
     mock_broadcast.assert_called_once()
-    mock_broadcast_instance.register_player_socket.assert_called_once_with(mock_sio_lobby, player.id, game.id, sid)
+    mock_broadcast_instance.register_player_socket.assert_called_once_with(
+        mock_sio_lobby, player.id, game.id, sid
+    )
     mock_emit_players_lobby.assert_called_once_with(game.id, db)
     mock_emit_can_start_game.assert_called_once_with(game.id, db)
 
 
 @pytest.mark.asyncio
-@patch('app.routers.sio_lobby.parse_query_string')
-@patch('app.routers.sio_lobby.Broadcast')
-@patch('app.routers.sio_lobby.lobby_events.emit_players_lobby')
-@patch('app.routers.sio_lobby.lobby_events.emit_can_start_game')
-@patch('app.routers.sio_lobby.sio_lobby')
-@patch('app.routers.sio_lobby.db_context')
-async def test_connect_game_nonexistant(mock_db_context, mock_sio_lobby, mock_emit_can_start_game, mock_emit_players_lobby, mock_broadcast, mock_parse_query_string, test_client):
+@patch("app.routers.sio_lobby.parse_query_string")
+@patch("app.routers.sio_lobby.Broadcast")
+@patch("app.routers.sio_lobby.lobby_events.emit_players_lobby")
+@patch("app.routers.sio_lobby.lobby_events.emit_can_start_game")
+@patch("app.routers.sio_lobby.sio_lobby")
+@patch("app.routers.sio_lobby.db_context")
+async def test_connect_game_nonexistant(
+    mock_db_context,
+    mock_sio_lobby,
+    mock_emit_can_start_game,
+    mock_emit_players_lobby,
+    mock_broadcast,
+    mock_parse_query_string,
+    test_client,
+):
 
     # Create game and player in the database
     db = TestingSessionLocal()
@@ -65,7 +80,7 @@ async def test_connect_game_nonexistant(mock_db_context, mock_sio_lobby, mock_em
     mock_broadcast_instance = AsyncMock()
     mock_broadcast.return_value = mock_broadcast_instance
 
-    sid = 'test_sid'
+    sid = "test_sid"
     environ = {}
     auth = {}
 
@@ -74,14 +89,23 @@ async def test_connect_game_nonexistant(mock_db_context, mock_sio_lobby, mock_em
     mock_emit_players_lobby.assert_not_called()
     mock_emit_can_start_game.assert_not_called()
 
+
 @pytest.mark.asyncio
-@patch('app.routers.sio_lobby.parse_query_string')
-@patch('app.routers.sio_lobby.Broadcast')
-@patch('app.routers.sio_lobby.lobby_events.emit_players_lobby')
-@patch('app.routers.sio_lobby.lobby_events.emit_can_start_game')
-@patch('app.routers.sio_lobby.sio_lobby')
-@patch('app.routers.sio_lobby.db_context')
-async def test_connect_player_error(mock_db_context, mock_sio_lobby, mock_emit_can_start_game, mock_emit_players_lobby, mock_broadcast, mock_parse_query_string, test_client):
+@patch("app.routers.sio_lobby.parse_query_string")
+@patch("app.routers.sio_lobby.Broadcast")
+@patch("app.routers.sio_lobby.lobby_events.emit_players_lobby")
+@patch("app.routers.sio_lobby.lobby_events.emit_can_start_game")
+@patch("app.routers.sio_lobby.sio_lobby")
+@patch("app.routers.sio_lobby.db_context")
+async def test_connect_player_error(
+    mock_db_context,
+    mock_sio_lobby,
+    mock_emit_can_start_game,
+    mock_emit_players_lobby,
+    mock_broadcast,
+    mock_parse_query_string,
+    test_client,
+):
 
     # Create game and player in the database
     db = TestingSessionLocal()
@@ -92,7 +116,7 @@ async def test_connect_player_error(mock_db_context, mock_sio_lobby, mock_emit_c
     mock_broadcast_instance = AsyncMock()
     mock_broadcast.return_value = mock_broadcast_instance
 
-    sid = 'test_sid'
+    sid = "test_sid"
     environ = {}
     auth = {}
 
@@ -104,13 +128,21 @@ async def test_connect_player_error(mock_db_context, mock_sio_lobby, mock_emit_c
 
 
 @pytest.mark.asyncio
-@patch('app.routers.sio_lobby.parse_query_string')
-@patch('app.routers.sio_lobby.Broadcast')
-@patch('app.routers.sio_lobby.lobby_events.emit_players_lobby')
-@patch('app.routers.sio_lobby.lobby_events.emit_can_start_game')
-@patch('app.routers.sio_lobby.sio_lobby')
-@patch('app.routers.sio_lobby.db_context')
-async def test_connect_not_lobby(mock_db_context, mock_sio_lobby, mock_emit_can_start_game, mock_emit_players_lobby, mock_broadcast, mock_parse_query_string, test_client):
+@patch("app.routers.sio_lobby.parse_query_string")
+@patch("app.routers.sio_lobby.Broadcast")
+@patch("app.routers.sio_lobby.lobby_events.emit_players_lobby")
+@patch("app.routers.sio_lobby.lobby_events.emit_can_start_game")
+@patch("app.routers.sio_lobby.sio_lobby")
+@patch("app.routers.sio_lobby.db_context")
+async def test_connect_not_lobby(
+    mock_db_context,
+    mock_sio_lobby,
+    mock_emit_can_start_game,
+    mock_emit_players_lobby,
+    mock_broadcast,
+    mock_parse_query_string,
+    test_client,
+):
 
     # Create game and player in the database
     db = TestingSessionLocal()
@@ -121,7 +153,7 @@ async def test_connect_not_lobby(mock_db_context, mock_sio_lobby, mock_emit_can_
     mock_broadcast_instance = AsyncMock()
     mock_broadcast.return_value = mock_broadcast_instance
 
-    sid = 'test_sid'
+    sid = "test_sid"
     environ = {}
     auth = {}
 

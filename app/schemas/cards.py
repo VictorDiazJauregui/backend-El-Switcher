@@ -1,14 +1,17 @@
 from pydantic import BaseModel
 from typing import List
 
+
 class CardFigSchema(BaseModel):
     figureCardId: int
     difficulty: str
     figureType: int
 
+
 class CardFigResponseSchema(BaseModel):
     ownerId: int
     cards: List[CardFigSchema]
+
 
 class CardMoveResponseSchema(BaseModel):
     movementcardId: int
