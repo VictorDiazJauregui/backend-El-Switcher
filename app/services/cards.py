@@ -324,18 +324,21 @@ def delete_figure_card(figureCardId: int, db: Session):
 
     except SQLAlchemyError as e:
         raise Exception(f"Error deleting figure card: {e}")
-    
+
+
 def delete_played_mov_cards(player_id: int, db: Session):
     """
     Deletes the played movement cards from the player's deck.
     """
     try:
-        cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player_id).all()
+        cards_in_hand = (
+            db.query(CardMove).filter(CardMove.owner_id == player_id).all()
+        )
         for card in cards_in_hand:
             if card.played:
                 db.delete(card)
         db.commit()
-    
+
     except SQLAlchemyError as e:
         raise Exception(f"Error deleting played movement cards: {e}")
 

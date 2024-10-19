@@ -82,8 +82,14 @@ async def make_move(
             raise NotFoundError("Player not found")
 
         state_id = save_board(game_id, player_id, card_move.id, db)
-        switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, state_id, card_move.move, db)
-        
+        switch_pieces(
+            move_data.squarePieceId1,
+            move_data.squarePieceId2,
+            state_id,
+            card_move.move,
+            db,
+        )
+
         card_move.played = True
         db.commit()
 
