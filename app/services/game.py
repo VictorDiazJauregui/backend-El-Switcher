@@ -108,9 +108,6 @@ async def pass_turn(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
 
-    await undo_played_moves(game_id, player_id, db)
-    delete_partial_cache(game_id, db)
-
     current_turn_index = [
         index
         for index, player in enumerate(game.players)
@@ -125,6 +122,9 @@ async def pass_turn(game_id: int, player_id: int, db: Session):
 
     print(f"Player {player.name} has ended their turn")
     db.commit()
+
+    await undo_played_moves(game_id, player_id, db)
+    delete_partial_cache(game_id, db)
 
     # Deal new cards if needed
     assign_figure_cards(game_id, next_player.id, db)
