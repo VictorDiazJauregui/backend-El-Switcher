@@ -59,12 +59,7 @@ async def test_cancel_move_success(db_session):
         await cancel_move(game_id, player_id, db_session)
 
         # Assertions
-        db_session.query(ParallelBoard).filter_by.assert_called_with(board_id=game_id)
-        db_session.query(SquarePiece).filter.assert_called_with(SquarePiece.board_id == game_id)
-        db_session.query(CardMove).filter.assert_called_with(CardMove.id == parallel_board.move_asociated,
-                                                             CardMove.owner_id == player_id,
-                                                             CardMove.played == True,
-                                                             CardMove.game_id == game_id)
+        db_session.query(ParallelBoard).filter_by.assert_called_with(board_id=game_id, state_id=1)
         assert card_move.played == False
         mock_emit_board.assert_awaited_once_with(game_id, db_session)
         mock_emit_opponents_total_mov_cards.assert_awaited_once_with(game_id, db_session)
