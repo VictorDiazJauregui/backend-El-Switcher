@@ -9,6 +9,12 @@ from .db_setup import (
     reset_db
 )
 
+@pytest.fixture(scope="module", autouse=True)
+def reset_database_at_end():
+    """Fixture to reset the database after all tests in the module."""
+    yield
+    reset_db()
+
 @pytest.fixture(scope="module")
 def test_client():
     yield client
@@ -207,3 +213,47 @@ def test_assign_movement_cards_with_empty_hand():
     cards_not_played = db.query(CardMove).filter(CardMove.owner_id == player.id, CardMove.played == False).all()
     assert len(cards_not_played) == 3, "El jugador debería tener 3 cartas de movimiento en la mano."
 
+def test_no_cards_deleted_when_no_played_mov_cards():
+    db = TestingSessionLocal()
+    reset_db()
+
+    player = create_player(db, 1)
+
+    # Inicializa algunas cartas de movimiento disponibles con played=False
+    card_moves = [
+        CardMove(id=1, game_id=1, owner_id=player.id, move=MoveType.MOV_1, played=False),
+        CardMove(id=2, game_id=1, owner_id=player.id, move=MoveType.MOV_2, played=False),
+        CardMove(id=3, game_id=1, owner_id=player.id, move=MoveType.MOV_3, played=False)
+    ]
+    db.add_all(card_moves)
+    db.commit()
+
+    # Intenta eliminar las cartas de movimiento jugadas, pero no hay cartas de movimiento jugadas.
+    cards.delete_played_mov_cards(player.id, db)
+
+    # Verifica que el jugador tenga 3 cartas
+    cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player.id).all()
+    assert len(cards_in_hand) == 3, "El jugador debería tener 3 cartas de movimiento en la mano."
+
+def test_delete_played_mov_cards():
+    db = TestingSessionLocal()
+    reset_db()
+
+    player = create_player(db, 1)
+
+    # Inicializa algunas cartas de movimiento disponibles con played=False
+    card_moves = [
+        CardMove(id=1, game_id=1, owner_id=player.id, move=MoveType.MOV_1, played=True),
+        CardMove(id=2, game_id=1, owner_id=player.id, move=MoveType.MOV_2, played=False),
+        CardMove(id=3, game_id=1, owner_id=player.id, move=MoveType.MOV_3, played=True)
+    ]
+    db.add_all(card_moves)
+    db.commit()
+
+    # Elimina las cartas de movimiento jugadas
+    cards.delete_played_mov_cards(player.id, db)
+
+    # Verifica que el jugador tenga 1 carta
+    cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player.id).all()
+    assert len(cards_in_hand) == 1, "El jugador debería tener 1 carta de movimiento en la mano."
+    assert cards_in_hand[0].id == 2, "La carta de movimiento no jugada debería ser la carta con ID 2."
