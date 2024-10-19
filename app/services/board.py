@@ -301,3 +301,22 @@ def delete_partial_cache(game_id: int, db: Session):
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception(f"Error deleting partial cache: {e}")
+
+async def undo_played_moves(game_id: int, player_id: int, db: Session):
+    """Deshace todos los movimientos jugados de un jugador en una partida"""
+    try:
+        played_card_moves = db.query(CardMove).filter(
+            CardMove.owner_id == player_id,
+            CardMove.played == True,
+            CardMove.game_id == game_id,
+        ).all()
+
+        if not played_card_moves:
+            return
+
+        for _ in played_card_moves:
+            await cancel_move(game_id, player_id, db)
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception(f"Error deleting partial cache: {e}")

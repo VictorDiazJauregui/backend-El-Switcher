@@ -5,7 +5,7 @@ from app.errors.handlers import ForbiddenError, NotFoundError
 from app.schemas.game import GameCreateSchema, StartResponseSchema
 from app.schemas.player import PlayerResponseSchema
 from app.services import lobby_events, game_events, game_list_events
-from app.services.board import delete_partial_cache
+from app.services.board import delete_partial_cache, undo_played_moves
 from app.services.cards import assign_figure_cards, assign_movement_cards
 
 
@@ -107,6 +107,8 @@ async def start_game(game_id: int, db: Session) -> StartResponseSchema:
 async def pass_turn(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
+
+    await undo_played_moves(game_id, player_id, db)
     delete_partial_cache(game_id, db)
 
     current_turn_index = [
