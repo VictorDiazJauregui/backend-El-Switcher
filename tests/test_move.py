@@ -276,7 +276,7 @@ def test_invalid_piece1(test_client):
             },
         )
         assert response.status_code == 400
-        assert "Piece 1 not found" in response.json()["detail"]
+        assert "One or both pieces not found" in response.json()["detail"]
     finally:
         db.close()
 
@@ -297,6 +297,6 @@ def test_invalid_piece2(test_client):
             },
         )
         assert response.status_code == 400
-        assert "Piece 2 not found" in response.json()["detail"]
+        assert "One or both pieces not found" in response.json()["detail"]
     finally:
         db.close()
