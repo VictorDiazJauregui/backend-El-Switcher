@@ -66,7 +66,7 @@ def get_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
 
 
 def get_square_pieces(piece_id1: int, piece_id2: int, db: Session):
-    """Obtiene las piezas y valida su existencia."""
+    """Valida y obtiene las fichas colores en base a su ID"""
     if not piece_id1 or not piece_id2:
         raise ValueError("Both piece IDs must be provided")
     if piece_id1 == piece_id2:
@@ -81,6 +81,7 @@ def get_square_pieces(piece_id1: int, piece_id2: int, db: Session):
     return piece1, piece2
 
 async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db: Session):
+    """Realiza un movimiento en el tablero"""
     try:
         card_move = db.query(CardMove).filter(CardMove.id == move_data.movementCardId).first()
         if not card_move:
@@ -114,6 +115,7 @@ async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db:
 
 
 def save_board(game_id: int, player_id: int, movCard_id: int, db: Session):
+    """Guarda el estado del tablero en la base de datos"""
     try:
         state_data = json.dumps(get_board(game_id, db))
 
@@ -144,6 +146,7 @@ def save_board(game_id: int, player_id: int, movCard_id: int, db: Session):
 
 
 def switch_pieces(piece1: int, piece2: int, state_id: int, db: Session):
+    """Intercambia dos fichas de colores en el tablero"""
     try:        
         piece1.row, piece2.row = piece2.row, piece1.row
         piece1.column, piece2.column = piece2.column, piece1.column
