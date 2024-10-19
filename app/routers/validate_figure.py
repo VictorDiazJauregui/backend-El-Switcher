@@ -1,13 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.services.figures import figures_event
-from app.db.db import Color, get_db
-from fastapi.encoders import jsonable_encoder
+from app.db.db import get_db
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure_function import validate_figure_function
-from app.services.cards import delete_figure_card
+from app.services.cards import delete_figure_card, delete_played_mov_cards
 from app.services import game_events
-import numpy as np
+from app.services.board import delete_partial_cache
 
 
 router = APIRouter()
@@ -35,7 +33,9 @@ async def validate_figure(
 
     response = validate_figure_function(figures_info, game_id, player_id, db)
     if response == 200:
+        delete_partial_cache(game_id, db)
         delete_figure_card(figures_info.figureCardId, db)
+        delete_played_mov_cards(player_id, db)
         await game_events.emit_cards(game_id, player_id, db)
 
     print(response)

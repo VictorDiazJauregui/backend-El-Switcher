@@ -76,20 +76,16 @@ async def make_move(
         )
         if not card_move:
             raise ValueError("Invalid movementCardId")
-        card_move.played = True
 
         player = db.query(Player).filter(Player.id == player_id).first()
         if not player:
             raise NotFoundError("Player not found")
 
         state_id = save_board(game_id, player_id, card_move.id, db)
-        switch_pieces(
-            move_data.squarePieceId1,
-            move_data.squarePieceId2,
-            state_id,
-            card_move.move,
-            db,
-        )
+        switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, state_id, card_move.move, db)
+        
+        card_move.played = True
+        db.commit()
 
         await game_events.emit_cards(game_id, player_id, db)
         await game_events.emit_board(game_id, db)
