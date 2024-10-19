@@ -89,11 +89,11 @@ jobs:
         source .venv/bin/activate
         python -c "from app.db.db import Base, engine; Base.metadata.create_all(bind=engine)"
 
-    # Paso 12: Formatear código con autopep8
+    # Paso 12: Formatear código con black
     - name: Formatear código
       run: |
         source .venv/bin/activate
-        autopep8 --in-place --select=E,W app/*/*.py
+        black . --line-length 79
 
     # Paso 13: Configurar usuario de Git
     - name: Configurar usuario de Git
