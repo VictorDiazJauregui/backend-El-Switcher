@@ -14,12 +14,15 @@ router = APIRouter()
 
 
 @router.post("/game/{game_id}/play_figure/{player_id}")
-async def validate_figure(figures_info: FigureSchema,
-                    game_id: int, player_id: int,
-                    db: Session = Depends(get_db)):
+async def validate_figure(
+    figures_info: FigureSchema,
+    game_id: int,
+    player_id: int,
+    db: Session = Depends(get_db),
+):
     """
     Validate the figure of a given player in a game.
-    
+
     Args:
         gameID (int): The ID of the game.
         playerID (int): The ID of the player.
@@ -30,12 +33,10 @@ async def validate_figure(figures_info: FigureSchema,
         details: The details of the response, if exists.
     """
 
-   
     response = validate_figure_function(figures_info, game_id, player_id, db)
     if response == 200:
         delete_figure_card(figures_info.figureCardId, db)
         await game_events.emit_cards(game_id, player_id, db)
-        
+
     print(response)
     return response
-

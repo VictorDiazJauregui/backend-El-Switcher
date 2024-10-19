@@ -1,14 +1,12 @@
 import pytest
 from app.db.db import GameStatus
-from .db_setup import (
-    client,
-    TestingSessionLocal,
-    create_game
-)
+from .db_setup import client, TestingSessionLocal, create_game
+
 
 @pytest.fixture(scope="module")
 def test_client():
     yield client
+
 
 def test_get_game_by_id():
 
@@ -16,12 +14,11 @@ def test_get_game_by_id():
     game = create_game(db, GameStatus.LOBBY)
 
     response = client.get(f"/game/{game.id}")
-    
+
     assert response.status_code == 200
     assert response.json() == {
         "gameId": game.id,
         "gameName": game.name,
         "maxPlayers": game.max_players,
-        "minPlayers":  game.min_players
+        "minPlayers": game.min_players,
     }
-    

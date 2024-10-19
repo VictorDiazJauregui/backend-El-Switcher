@@ -4,10 +4,11 @@ from sqlalchemy.orm import Session
 
 from app.db.db import get_db, Player
 
+
 # Skipped by default to not trigger prod database operations
 @pytest.mark.skip(reason="Contextual test")
 def test_get_db():
-    """ Test the real get_db function with a live database session """
+    """Test the real get_db function with a live database session"""
     # Use get_db to get a session
     db_gen = get_db()
     db = next(db_gen)  # Get the session object
@@ -22,14 +23,18 @@ def test_get_db():
     db.commit()
 
     # Retrieve the same record to verify session functionality
-    retrieved_record = db.query(Player).filter(Player.name == "Test Player").first()
+    retrieved_record = (
+        db.query(Player).filter(Player.name == "Test Player").first()
+    )
     assert retrieved_record is not None
     assert retrieved_record.name == "Test Player"
 
     # Test that the session gets closed properly
     # Clean up the generator
     try:
-        next(db_gen)  # This should raise StopIteration since db is closed after use
+        next(
+            db_gen
+        )  # This should raise StopIteration since db is closed after use
     except StopIteration:
         pass  # Expected behavior, session closed successfully
 
