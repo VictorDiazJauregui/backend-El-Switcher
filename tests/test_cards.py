@@ -213,6 +213,19 @@ def test_assign_movement_cards_with_empty_hand():
     cards_not_played = db.query(CardMove).filter(CardMove.owner_id == player.id, CardMove.played == False).all()
     assert len(cards_not_played) == 3, "El jugador debería tener 3 cartas de movimiento en la mano."
 
+def test_no_cards_deleted_when_no_movement_cards_exist():
+    db = TestingSessionLocal()
+    reset_db()
+
+    player = create_player(db, 1)
+
+    # No inicializa cartas de movimiento
+    cards.delete_played_mov_cards(player.id, db)
+
+    # Verifica que el jugador siga sin cartas
+    cards_in_hand = db.query(CardMove).filter(CardMove.owner_id == player.id).all()
+    assert len(cards_in_hand) == 0, "El jugador no debería tener cartas de movimiento en la mano."
+
 def test_no_cards_deleted_when_no_played_mov_cards():
     db = TestingSessionLocal()
     reset_db()
