@@ -65,31 +65,22 @@ def get_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
     ]
 
 
-async def make_move(
-    game_id: int, player_id: int, move_data: MakeMoveSchema, db: Session
-):
+async def make_move(game_id: int, player_id: int, move_data: MakeMoveSchema, db: Session):
     try:
-        card_move = (
-            db.query(CardMove)
-            .filter(CardMove.id == move_data.movementCardId)
-            .first()
-        )
+        card_move = db.query(CardMove).filter(CardMove.id == move_data.movementCardId).first()
         if not card_move:
             raise ValueError("Invalid movementCardId")
 
         player = db.query(Player).filter(Player.id == player_id).first()
         if not player:
             raise NotFoundError("Player not found")
+        
+        if not validate_move(move_data.squarePieceId1, move_data.squarePieceId2, card_move.move, db):
+            raise ValueError("Invalid move")
 
         state_id = save_board(game_id, player_id, card_move.id, db)
-        switch_pieces(
-            move_data.squarePieceId1,
-            move_data.squarePieceId2,
-            state_id,
-            card_move.move,
-            db,
-        )
-
+        switch_pieces(move_data.squarePieceId1, move_data.squarePieceId2, state_id, db)
+        
         card_move.played = True
         db.commit()
 
@@ -97,7 +88,7 @@ async def make_move(
         await game_events.emit_board(game_id, db)
         await game_events.emit_found_figures(game_id, db)
         await game_events.emit_opponents_total_mov_cards(game_id, db)
-
+        
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception(f"Error making move: {e}")
@@ -135,36 +126,16 @@ def save_board(game_id: int, player_id: int, movCard_id: int, db: Session):
         raise Exception(f"Error saving board state: {e}")
 
 
-def switch_pieces(
-    piece_id1: int,
-    piece_id2: int,
-    state_id: int,
-    move_type: MoveType,
-    db: Session,
-):
+def switch_pieces(piece_id1: int, piece_id2: int, state_id: int, db: Session):
     try:
-        piece1 = (
-            db.query(SquarePiece).filter(SquarePiece.id == piece_id1).first()
-        )
-        piece2 = (
-            db.query(SquarePiece).filter(SquarePiece.id == piece_id2).first()
-        )
-
-        if piece1 == piece2:
-            raise ValueError("Pieces are the same")
-        if not piece1:
-            raise ValueError("Piece 1 not found")
-        if not piece2:
-            raise ValueError("Piece 2 not found")
-
-        if validate_move(piece1, piece2, move_type):
-            piece1.row, piece2.row = piece2.row, piece1.row
-            piece1.column, piece2.column = piece2.column, piece1.column
-            piece1.partial_id = state_id
-            piece2.partial_id = state_id
-            db.commit()
-        else:
-            raise ValueError("Invalid move")
+        piece1 = db.query(SquarePiece).filter(SquarePiece.id == piece_id1).first()
+        piece2 = db.query(SquarePiece).filter(SquarePiece.id == piece_id2).first()
+        
+        piece1.row, piece2.row = piece2.row, piece1.row
+        piece1.column, piece2.column = piece2.column, piece1.column
+        piece1.partial_id = state_id
+        piece2.partial_id = state_id
+        db.commit()
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception(f"Error switching pieces: {e}")
@@ -172,66 +143,44 @@ def switch_pieces(
         raise ValueError(f"{e}")
 
 
-def validate_move(piece1, piece2, move_type: MoveType):
+def validate_move(piece_id1: int, piece_id2: int, move_type: MoveType, db: Session):
+    if not piece_id1:
+        raise ValueError("Piece 1 not found")
+    if not piece_id2:
+        raise ValueError("Piece 2 not found")
+    if piece_id1 == piece_id2:
+        raise ValueError("Pieces are the same")
+    
+    piece1 = db.query(SquarePiece).filter(SquarePiece.id == piece_id1).first()
+    piece2 = db.query(SquarePiece).filter(SquarePiece.id == piece_id2).first()
+
     row_diff = abs(piece1.row - piece2.row)
     col_diff = abs(piece1.column - piece2.column)
 
     row_rdiff = piece1.row - piece2.row
     col_rdiff = piece1.column - piece2.column
 
-    if move_type == MoveType.MOV_1:  # CRUCE DIAGONAL CON UN ESPACIO
+    if move_type == MoveType.MOV_1: # CRUCE DIAGONAL CON UN ESPACIO
         return row_diff == 2 and col_diff == 2
-    elif move_type == MoveType.MOV_2:  # CRUCE EN LINEA CON UN ESPACIOS
-        return (row_diff == 2 and col_diff == 0) or (
-            row_diff == 0 and col_diff == 2
-        )
-    elif move_type == MoveType.MOV_3:  # CRUCE EN LINEA CONTIGUO
-        return (row_diff == 1 and col_diff == 0) or (
-            row_diff == 0 and col_diff == 1
-        )
-    elif move_type == MoveType.MOV_4:  # CRUCE DIAGONAL CONTIGUO
+    elif move_type == MoveType.MOV_2: # CRUCE EN LINEA CON UN ESPACIOS
+        return (row_diff == 2 and col_diff == 0) or (row_diff == 0 and col_diff == 2)
+    elif move_type == MoveType.MOV_3: # CRUCE EN LINEA CONTIGUO
+        return (row_diff == 1 and col_diff == 0) or (row_diff == 0 and col_diff == 1)
+    elif move_type == MoveType.MOV_4: # CRUCE DIAGONAL CONTIGUO
         return row_diff == 1 and col_diff == 1
-    elif (
-        move_type == MoveType.MOV_5
-    ):  # CRUCE EN L A LA IZQUIERDA CON DOS ESPACIOS)
-        return (
-            (row_rdiff == -2 and col_rdiff == 1)
-            or (row_rdiff == 2 and col_rdiff == -1)
-        ) or (
-            (row_rdiff == 1 and col_rdiff == 2)
-            or (row_rdiff == -1 and col_rdiff == -2)
-        )
-    elif (
-        move_type == MoveType.MOV_6
-    ):  # CRUCE EN L A LA DERECHA CON DOS ESPACIOS
-        return (
-            (row_rdiff == -2 and col_rdiff == -1)
-            or (row_rdiff == 2 and col_rdiff == 1)
-        ) or (
-            (row_rdiff == 1 and col_rdiff == -2)
-            or (row_rdiff == -1 and col_rdiff == 2)
-        )
-    elif move_type == MoveType.MOV_7:  # CRUCE EN LINEA AL LATERAL
-        return (
-            (
-                (piece2.row == 0 or piece2.row == 5)
-                and piece1.column == piece2.column
-            )
-            or (
-                (piece2.column == 0 or piece2.column == 5)
-                and piece1.row == piece2.row
-            )
-            or (
-                (piece1.row == 0 or piece1.row == 5)
-                and piece1.column == piece2.column
-            )
-            or (
-                (piece1.column == 0 or piece1.column == 5)
-                and piece1.row == piece2.row
-            )
-        )
+    elif move_type == MoveType.MOV_5: # CRUCE EN L A LA IZQUIERDA CON DOS ESPACIOS)
+        return ((row_rdiff == -2 and col_rdiff == 1) or (row_rdiff == 2 and col_rdiff == -1)
+                ) or ((row_rdiff == 1 and col_rdiff == 2) or (row_rdiff == -1 and col_rdiff == -2))
+    elif move_type == MoveType.MOV_6: # CRUCE EN L A LA DERECHA CON DOS ESPACIOS
+        return ((row_rdiff == -2 and col_rdiff == -1) or (row_rdiff == 2 and col_rdiff == 1)
+                ) or ((row_rdiff == 1 and col_rdiff == -2) or (row_rdiff == -1 and col_rdiff == 2))
+    elif move_type == MoveType.MOV_7: # CRUCE EN LINEA AL LATERAL
+            return (
+                (piece2.row == 0 or piece2.row == 5) and piece1.column == piece2.column
+            ) or ((piece2.column == 0 or piece2.column == 5) and piece1.row == piece2.row
+            ) or ((piece1.row == 0 or piece1.row == 5) and piece1.column == piece2.column
+            ) or ((piece1.column == 0 or piece1.column == 5) and piece1.row == piece2.row)
     return False
-
 
 async def cancel_move(game_id: int, player_id: int, db: Session):
     try:
