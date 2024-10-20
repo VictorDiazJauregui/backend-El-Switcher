@@ -375,9 +375,17 @@ def test_no_cards_revoke_when_no_played_mov_cards():
     cards_in_hand = (
         db.query(CardMove).filter(CardMove.owner_id == player.id).all()
     )
+
     assert (
         len(cards_in_hand) == 3
     ), "El jugador debería tener 3 cartas de movimiento en la mano."
+
+    # Verifica que las cartas existen en la base de datos
+    total_cards = db.query(CardMove).all()
+
+    assert (
+        len(total_cards) == 3
+    ), "Deberían existir 3 cartas de movimiento en la base de datos."
 
 
 def test_revoke_played_movement_cards():
@@ -426,3 +434,25 @@ def test_revoke_played_movement_cards():
     assert (
         cards_in_hand[0].id == 2
     ), "La carta de movimiento no jugada debería ser la carta con ID 2."
+    assert (
+        cards_in_hand[0].played == False
+    ), "La carta de movimiento no jugada no debería estar jugada."
+
+    # Verifica que las cartas existen en la base de datos
+    total_cards = db.query(CardMove).all()
+
+    assert (
+        len(total_cards) == 3
+    ), "Deberían existir 3 cartas de movimiento en la base de datos."
+
+    # Verifica que solo se han revocado las cartas jugadas.
+    non_owned_cards = db.query(CardMove).filter(CardMove.owner_id == None).all()
+
+    assert (
+        len(non_owned_cards) == 2
+    ), "No deberían existir cartas de movimiento sin dueño en la base de datos."
+
+    for card in non_owned_cards:
+        assert (
+            card.played == False
+        ), "Las cartas de movimiento sin dueño no deberían estar jugadas."
