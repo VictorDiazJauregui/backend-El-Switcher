@@ -446,7 +446,9 @@ def test_revoke_played_movement_cards():
     ), "Deberían existir 3 cartas de movimiento en la base de datos."
 
     # Verifica que solo se han revocado las cartas jugadas.
-    non_owned_cards = db.query(CardMove).filter(CardMove.owner_id == None).all()
+    non_owned_cards = (
+        db.query(CardMove).filter(CardMove.owner_id == None).all()
+    )
 
     assert (
         len(non_owned_cards) == 2

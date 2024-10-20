@@ -328,7 +328,7 @@ def delete_figure_card(figureCardId: int, db: Session):
 
 def revoke_played_movement_cards(player_id: int, db: Session):
     """
-    Resets the played movement cards for the specified player by marking them 
+    Resets the played movement cards for the specified player by marking them
     as unplayed and removing their ownership.
     """
     try:
@@ -342,6 +342,7 @@ def revoke_played_movement_cards(player_id: int, db: Session):
         db.commit()
     except SQLAlchemyError as e:
         raise Exception(f"Error deleting played movement cards: {e}")
+
 
 def initialize_cards(game_id: int, db: Session):
     """
