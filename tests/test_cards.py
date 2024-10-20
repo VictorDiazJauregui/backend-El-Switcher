@@ -317,14 +317,14 @@ def test_assign_movement_cards_with_empty_hand():
     ), "El jugador debería tener 3 cartas de movimiento en la mano."
 
 
-def test_no_cards_deleted_when_no_movement_cards_exist():
+def test_no_cards_revoke_when_no_movement_cards_exist():
     db = TestingSessionLocal()
     reset_db()
 
     player = create_player(db, 1)
 
     # No inicializa cartas de movimiento
-    cards.delete_played_mov_cards(player.id, db)
+    cards.revoke_played_movement_cards(player.id, db)
 
     # Verifica que el jugador siga sin cartas
     cards_in_hand = (
@@ -335,7 +335,7 @@ def test_no_cards_deleted_when_no_movement_cards_exist():
     ), "El jugador no debería tener cartas de movimiento en la mano."
 
 
-def test_no_cards_deleted_when_no_played_mov_cards():
+def test_no_cards_revoke_when_no_played_mov_cards():
     db = TestingSessionLocal()
     reset_db()
 
@@ -369,7 +369,7 @@ def test_no_cards_deleted_when_no_played_mov_cards():
     db.commit()
 
     # Intenta eliminar las cartas de movimiento jugadas, pero no hay cartas de movimiento jugadas.
-    cards.delete_played_mov_cards(player.id, db)
+    cards.revoke_played_movement_cards(player.id, db)
 
     # Verifica que el jugador tenga 3 cartas
     cards_in_hand = (
@@ -380,7 +380,7 @@ def test_no_cards_deleted_when_no_played_mov_cards():
     ), "El jugador debería tener 3 cartas de movimiento en la mano."
 
 
-def test_delete_played_mov_cards():
+def test_revoke_played_movement_cards():
     db = TestingSessionLocal()
     reset_db()
 
@@ -414,7 +414,7 @@ def test_delete_played_mov_cards():
     db.commit()
 
     # Elimina las cartas de movimiento jugadas
-    cards.delete_played_mov_cards(player.id, db)
+    cards.revoke_played_movement_cards(player.id, db)
 
     # Verifica que el jugador tenga 1 carta
     cards_in_hand = (
