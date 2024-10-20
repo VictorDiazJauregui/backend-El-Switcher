@@ -230,6 +230,7 @@ def validate_move(piece1: int, piece2: int, move_type: MoveType):
     return False
 
 async def validate_and_cancel_move(game_id: int, player_id: int, db: Session):
+    """Valida y cancela el último movimiento jugado por un jugador"""
     player = get_player(player_id, db)
     game = get_game(game_id, db)
 
@@ -243,6 +244,7 @@ async def validate_and_cancel_move(game_id: int, player_id: int, db: Session):
 
 
 async def revert_move_state(game_id: int, player_id: int, db: Session):
+    """Revierte el último movimiento jugado por un jugador"""
     try:
         parallel_board = (
             db.query(ParallelBoard)
@@ -304,6 +306,7 @@ async def revert_move_state(game_id: int, player_id: int, db: Session):
 
 # Delete all ParallelBoards and SquarePieces.partial_id
 def delete_partial_cache(game_id: int, db: Session):
+    """Elimina la cache parcial de un juego"""
     try:
         db.query(ParallelBoard).filter(
             ParallelBoard.board_id == game_id
