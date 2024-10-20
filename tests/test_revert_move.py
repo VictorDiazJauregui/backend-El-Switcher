@@ -3,7 +3,7 @@ import pytest
 from sqlalchemy.orm import Session
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.exc import SQLAlchemyError
-from app.services.board import cancel_move
+from app.services.board import revert_move_state
 from app.db.db import ParallelBoard, SquarePiece, CardMove, Color
 from app.errors.handlers import NotFoundError
 
@@ -16,7 +16,7 @@ def db_session():
 
 
 @pytest.mark.asyncio
-async def test_cancel_move_success(db_session):
+async def test_revert_move_success(db_session):
     game_id = 1
     player_id = 1
 
@@ -65,7 +65,7 @@ async def test_cancel_move_success(db_session):
         new_callable=AsyncMock,
     ) as mock_emit_found_figures:
 
-        await cancel_move(game_id, player_id, db_session)
+        await revert_move_state(game_id, player_id, db_session)
 
         # Assertions
         db_session.query(ParallelBoard).filter_by.assert_called_with(
@@ -83,7 +83,7 @@ async def test_cancel_move_success(db_session):
 
 
 @pytest.mark.asyncio
-async def test_cancel_move_no_board_state(db_session):
+async def test_revert_move_no_board_state(db_session):
     game_id = 1
     player_id = 1
 
@@ -93,7 +93,7 @@ async def test_cancel_move_no_board_state(db_session):
     ).filter_by.return_value.order_by.return_value.first.return_value = None
 
     with pytest.raises(RuntimeError, match="No board state to revert"):
-        await cancel_move(game_id, player_id, db_session)
+        await revert_move_state(game_id, player_id, db_session)
 
     db_session.query(ParallelBoard).filter_by.assert_called_with(
         board_id=game_id
@@ -101,7 +101,7 @@ async def test_cancel_move_no_board_state(db_session):
 
 
 @pytest.mark.asyncio
-async def test_cancel_move_sqlalchemy_error(db_session):
+async def test_revert_move_sqlalchemy_error(db_session):
     game_id = 1
     player_id = 1
 
@@ -113,6 +113,6 @@ async def test_cancel_move_sqlalchemy_error(db_session):
     )
 
     with pytest.raises(RuntimeError, match="Error canceling move"):
-        await cancel_move(game_id, player_id, db_session)
+        await revert_move_state(game_id, player_id, db_session)
 
     db_session.rollback.assert_called_once()

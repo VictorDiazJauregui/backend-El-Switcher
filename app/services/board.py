@@ -13,11 +13,13 @@ from app.db.db import (
     CardMove,
     Player,
     MoveType,
+    GameStatus,
 )
 from app.errors.handlers import NotFoundError
 from app.schemas.board import PieceResponseSchema
 from app.schemas.move import MakeMoveSchema
 from app.services import game_events
+from app.services.game_player_service import get_game, get_player
 
 
 def create_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
@@ -228,7 +230,22 @@ def validate_move(piece1: int, piece2: int, move_type: MoveType):
     return False
 
 
-async def cancel_move(game_id: int, player_id: int, db: Session):
+async def validate_and_cancel_move(game_id: int, player_id: int, db: Session):
+    """Valida y cancela el último movimiento jugado por un jugador"""
+    player = get_player(player_id, db)
+    game = get_game(game_id, db)
+
+    if game.status != GameStatus.INGAME:
+        raise ValueError("Game is not in progress")
+
+    if player.turn != game.turn:
+        raise ValueError("It's not your turn")
+
+    await revert_move_state(game_id, player_id, db)
+
+
+async def revert_move_state(game_id: int, player_id: int, db: Session):
+    """Revierte el último movimiento jugado por un jugador"""
     try:
         parallel_board = (
             db.query(ParallelBoard)
@@ -290,6 +307,7 @@ async def cancel_move(game_id: int, player_id: int, db: Session):
 
 # Delete all ParallelBoards and SquarePieces.partial_id
 def delete_partial_cache(game_id: int, db: Session):
+    """Elimina la cache parcial de un juego"""
     try:
         db.query(ParallelBoard).filter(
             ParallelBoard.board_id == game_id
@@ -298,6 +316,30 @@ def delete_partial_cache(game_id: int, db: Session):
             {SquarePiece.partial_id: None}
         )
         db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception(f"Error deleting partial cache: {e}")
+
+
+async def undo_played_moves(game_id: int, player_id: int, db: Session):
+    """Deshace todos los movimientos jugados de un jugador en una partida"""
+    try:
+        played_card_moves = (
+            db.query(CardMove)
+            .filter(
+                CardMove.owner_id == player_id,
+                CardMove.played == True,
+                CardMove.game_id == game_id,
+            )
+            .all()
+        )
+
+        if not played_card_moves:
+            return
+
+        for _ in played_card_moves:
+            await revert_move_state(game_id, player_id, db)
+
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception(f"Error deleting partial cache: {e}")
