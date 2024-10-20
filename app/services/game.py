@@ -7,6 +7,7 @@ from app.schemas.player import PlayerResponseSchema
 from app.services import lobby_events, game_events, game_list_events
 from app.services.board import delete_partial_cache, undo_played_moves
 from app.services.cards import assign_figure_cards, assign_movement_cards
+from app.services.game_player_service import get_game, get_player
 
 
 async def create_game(data: GameCreateSchema, db: Session):
@@ -45,20 +46,6 @@ async def create_game(data: GameCreateSchema, db: Session):
     await game_list_events.emit_game_list(db)
 
     return {"gameId": db_game.id, "ownerId": db_player.id}
-
-
-def get_game(game_id: int, db: Session) -> Game:
-    game = db.query(Game).filter(Game.id == game_id).first()
-    if game is None:
-        raise NotFoundError(f"Game with id {game_id} does not exist.")
-    return game
-
-
-def get_player(player_id: int, db: Session) -> Player:
-    player = db.query(Player).filter(Player.id == player_id).first()
-    if player is None:
-        raise NotFoundError(f"Player with id {player_id} does not exist.")
-    return player
 
 
 async def add_player_to_game(

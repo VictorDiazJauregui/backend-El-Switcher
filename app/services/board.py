@@ -13,11 +13,13 @@ from app.db.db import (
     CardMove,
     Player,
     MoveType,
+    GameStatus,
 )
 from app.errors.handlers import NotFoundError
 from app.schemas.board import PieceResponseSchema
 from app.schemas.move import MakeMoveSchema
 from app.services import game_events
+from app.services.game_player_service import get_game, get_player
 
 
 def create_board(game_id: int, db: Session) -> List[PieceResponseSchema]:
@@ -227,8 +229,20 @@ def validate_move(piece1: int, piece2: int, move_type: MoveType):
         )
     return False
 
+async def validate_and_cancel_move(game_id: int, player_id: int, db: Session):
+    player = get_player(player_id, db)
+    game = get_game(game_id, db)
 
-async def cancel_move(game_id: int, player_id: int, db: Session):
+    if game.status != GameStatus.INGAME:
+        raise ValueError("Game is not in progress")
+    
+    if player.turn != game.turn:
+        raise ValueError("It's not your turn")
+    
+    await revert_move_state(game_id, player_id, db)
+
+
+async def revert_move_state(game_id: int, player_id: int, db: Session):
     try:
         parallel_board = (
             db.query(ParallelBoard)
@@ -315,7 +329,7 @@ async def undo_played_moves(game_id: int, player_id: int, db: Session):
             return
 
         for _ in played_card_moves:
-            await cancel_move(game_id, player_id, db)
+            await revert_move_state(game_id, player_id, db)
 
     except SQLAlchemyError as e:
         db.rollback()
