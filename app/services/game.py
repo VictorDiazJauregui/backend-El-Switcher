@@ -110,6 +110,7 @@ async def pass_turn(game_id: int, player_id: int, db: Session):
     print(f"Player {player.name} has ended their turn")
     db.commit()
 
+    # Undo played moves. This must be done after the turn is passed.
     await undo_played_moves(game_id, player_id, db)
     delete_partial_cache(game_id, db)
 
