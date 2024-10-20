@@ -229,6 +229,7 @@ def validate_move(piece1: int, piece2: int, move_type: MoveType):
         )
     return False
 
+
 async def validate_and_cancel_move(game_id: int, player_id: int, db: Session):
     """Valida y cancela el último movimiento jugado por un jugador"""
     player = get_player(player_id, db)
@@ -236,10 +237,10 @@ async def validate_and_cancel_move(game_id: int, player_id: int, db: Session):
 
     if game.status != GameStatus.INGAME:
         raise ValueError("Game is not in progress")
-    
+
     if player.turn != game.turn:
         raise ValueError("It's not your turn")
-    
+
     await revert_move_state(game_id, player_id, db)
 
 
@@ -319,14 +320,19 @@ def delete_partial_cache(game_id: int, db: Session):
         db.rollback()
         raise Exception(f"Error deleting partial cache: {e}")
 
+
 async def undo_played_moves(game_id: int, player_id: int, db: Session):
     """Deshace todos los movimientos jugados de un jugador en una partida"""
     try:
-        played_card_moves = db.query(CardMove).filter(
-            CardMove.owner_id == player_id,
-            CardMove.played == True,
-            CardMove.game_id == game_id,
-        ).all()
+        played_card_moves = (
+            db.query(CardMove)
+            .filter(
+                CardMove.owner_id == player_id,
+                CardMove.played == True,
+                CardMove.game_id == game_id,
+            )
+            .all()
+        )
 
         if not played_card_moves:
             return

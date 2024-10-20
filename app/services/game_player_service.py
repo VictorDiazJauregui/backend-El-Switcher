@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.db.db import Game, Player
 from app.errors.handlers import NotFoundError
 
+
 def get_game(game_id: int, db: Session) -> Game:
     game = db.query(Game).filter(Game.id == game_id).first()
     if game is None:
