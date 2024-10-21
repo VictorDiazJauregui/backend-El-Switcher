@@ -326,9 +326,10 @@ def delete_figure_card(figureCardId: int, db: Session):
         raise Exception(f"Error deleting figure card: {e}")
 
 
-def delete_played_mov_cards(player_id: int, db: Session):
+def unassign_played_movement_cards(player_id: int, db: Session):
     """
-    Deletes the played movement cards from the player's deck.
+    Unassigns the played movement cards for the specified player by marking them
+    as unplayed and removing their ownership.
     """
     try:
         cards_in_hand = (
@@ -336,9 +337,9 @@ def delete_played_mov_cards(player_id: int, db: Session):
         )
         for card in cards_in_hand:
             if card.played:
-                db.delete(card)
+                card.played = False
+                card.owner_id = None
         db.commit()
-
     except SQLAlchemyError as e:
         raise Exception(f"Error deleting played movement cards: {e}")
 
