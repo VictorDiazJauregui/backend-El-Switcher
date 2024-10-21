@@ -326,9 +326,9 @@ def delete_figure_card(figureCardId: int, db: Session):
         raise Exception(f"Error deleting figure card: {e}")
 
 
-def revoke_played_movement_cards(player_id: int, db: Session):
+def unassign_played_movement_cards(player_id: int, db: Session):
     """
-    Resets the played movement cards for the specified player by marking them
+    Unassigns the played movement cards for the specified player by marking them
     as unplayed and removing their ownership.
     """
     try:
