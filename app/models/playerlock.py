@@ -1,5 +1,6 @@
 from app.errors.handlers import ForbiddenError
 from enum import Enum
+from contextlib import contextmanager
 
 class PlayerAction(Enum):
     END_TURN = "end_turn"
@@ -29,3 +30,14 @@ class PlayerLock:
         """Desbloquea un jugador para una acción específica."""
         if player_id in self.locks[action]:
             del self.locks[action][player_id]
+
+
+@contextmanager
+def lock_player(player_id: int, action: PlayerAction):
+    """Context manager para bloquear un jugador para una acción específica."""
+    player_lock = PlayerLock()
+    player_lock.acquire(player_id, action)
+    try:
+        yield
+    finally:
+        player_lock.release(player_id, action)

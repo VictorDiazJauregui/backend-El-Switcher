@@ -8,7 +8,7 @@ from app.services import lobby_events, game_events, game_list_events
 from app.services.board import delete_partial_cache, undo_played_moves
 from app.services.cards import assign_figure_cards, assign_movement_cards
 from app.services.game_player_service import get_game, get_player
-from app.models.playerlock import PlayerAction, PlayerLock
+from app.models.playerlock import PlayerAction, PlayerLock, lock_player
 
 
 async def create_game(data: GameCreateSchema, db: Session):
@@ -129,19 +129,13 @@ async def end_turn(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
 
-    player_lock = PlayerLock()
-
     if game.status != GameStatus.INGAME:
         raise ValueError(f"Game {game.id} is not in progress.")
     if game.turn != player.turn:
         raise ValueError(f"It's not {player.id} turn.")
-
-    player_lock.acquire(player_id, PlayerAction.END_TURN)
-
-    try:
+    
+    with lock_player(player_id, PlayerAction.END_TURN):
         await pass_turn(game_id, player_id, db)
-    finally:
-        player_lock.release(player_id, PlayerAction.END_TURN)
     
     return {"message": f"Player {player.name} has ended their turn."}
 
@@ -150,16 +144,12 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
 
-    player_lock = PlayerLock()
-
-    if player_lock.is_locked(player_id, PlayerAction.END_TURN):
+    if PlayerLock().is_locked(player_id, PlayerAction.END_TURN):
         raise ForbiddenError(
             "Player is currently ending their turn and cannot leave the game."
         )
 
-    player_lock.acquire(player_id, PlayerAction.REMOVE_PLAYER)
-
-    try:
+    with lock_player(player_id, PlayerAction.REMOVE_PLAYER):
         # Disconnect the player's socket from the game room
         await game_events.disconnect_player_socket(player_id, game_id)
 
@@ -190,7 +180,5 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
 
         if game.status == GameStatus.INGAME:
             await game_events.emit_players_game(game_id, db)
-    finally:
-        player_lock.release(player_id, PlayerAction.REMOVE_PLAYER)
 
     return {"message": f"Player {player.name} has left the game."}
