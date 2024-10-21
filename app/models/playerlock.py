@@ -2,9 +2,11 @@ from app.errors.handlers import ForbiddenError
 from enum import Enum
 from contextlib import contextmanager
 
+
 class PlayerAction(Enum):
     END_TURN = "end_turn"
     REMOVE_PLAYER = "remove_player"
+
 
 class PlayerLock:
     _instance = None
@@ -19,11 +21,13 @@ class PlayerLock:
     def is_locked(self, player_id: int, action: PlayerAction) -> bool:
         """Verifica si un jugador está bloqueado para una acción específica."""
         return player_id in self.locks[action]
-    
+
     def acquire(self, player_id: int, action: PlayerAction) -> None:
         """Bloquea un jugador para una acción específica."""
         if self.is_locked(player_id, action):
-            raise ForbiddenError(f"Player is currently in a game action ({action.value}) and cannot perform another action.")
+            raise ForbiddenError(
+                f"Player is currently in a game action ({action.value}) and cannot perform another action."
+            )
         self.locks[action][player_id] = action
 
     def release(self, player_id: int, action: PlayerAction) -> None:

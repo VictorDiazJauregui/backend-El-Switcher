@@ -133,10 +133,10 @@ async def end_turn(game_id: int, player_id: int, db: Session):
         raise ValueError(f"Game {game.id} is not in progress.")
     if game.turn != player.turn:
         raise ValueError(f"It's not {player.id} turn.")
-    
+
     with lock_player(player_id, PlayerAction.END_TURN):
         await pass_turn(game_id, player_id, db)
-    
+
     return {"message": f"Player {player.name} has ended their turn."}
 
 
@@ -153,7 +153,6 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
         # Disconnect the player's socket from the game room
         await game_events.disconnect_player_socket(player_id, game_id)
 
-        
         if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
             raise ForbiddenError(
                 "Host does not have permission to leave the lobby."
