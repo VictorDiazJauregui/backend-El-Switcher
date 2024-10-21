@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List
+
 
 class GameCreateSchema(BaseModel):
     ownerName: str
@@ -7,9 +8,11 @@ class GameCreateSchema(BaseModel):
     maxPlayers: int
     minPlayers: int
 
+
 class GameResponseSchema(BaseModel):
     gameId: int
     ownerId: int
+
 
 class GameListSchema(BaseModel):
     gameId: int
@@ -17,12 +20,15 @@ class GameListSchema(BaseModel):
     connectedPlayers: int
     maxPlayers: int
 
+
 class ListSchema(BaseModel):
     games: List[GameListSchema]
+
 
 class StartResponseSchema(BaseModel):
     gameId: int
     status: str
+
 
 class GameInfoSchema(BaseModel):
     gameId: int
