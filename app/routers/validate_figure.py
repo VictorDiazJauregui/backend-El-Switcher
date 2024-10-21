@@ -3,7 +3,10 @@ from sqlalchemy.orm import Session
 from app.db.db import get_db
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure_function import validate_figure_function
-from app.services.cards import delete_figure_card, unassign_played_movement_cards
+from app.services.cards import (
+    delete_figure_card,
+    unassign_played_movement_cards,
+)
 from app.services import game_events
 from app.services.board import delete_partial_cache
 
