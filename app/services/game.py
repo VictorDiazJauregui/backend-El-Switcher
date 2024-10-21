@@ -8,6 +8,7 @@ from app.services import lobby_events, game_events, game_list_events
 from app.services.board import delete_partial_cache, undo_played_moves
 from app.services.cards import assign_figure_cards, assign_movement_cards
 from app.services.game_player_service import get_game, get_player
+from app.models.playerlock import PlayerAction, PlayerLock
 
 
 async def create_game(data: GameCreateSchema, db: Session):
@@ -128,13 +129,20 @@ async def end_turn(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
 
+    player_lock = PlayerLock()
+
     if game.status != GameStatus.INGAME:
         raise ValueError(f"Game {game.id} is not in progress.")
     if game.turn != player.turn:
         raise ValueError(f"It's not {player.id} turn.")
 
-    await pass_turn(game_id, player_id, db)
+    player_lock.acquire(player_id, PlayerAction.END_TURN)
 
+    try:
+        await pass_turn(game_id, player_id, db)
+    finally:
+        player_lock.release(player_id, PlayerAction.END_TURN)
+    
     return {"message": f"Player {player.name} has ended their turn."}
 
 
@@ -142,34 +150,47 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
     game = get_game(game_id, db)
     player = get_player(player_id, db)
 
-    # Disconnect the player's socket from the game room
-    await game_events.disconnect_player_socket(player_id, game_id)
+    player_lock = PlayerLock()
 
-    if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
+    if player_lock.is_locked(player_id, PlayerAction.END_TURN):
         raise ForbiddenError(
-            "Host does not have permission to leave the lobby."
+            "Player is currently ending their turn and cannot leave the game."
         )
 
-    if game.status == GameStatus.INGAME and player.turn == game.turn:
-        # if the player leaving is the current player, end their turn
-        await end_turn(game_id, player_id, db)
+    player_lock.acquire(player_id, PlayerAction.REMOVE_PLAYER)
 
-    db.delete(player)
-    db.commit()
+    try:
+        # Disconnect the player's socket from the game room
+        await game_events.disconnect_player_socket(player_id, game_id)
 
-    if game.status == GameStatus.INGAME and len(game.players) == 1:
-        # if there is only one player left in the game, the game is over and that player wins
-        game.status = GameStatus.FINISHED
+        
+        if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
+            raise ForbiddenError(
+                "Host does not have permission to leave the lobby."
+            )
+
+        if game.status == GameStatus.INGAME and player.turn == game.turn:
+            # if the player leaving is the current player, end their turn
+            await end_turn(game_id, player_id, db)
+
+        db.delete(player)
         db.commit()
 
-        await game_events.emit_winner(game_id, game.players[0].id, db)
+        if game.status == GameStatus.INGAME and len(game.players) == 1:
+            # if there is only one player left in the game, the game is over and that player wins
+            game.status = GameStatus.FINISHED
+            db.commit()
 
-    if game.status == GameStatus.LOBBY:
-        await lobby_events.emit_players_lobby(game_id, db)
-        await lobby_events.emit_can_start_game(game_id, db)
-        await game_list_events.emit_game_list(db)
+            await game_events.emit_winner(game_id, game.players[0].id, db)
 
-    if game.status == GameStatus.INGAME:
-        await game_events.emit_players_game(game_id, db)
+        if game.status == GameStatus.LOBBY:
+            await lobby_events.emit_players_lobby(game_id, db)
+            await lobby_events.emit_can_start_game(game_id, db)
+            await game_list_events.emit_game_list(db)
+
+        if game.status == GameStatus.INGAME:
+            await game_events.emit_players_game(game_id, db)
+    finally:
+        player_lock.release(player_id, PlayerAction.REMOVE_PLAYER)
 
     return {"message": f"Player {player.name} has left the game."}
