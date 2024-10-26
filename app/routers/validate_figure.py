@@ -43,7 +43,7 @@ async def validate_figure(
         await game_events.emit_cards(game_id, player_id, db)
         
         if win_by_figures(game_id, player_id, db):
-            await game_events.emit_win(game_id, player_id, db)
+            await game_events.emit_winner(game_id, player_id, db)
 
     print(response)
     return response
