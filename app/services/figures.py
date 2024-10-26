@@ -167,18 +167,23 @@ def figures_event(game_id: int, db: Session) -> list:
 
     return figures
 
+
 def win_by_figures(game_id: int, player_id: int, db: Session) -> bool:
     """
     Comprueba si un jugador ha ganado una partida por figuras.
     """
     win = False
 
-    player = db.query(Player).filter(Player.id == player_id, Player.game_id == game_id).first()
+    player = (
+        db.query(Player)
+        .filter(Player.id == player_id, Player.game_id == game_id)
+        .first()
+    )
     game = db.query(Game).filter(Game.id == game_id).first()
 
     if len(player.card_figs) == 0:
         win = True
         game.status = GameStatus.FINISHED
         db.commit()
-    
+
     return win
