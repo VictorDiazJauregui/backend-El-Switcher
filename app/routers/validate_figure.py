@@ -8,6 +8,7 @@ from app.services.cards import (
     unassign_played_movement_cards,
 )
 from app.services import game_events
+from app.services.figures import win_by_figures
 from app.services.board import delete_partial_cache
 
 
@@ -39,6 +40,9 @@ async def validate_figure(
         delete_partial_cache(game_id, db)
         delete_figure_card(figures_info.figureCardId, db)
         unassign_played_movement_cards(player_id, db)
+
+        if win_by_figures(game_id, player_id, db):
+            await game_events.emit_win(game_id, player_id, db)
         await game_events.emit_cards(game_id, player_id, db)
 
     print(response)

@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from sqlalchemy.orm import Session
 
-from app.db.db import Board, Color
+from app.db.db import Board, Color, GameStatus, Player, Game
 from app.errors.handlers import NotFoundError
 from app.models.figures import get_all_figures
 
@@ -166,3 +166,19 @@ def figures_event(game_id: int, db: Session) -> list:
     figures = convert_to_serializable(figures)
 
     return figures
+
+def win_by_figures(game_id: int, player_id: int, db: Session) -> bool:
+    """
+    Comprueba si un jugador ha ganado una partida por figuras.
+    """
+    win = False
+
+    player = db.query(Player).filter(Player.id == player_id, Player.game_id == game_id).first()
+    game = db.query(Game).filter(Game.id == game_id).first()
+
+    if len(player.card_figs) == 0:
+        win = True
+        game.status = GameStatus.FINISHED
+        db.commit()
+    
+    return win
