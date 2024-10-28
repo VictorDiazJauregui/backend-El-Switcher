@@ -19,7 +19,9 @@ async def create_game(data: GameCreateSchema, db: Session):
     min_players = data.minPlayers
 
     if data.password is not None:
-        password = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt())
+        password = bcrypt.hashpw(
+            data.password.encode("utf-8"), bcrypt.gensalt()
+        )
     else:
         password = None
 
@@ -68,7 +70,8 @@ async def add_player_to_game(
         raise ValueError(f"Game {game_id} is full.")
 
     if game.password and not bcrypt.checkpw(
-        password.encode('utf-8'), game.password):
+        password.encode("utf-8"), game.password
+    ):
         raise ValueError("Incorrect password.")
 
     # Determine the turn for the new player
