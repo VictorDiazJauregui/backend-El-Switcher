@@ -100,7 +100,7 @@ class Game(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(25), nullable=False)
-    password = Column(String(25), nullable=True)
+    password = Column(String(255), nullable=True)
     max_players = Column(Integer, nullable=False)
     min_players = Column(Integer, nullable=False)
     status = Column(Enum(GameStatus), nullable=False)
