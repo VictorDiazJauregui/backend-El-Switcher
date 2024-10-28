@@ -23,6 +23,21 @@ def test_create_game_success(test_client):
     assert "gameId" in data
     assert "ownerId" in data
 
+def test_create_game_with_password(test_client):
+    response = test_client.post(
+        "/game_create",
+        json={
+            "ownerName": "Alice",
+            "gameName": "Protected Game",
+            "maxPlayers": 3,
+            "minPlayers": 2,
+            "password": "securepassword",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "gameId" in data
+    assert "ownerId" in data
 
 def test_create_game_missing_fields(test_client):
     response = test_client.post("/game_create", json={})

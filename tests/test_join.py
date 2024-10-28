@@ -27,6 +27,39 @@ def test_add_player_to_game(test_client):
     assert "playerId" in data
     assert data["playerName"] == "test_player"
 
+def test_add_player_to_game_with_correct_password(test_client):
+    db = TestingSessionLocal()
+    game = create_game(db, GameStatus.LOBBY, password="securepassword")
+
+    # Now, try to add a player with the correct password
+    response = test_client.post(
+        f"/game/{game.id}/join",
+        json={
+            "playerName": "Bob",
+            "password": "securepassword",
+        },
+    )
+    
+    assert response.status_code == 200
+    player_data = response.json()
+    assert "playerId" in player_data
+    assert "playerName" in player_data
+
+def test_add_player_to_game_with_incorrect_password(test_client):
+    db = TestingSessionLocal()
+    game = create_game(db, GameStatus.LOBBY, password="password")
+
+    # Now, try to add a player with an incorrect password
+    response = test_client.post(
+        f"/game/{game.id}/join",
+        json={
+            "playerName": "Bob",
+            "password": "wrongpassword",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Incorrect password."
 
 def test_add_player_to_game_missing_fields(test_client):
     response = test_client.post("/game/1/join", json={})

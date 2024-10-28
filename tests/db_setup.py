@@ -1,3 +1,4 @@
+import bcrypt
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -51,13 +52,15 @@ def reset_db():
 reset_db()
 
 
-def create_game(db, game_status):
+def create_game(db, game_status, password: str = None):
+    
     game = Game(
         name="test_game",
         max_players=4,
         min_players=2,
         status=game_status,
         turn=Turn.P1,
+        password= bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()) if password else None
     )
     db.add(game)
     db.commit()
