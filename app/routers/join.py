@@ -12,6 +12,8 @@ router = APIRouter()
 async def join_game(
     game_id: int, player: PlayerCreateRequest, db: Session = Depends(get_db)
 ):
-    response = await add_player_to_game(player.playerName, game_id, db, player.password)
+    response = await add_player_to_game(
+        player.playerName, game_id, db, player.password
+    )
 
     return response

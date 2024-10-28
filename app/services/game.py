@@ -16,7 +16,7 @@ async def create_game(data: GameCreateSchema, db: Session):
     game_name = data.gameName
     max_players = data.maxPlayers
     min_players = data.minPlayers
-    
+
     if data.password is not None:
         password = data.password
     else:
