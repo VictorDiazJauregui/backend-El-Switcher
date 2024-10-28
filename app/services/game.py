@@ -1,3 +1,4 @@
+import bcrypt
 from sqlalchemy.orm import Session
 
 from app.db.db import Game, Player, GameStatus, Turn
@@ -18,7 +19,7 @@ async def create_game(data: GameCreateSchema, db: Session):
     min_players = data.minPlayers
 
     if data.password is not None:
-        password = data.password
+        password = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt())
     else:
         password = None
 
@@ -66,7 +67,8 @@ async def add_player_to_game(
     if len(game.players) >= game.max_players:
         raise ValueError(f"Game {game_id} is full.")
 
-    if game.password and game.password != password:
+    if game.password and not bcrypt.checkpw(
+        password.encode('utf-8'), game.password):
         raise ValueError("Incorrect password.")
 
     # Determine the turn for the new player
