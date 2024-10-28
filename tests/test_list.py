@@ -53,6 +53,7 @@ async def test_emit_game_list_with_games(mock_db_session, mock_sio):
             "gameName": mock_game.name,
             "connectedPlayers": len(mock_game.players),
             "maxPlayers": mock_game.max_players,
+            "isPublic": True
         }
     ]
 
