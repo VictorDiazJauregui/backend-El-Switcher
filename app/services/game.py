@@ -16,6 +16,11 @@ async def create_game(data: GameCreateSchema, db: Session):
     game_name = data.gameName
     max_players = data.maxPlayers
     min_players = data.minPlayers
+    
+    if data.password is not None:
+        password = data.password
+    else:
+        password = None
 
     if not owner_name or not game_name or not max_players or not min_players:
         raise ValueError("All fields required")
@@ -30,6 +35,7 @@ async def create_game(data: GameCreateSchema, db: Session):
 
     db_game = Game(
         name=game_name,
+        password=password,
         max_players=max_players,
         min_players=min_players,
         status=GameStatus.LOBBY,
@@ -50,7 +56,7 @@ async def create_game(data: GameCreateSchema, db: Session):
 
 
 async def add_player_to_game(
-    player_name: str, game_id: int, db: Session
+    player_name: str, game_id: int, db: Session, password: str = None
 ) -> PlayerResponseSchema:
     game = get_game(game_id, db)
 
@@ -59,6 +65,9 @@ async def add_player_to_game(
 
     if len(game.players) >= game.max_players:
         raise ValueError(f"Game {game_id} is full.")
+
+    if game.password and game.password != password:
+        raise ValueError("Incorrect password.")
 
     # Determine the turn for the new player
     turn_order = len(game.players) + 1
