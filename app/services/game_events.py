@@ -54,8 +54,8 @@ async def emit_turn_info(game_id, db):
     await broadcast.broadcast(sio.sio_game, game_id, "turn", turn_info)
 
     # Start the timer for the new turn
-    await emit_timer(game_id, player.id, db)
-
+    asyncio.create_task(emit_timer(game_id, player.id, db))
+    
 async def emit_timer(game_id, player_id, db):
 
     broadcast = Broadcast()
