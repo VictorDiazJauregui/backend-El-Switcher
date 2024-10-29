@@ -18,12 +18,12 @@ async def create_game(data: GameCreateSchema, db: Session):
     max_players = data.maxPlayers
     min_players = data.minPlayers
 
-    if data.password is not None:
+    if data.password is None or data.password == "":
+        password = None
+    else:
         password = bcrypt.hashpw(
             data.password.encode("utf-8"), bcrypt.gensalt()
         )
-    else:
-        password = None
 
     if not owner_name or not game_name or not max_players or not min_players:
         raise ValueError("All fields required")
