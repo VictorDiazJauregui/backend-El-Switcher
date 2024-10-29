@@ -169,6 +169,7 @@ def create_card_move(db, player_id, move_type):
     db.refresh(card_move)
     return card_move
 
+
 def create_card_fig(db, game_id, player_id):
     card_fig = CardFig(
         game_id=game_id,
@@ -181,11 +182,12 @@ def create_card_fig(db, game_id, player_id):
     db.refresh(card_fig)
     return card_fig
 
+
 def create_figure(card_id):
     return FigureSchema(
         colorCards=[
-                {"row": 0, "column": 0, "color": "red"},
-                {"row": 0, "column": 1, "color": "red"}
-            ],
-        figureCardId=card_id
+            {"row": 0, "column": 0, "color": "red"},
+            {"row": 0, "column": 1, "color": "red"},
+        ],
+        figureCardId=card_id,
     )

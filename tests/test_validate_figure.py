@@ -15,9 +15,11 @@ from .db_setup import (
     create_figure,
 )
 
+
 @pytest.fixture
 def test_client():
     return TestClient(app)
+
 
 @pytest.fixture
 def db_session():
@@ -25,25 +27,28 @@ def db_session():
     yield db
     db.close()
 
+
 @pytest.fixture
 def figures_info():
     return FigureSchema(
         colorCards=[
             {"row": 0, "column": 0, "color": "red"},
-            {"row": 0, "column": 1, "color": "red"}
+            {"row": 0, "column": 1, "color": "red"},
         ],
-        figureCardId=998
+        figureCardId=998,
     )
+
 
 @pytest.fixture
 def not_found_figure_info():
     return FigureSchema(
         colorCards=[
             {"row": 0, "column": 0, "color": "red"},
-            {"row": 0, "column": 1, "color": "red"}
+            {"row": 0, "column": 1, "color": "red"},
         ],
-        figureCardId=999
+        figureCardId=999,
     )
+
 
 def test_get_figure_type_by_id(db_session):
     db_session.add(CardFig(id=995, figure="EASY_7"))
@@ -53,16 +58,17 @@ def test_get_figure_type_by_id(db_session):
     assert figure_type.name == "EASY_7"
     assert figure_type.value[1] == "Figura Fácil 7"
 
-@patch('app.services.validate_figure.select_figure_by_his_type')
-@patch('app.services.validate_figure.get_figure_type_by_id')
-@patch('app.services.validate_figure.get_figure_by_id')
+
+@patch("app.services.validate_figure.select_figure_by_his_type")
+@patch("app.services.validate_figure.get_figure_type_by_id")
+@patch("app.services.validate_figure.get_figure_by_id")
 def test_validate_figure_returns_200(
-        mock_get_figure_by_id,
-        mock_get_figure_type_by_id,
-        mock_select_figure_by_his_type,
-        db_session,
-        test_client
-        ):
+    mock_get_figure_by_id,
+    mock_get_figure_type_by_id,
+    mock_select_figure_by_his_type,
+    db_session,
+    test_client,
+):
     # Create test data
     game = create_game(db_session, GameStatus.INGAME)
     player = create_player(db_session, game.id)
@@ -72,7 +78,10 @@ def test_validate_figure_returns_200(
     # Mock the figure lookups
     mock_get_figure_by_id.return_value = MagicMock()
     mock_get_figure_type_by_id.return_value = MagicMock()
-    mock_get_figure_type_by_id.return_value.value = (1, 'some_type')  # Tuple of (id, type)
+    mock_get_figure_type_by_id.return_value.value = (
+        1,
+        "some_type",
+    )  # Tuple of (id, type)
 
     # Mock the figure matcher to return True
     mock_figure = MagicMock()
@@ -81,8 +90,7 @@ def test_validate_figure_returns_200(
 
     # Make request
     response = test_client.post(
-        f"/game/{game.id}/play_figure/{player.id}",
-        json= figure.model_dump()
+        f"/game/{game.id}/play_figure/{player.id}", json=figure.model_dump()
     )
 
     assert response.status_code == 200
@@ -92,122 +100,147 @@ def test_validate_figure_game_not_found(db_session, figures_info):
     with pytest.raises(ValueError, match="Game not found"):
         validate(figures_info, 999, 1, db_session)
 
+
 def test_validate_figure_player_not_found(db_session, figures_info):
     game = create_game(db_session, GameStatus.INGAME)
 
     with pytest.raises(ValueError, match="Player not found"):
         validate(figures_info, game.id, 999, db_session)
 
+
 def test_player_checks_player_not_belong_to_game(db_session):
     game1 = create_game(db_session, GameStatus.INGAME)
     game2 = create_game(db_session, GameStatus.INGAME)
     player = create_player(db_session, game2.id)
-    
+
     with pytest.raises(ValueError, match="Player does not belong to game"):
         validate(figures_info, game1.id, player.id, db_session)
+
 
 def test_validate_figure_not_your_turn(db_session, figures_info):
     game = create_game(db_session, GameStatus.INGAME)
     player = create_player(db_session, game.id)
     game.turn = Turn.P3
     db_session.commit()
-    
+
     with pytest.raises(ValueError, match="Not your turn"):
         validate(figures_info, game.id, player.id, db_session)
+
 
 def test_validate_figure_game_not_in_progress(db_session, figures_info):
     game = create_game(db_session, GameStatus.FINISHED)
     player = create_player(db_session, game.id)
-    
+
     with pytest.raises(ValueError, match="Game is not in progress"):
         validate(figures_info, game.id, player.id, db_session)
 
-@patch('app.services.validate_figure.get_figure_by_id')
-@patch('app.services.validate_figure.get_figure_type_by_id')
-@patch('app.services.validate_figure.find_connected_components') 
+
+@patch("app.services.validate_figure.get_figure_by_id")
+@patch("app.services.validate_figure.get_figure_type_by_id")
+@patch("app.services.validate_figure.find_connected_components")
 def test_validate_figure_no_connected_components(
-        mock_find_connected_components,
-        mock_get_figure_type_by_id,
-        mock_get_figure_by_id,
-        db_session,
-        figures_info):
+    mock_find_connected_components,
+    mock_get_figure_type_by_id,
+    mock_get_figure_by_id,
+    db_session,
+    figures_info,
+):
     game = create_game(db_session, GameStatus.INGAME)
     player = create_player(db_session, game.id)
-    
+
     # Set up proper mock returns
     mock_figure = MagicMock()
     mock_figure_type = MagicMock()
-    
+
     mock_get_figure_by_id.return_value = mock_figure
     mock_get_figure_type_by_id.return_value = mock_figure_type
     mock_find_connected_components.return_value = []  # Mock returns None
 
-    
     with pytest.raises(ValueError, match="No connected components found"):
         validate(figures_info, game.id, player.id, db_session)
 
-@patch('app.services.validate_figure.get_figure_by_id')
-@patch('app.services.validate_figure.get_figure_type_by_id')
-@patch('app.services.validate_figure.find_connected_components') 
+
+@patch("app.services.validate_figure.get_figure_by_id")
+@patch("app.services.validate_figure.get_figure_type_by_id")
+@patch("app.services.validate_figure.find_connected_components")
 def test_validate_figure_more_than_one_connected_component(
-        mock_find_connected_components,
-        mock_get_figure_type_by_id,
-        mock_get_figure_by_id,
-        db_session,
-        figures_info):
+    mock_find_connected_components,
+    mock_get_figure_type_by_id,
+    mock_get_figure_by_id,
+    db_session,
+    figures_info,
+):
     game = create_game(db_session, GameStatus.INGAME)
     player = create_player(db_session, game.id)
-    
+
     # Set up proper mock returns
     mock_figure = MagicMock()
     mock_figure_type = MagicMock()
-    
+
     mock_get_figure_by_id.return_value = mock_figure
     mock_get_figure_type_by_id.return_value = mock_figure_type
-    mock_find_connected_components.return_value =  ["lol", "lmao"] # More than one connected "component"
-    
-    with pytest.raises(ValueError, match="More than one connected component found"):
+    mock_find_connected_components.return_value = [
+        "lol",
+        "lmao",
+    ]  # More than one connected "component"
+
+    with pytest.raises(
+        ValueError, match="More than one connected component found"
+    ):
         validate(figures_info, game.id, player.id, db_session)
 
-def test_validate_figure_figure_not_found(
-    db_session,
-    not_found_figure_info):
+
+def test_validate_figure_figure_not_found(db_session, not_found_figure_info):
 
     game = create_game(db_session, GameStatus.INGAME)
     player = create_player(db_session, game.id)
-        
+
     with pytest.raises(ValueError, match="Figure not found"):
         validate(not_found_figure_info, game.id, player.id, db_session)
 
-@patch('app.services.validate_figure.get_figure_by_id')
-@patch('app.services.validate_figure.get_figure_type_by_id')
+
+@patch("app.services.validate_figure.get_figure_by_id")
+@patch("app.services.validate_figure.get_figure_type_by_id")
 def test_validate_figure_figure_type_not_found(
-        mock_get_figure_type_by_id,
-        mock_get_figure_by_id,
-        db_session,
-        not_found_figure_info):
+    mock_get_figure_type_by_id,
+    mock_get_figure_by_id,
+    db_session,
+    not_found_figure_info,
+):
     game = create_game(db_session, GameStatus.INGAME)
     player = create_player(db_session, game.id)
-    
+
     mock_get_figure_by_id.return_value = MagicMock()
     mock_get_figure_type_by_id.return_value = None
-    
+
     with pytest.raises(ValueError, match="Figure type not found"):
         validate(not_found_figure_info, game.id, player.id, db_session)
 
-@patch('app.services.validate_figure.get_figure_by_id')
-@patch('app.services.validate_figure.get_figure_type_by_id')
-@patch('app.services.validate_figure.select_figure_by_his_type')
-def test_validate_figure_figure_does_not_match(mock_select_figure_by_his_type, mock_get_figure_type_by_id, mock_get_figure_by_id, db_session, figures_info):
+
+@patch("app.services.validate_figure.get_figure_by_id")
+@patch("app.services.validate_figure.get_figure_type_by_id")
+@patch("app.services.validate_figure.select_figure_by_his_type")
+def test_validate_figure_figure_does_not_match(
+    mock_select_figure_by_his_type,
+    mock_get_figure_type_by_id,
+    mock_get_figure_by_id,
+    db_session,
+    figures_info,
+):
     game = create_game(db_session, GameStatus.INGAME)
     player = create_player(db_session, game.id)
-    
+
     mock_get_figure_by_id.return_value = MagicMock()
     mock_get_figure_type_by_id.return_value = MagicMock()
-    mock_select_figure_by_his_type.return_value.matches_any_rotation.return_value = False
-    
-    with pytest.raises(ValueError, match="Figure does not match connected component"):
+    mock_select_figure_by_his_type.return_value.matches_any_rotation.return_value = (
+        False
+    )
+
+    with pytest.raises(
+        ValueError, match="Figure does not match connected component"
+    ):
         validate(figures_info, game.id, player.id, db_session)
+
 
 FIGURE_TYPE_CASES = {
     "Figura Difícil 1": 1,
@@ -237,18 +270,20 @@ FIGURE_TYPE_CASES = {
     "Figura Fácil 7": 25,
 }
 
+
 @pytest.mark.parametrize("figure_type,figure_id", FIGURE_TYPE_CASES.items())
-@patch('app.services.validate_figure.get_figure_by_id')
-@patch('app.services.validate_figure.get_figure_type_by_id')
-@patch('app.services.validate_figure.find_connected_components')
+@patch("app.services.validate_figure.get_figure_by_id")
+@patch("app.services.validate_figure.get_figure_type_by_id")
+@patch("app.services.validate_figure.find_connected_components")
 def test_validate_figure_all_types(
-        mock_find_connected_components,
-        mock_get_figure_type_by_id,
-        mock_get_figure_by_id,
-        figure_type,
-        figure_id,
-        db_session,
-        figures_info):  # Use the fixture we already have
+    mock_find_connected_components,
+    mock_get_figure_type_by_id,
+    mock_get_figure_by_id,
+    figure_type,
+    figure_id,
+    db_session,
+    figures_info,
+):  # Use the fixture we already have
     # Create test data
     game = create_game(db_session, GameStatus.INGAME)
     player = create_player(db_session, game.id)
@@ -256,20 +291,28 @@ def test_validate_figure_all_types(
     # Mock the figure lookups
     mock_get_figure_by_id.return_value = MagicMock()
     mock_get_figure_type_by_id.return_value = MagicMock()
-    mock_get_figure_type_by_id.return_value.value = (figure_id, figure_type)  # Tuple of (id, type)
-    
+    mock_get_figure_type_by_id.return_value.value = (
+        figure_id,
+        figure_type,
+    )  # Tuple of (id, type)
+
     # Get the actual figure instance
     figure = select_figure_by_his_type(figure_type)
     assert figure is not None, f"Figure {figure_type} should not be None"
-    assert figure.type_name == figure_type, f"Figure type mismatch: expected {figure_type}, got {figure.type_name}"
-    assert hasattr(figure, 'matrix_figure'), f"Figure {figure_type} missing matrix_figure attribute"
-    
+    assert (
+        figure.type_name == figure_type
+    ), f"Figure type mismatch: expected {figure_type}, got {figure.type_name}"
+    assert hasattr(
+        figure, "matrix_figure"
+    ), f"Figure {figure_type} missing matrix_figure attribute"
+
     # Mock connected components to return a matching component
     mock_find_connected_components.return_value = [figure.matrix_figure]
 
     # Call the function and verify it returns 200
     result = validate(figures_info, game.id, player.id, db_session)
     assert result == 200
+
 
 def test_select_figure_by_his_type_none():
     # Test cases for None return
@@ -279,32 +322,34 @@ def test_select_figure_by_his_type_none():
         "Invalid Figure",
         "Figura Inexistente",
         "Figura Difícil 99",
-        "Figura Fácil 99"
+        "Figura Fácil 99",
     ]
-    
+
     for invalid_type in invalid_types:
         figure = select_figure_by_his_type(invalid_type)
-        assert figure is None, f"Expected None for invalid type: {invalid_type}"
+        assert (
+            figure is None
+        ), f"Expected None for invalid type: {invalid_type}"
 
 
-@patch('app.services.game_events.emit_cards')
-@patch('app.services.cards.unassign_played_movement_cards')
-@patch('app.services.cards.delete_figure_card')
-@patch('app.services.board.delete_partial_cache')
-@patch('app.services.validate_figure.validate')
+@patch("app.services.game_events.emit_cards")
+@patch("app.services.cards.unassign_played_movement_cards")
+@patch("app.services.cards.delete_figure_card")
+@patch("app.services.board.delete_partial_cache")
+@patch("app.services.validate_figure.validate")
 def test_validate_figure_failure(
     mock_validate_figure,
     mock_delete_partial_cache,
     mock_delete_figure_card,
     mock_unassign_played_movement_cards,
     mock_emit_cards,
-    test_client
+    test_client,
 ):
 
     db = TestingSessionLocal()
     game = create_game(db, GameStatus.INGAME)
     player = create_player(db, game.id)
-    
+
     # Mock validate_figure to return error
     mock_validate_figure.return_value = 400
 
@@ -312,23 +357,21 @@ def test_validate_figure_failure(
     figure_data = {
         "colorCards": [
             {"row": 0, "column": 0, "color": "red"},
-            {"row": 0, "column": 1, "color": "red"}
+            {"row": 0, "column": 1, "color": "red"},
         ],
-        "figureCardId": 1
+        "figureCardId": 1,
     }
 
     # Make request
     response = test_client.post(
-        f"/game/{game.id}/play_figure/{player.id}",
-        json=figure_data
+        f"/game/{game.id}/play_figure/{player.id}", json=figure_data
     )
 
     # Assertions
     assert response.status_code == 400
-    
+
     # Verify cleanup functions were not called
     mock_delete_partial_cache.assert_not_called()
     mock_delete_figure_card.assert_not_called()
     mock_unassign_played_movement_cards.assert_not_called()
     mock_emit_cards.assert_not_called()
-

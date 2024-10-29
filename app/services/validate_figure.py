@@ -19,7 +19,7 @@ def game_checks(game: Game):
         raise ValueError("Game not found")
     if game.status != GameStatus.INGAME:
         raise ValueError("Game is not in progress")
-    
+
 
 def player_checks(player: Player, game: Game):
     if player is None:
@@ -44,9 +44,7 @@ def process_components(figures_info):
     for figure in colorCards:
         matrix[figure["row"]][figure["column"]] = figure["color"]
 
-    components = find_connected_components(
-        matrix, colorCards[0]["color"]
-    )
+    components = find_connected_components(matrix, colorCards[0]["color"])
 
     component_checks(components)
 
@@ -70,10 +68,7 @@ def figure_checks(figures_info, components, db):
 
 
 def validate(
-    figures_info: FigureSchema,
-    gameID: int,
-    playerID: int,
-    db: Session
+    figures_info: FigureSchema, gameID: int, playerID: int, db: Session
 ):
 
     game = db.query(Game).filter(Game.id == gameID).first()
@@ -85,8 +80,9 @@ def validate(
     components = process_components(figures_info)
 
     figure_checks(figures_info, components, db)
-    
+
     return 200
+
 
 async def cleanup(figures_info, game_id, player_id, db):
     delete_partial_cache(game_id, db)
