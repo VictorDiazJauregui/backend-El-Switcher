@@ -69,6 +69,10 @@ async def add_player_to_game(
     if len(game.players) >= game.max_players:
         raise ValueError(f"Game {game_id} is full.")
 
+    if not game.password and password:
+        raise ValueError("Game does not have a password.")
+    if game.password and not password:
+        raise ValueError("Password required to join game.")
     if game.password and not bcrypt.checkpw(
         password.encode("utf-8"), game.password
     ):
