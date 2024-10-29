@@ -11,9 +11,12 @@ from app.db.db import (
     SquarePiece,
     Player,
     CardMove,
+    CardFig,
+    FigureType,
     Color,
     Turn,
 )
+from app.schemas.figures import FigureSchema
 
 # Setup the test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -165,3 +168,24 @@ def create_card_move(db, player_id, move_type):
     db.commit()
     db.refresh(card_move)
     return card_move
+
+def create_card_fig(db, game_id, player_id):
+    card_fig = CardFig(
+        game_id=game_id,
+        owner_id=player_id,
+        in_hand=True,
+        figure=FigureType.EASY_7,
+    )
+    db.add(card_fig)
+    db.commit()
+    db.refresh(card_fig)
+    return card_fig
+
+def create_figure(card_id):
+    return FigureSchema(
+        colorCards=[
+                {"row": 0, "column": 0, "color": "red"},
+                {"row": 0, "column": 1, "color": "red"}
+            ],
+        figureCardId=card_id
+    )
