@@ -46,6 +46,7 @@ def test_add_player_to_game_with_correct_password(test_client):
     assert "playerId" in player_data
     assert "playerName" in player_data
 
+
 def test_add_players_to_game_with_correct_password(test_client):
     db = TestingSessionLocal()
     game = create_game(db, GameStatus.LOBBY, password="securepassword")
@@ -66,11 +67,16 @@ def test_add_players_to_game_with_correct_password(test_client):
         assert player_data["playerName"] == player_name
 
     # Verify all players are in the game
-    connected_players = db.query(Player).filter(Player.game_id == game.id).all()
+    connected_players = (
+        db.query(Player).filter(Player.game_id == game.id).all()
+    )
     assert len(connected_players) == 4
-    connected_player_names = [player.name for player in connected_players]  # Get list of player names
+    connected_player_names = [
+        player.name for player in connected_players
+    ]  # Get list of player names
     for name in player_names:
         assert name in connected_player_names  # Compare strings with strings
+
 
 def test_add_player_to_game_with_incorrect_password(test_client):
     db = TestingSessionLocal()
@@ -88,6 +94,7 @@ def test_add_player_to_game_with_incorrect_password(test_client):
     assert response.status_code == 400
     assert response.json()["detail"] == "Incorrect password."
 
+
 def test_join_public_game_with_password(test_client):
     db = TestingSessionLocal()
     # Create game without password
@@ -96,10 +103,7 @@ def test_join_public_game_with_password(test_client):
     # Try to join with a password
     response = test_client.post(
         f"/game/{game.id}/join",
-        json={
-            "playerName": "test_player",
-            "password": "somepassword"
-        },
+        json={"playerName": "test_player", "password": "somepassword"},
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "Game does not have a password."
@@ -113,12 +117,11 @@ def test_join_private_game_without_password(test_client):
     # Try to join without providing password
     response = test_client.post(
         f"/game/{game.id}/join",
-        json={
-            "playerName": "test_player"
-        },
+        json={"playerName": "test_player"},
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "Password required to join game."
+
 
 def test_add_player_to_game_missing_fields(test_client):
     response = test_client.post("/game/1/join", json={})
