@@ -15,7 +15,9 @@ def test_client():
 @patch("app.services.game_events.Broadcast")
 @patch("app.services.game_events.end_turn")
 @patch("app.services.game_events.asyncio.sleep")
-@pytest.mark.filterwarnings("ignore:coroutine 'AsyncMockMixin._execute_mock_call' was never awaited:RuntimeWarning")
+@pytest.mark.filterwarnings(
+    "ignore:coroutine 'AsyncMockMixin._execute_mock_call' was never awaited:RuntimeWarning"
+)
 async def test_emit_timer(mock_sleep, mock_end_turn, mock_broadcast):
     db = TestingSessionLocal()
     player = create_player(db, 1)
@@ -30,6 +32,7 @@ async def test_emit_timer(mock_sleep, mock_end_turn, mock_broadcast):
     # Assert
     assert mock_broadcast_instance.broadcast.call_count == 120
     mock_end_turn.assert_called_once_with(1, player.id, db)
+
 
 @pytest.mark.asyncio
 @patch("app.services.game_events.Broadcast")

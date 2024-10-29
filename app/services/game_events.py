@@ -55,18 +55,22 @@ async def emit_turn_info(game_id, db):
 
     # Start the timer for the new turn
     asyncio.create_task(emit_timer(game_id, player.id, db))
-    
+
+
 async def emit_timer(game_id, player_id, db):
 
     broadcast = Broadcast()
     time_left = 120
 
     while time_left > 0:
-        await broadcast.broadcast(sio.sio_game, game_id, "timer", {"time": time_left})
+        await broadcast.broadcast(
+            sio.sio_game, game_id, "timer", {"time": time_left}
+        )
         await asyncio.sleep(1)
         time_left -= 1
 
     end_turn(game_id, player_id, db)
+
 
 async def emit_winner(game_id, winner_id, db):
     winner = db.query(Player).filter(Player.id == winner_id).first()
