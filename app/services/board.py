@@ -169,7 +169,9 @@ def switch_pieces(piece1: int, piece2: int, state_id: int, db: Session):
         raise Exception(f"Error switching pieces: {e}")
 
 
-def validate_move(piece1: SquarePiece, piece2: SquarePiece, move_type: MoveType):
+def validate_move(
+    piece1: SquarePiece, piece2: SquarePiece, move_type: MoveType
+):
     row_diff = abs(piece1.row - piece2.row)
     col_diff = abs(piece1.column - piece2.column)
 
