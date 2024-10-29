@@ -1,4 +1,7 @@
-from app.db.db import Player, Game
+import asyncio
+from app.db.db import (Player, Game, GameStatus,
+                       Board, ParallelBoard, CardMove,
+                       CardFig, SquarePiece)
 from app.models.broadcast import Broadcast
 from app.routers import sio_game as sio
 from app.schemas.player import PlayerResponseSchema, WinnerSchema
@@ -64,6 +67,7 @@ async def emit_winner(game_id, winner_id, db):
         WinnerSchema(idWinner=winner.id, nameWinner=winner.name).model_dump(),
     )
 
+    await cleanup_game(game_id, db)
 
 async def emit_cards(game_id, player_id, db):
     """
@@ -130,3 +134,36 @@ async def emit_found_figures(game_id, db):
     response = figures_event(game_id, db)
 
     await channel.broadcast(sio.sio_game, game_id, "found_figures", response)
+
+async def cleanup_game(game_id, db):
+    
+    game = db.query(Game).filter(Game.id == game_id).first()
+    game.status = GameStatus.FINISHED
+    db.commit()
+
+    # Sleep for 10 seconds
+    await asyncio.sleep(10)
+    
+    # Delete all players related to the game
+    db.query(Player).filter(Player.game_id == game_id).delete()
+    
+    # Delete all boards related to the game
+    db.query(Board).filter(Board.game_id == game_id).delete()
+    
+    # Delete all parallel boards related to the game
+    db.query(ParallelBoard).filter(ParallelBoard.board_id == game_id).delete()
+    
+    # Delete all card moves related to the game
+    db.query(CardMove).filter(CardMove.game_id == game_id).delete()
+    
+    # Delete all card figures related to the game
+    db.query(CardFig).filter(CardFig.game_id == game_id).delete()
+    
+    # Delete all square pieces related to the game
+    db.query(SquarePiece).filter(SquarePiece.board_id == game_id).delete()
+    
+    # Delete the game itself
+    db.query(Game).filter(Game.id == game_id).delete()
+    
+    # Commit the changes to the database
+    db.commit()

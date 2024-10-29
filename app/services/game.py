@@ -166,10 +166,6 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
         db.commit()
 
         if game.status == GameStatus.INGAME and len(game.players) == 1:
-            # if there is only one player left in the game, the game is over and that player wins
-            game.status = GameStatus.FINISHED
-            db.commit()
-
             await game_events.emit_winner(game_id, game.players[0].id, db)
 
         if game.status == GameStatus.LOBBY:
