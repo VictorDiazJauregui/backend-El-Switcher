@@ -1,3 +1,4 @@
+import asyncio
 from app.db.db import Player, Game
 from app.models.broadcast import Broadcast
 from app.routers import sio_game as sio
@@ -5,6 +6,7 @@ from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board
 from app.services.figures import figures_event
+from app.services.game import end_turn
 
 
 async def disconnect_player_socket(player_id, game_id):
@@ -51,6 +53,20 @@ async def emit_turn_info(game_id, db):
     # send the turn info to all players in the lobby
     await broadcast.broadcast(sio.sio_game, game_id, "turn", turn_info)
 
+    # Start the timer for the new turn
+    await emit_timer(game_id, player.id, db)
+
+async def emit_timer(game_id, player_id, db):
+
+    broadcast = Broadcast()
+    time_left = 120
+
+    while time_left > 0:
+        await broadcast.broadcast(sio.sio_game, game_id, "timer", {"time": time_left})
+        await asyncio.sleep(1)
+        time_left -= 1
+
+    end_turn(game_id, player_id, db)
 
 async def emit_winner(game_id, winner_id, db):
     winner = db.query(Player).filter(Player.id == winner_id).first()
