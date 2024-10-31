@@ -8,6 +8,7 @@ from app.services.board import get_board
 from app.services.figures import figures_event
 from app.services.timer import handle_timer
 
+
 async def disconnect_player_socket(player_id, game_id):
     broadcast = Broadcast()
     await broadcast.unregister_player_socket(sio.sio_game, player_id, game_id)

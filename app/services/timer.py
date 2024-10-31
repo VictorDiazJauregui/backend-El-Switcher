@@ -8,6 +8,7 @@ TURN_TIME_LIMIT = 120
 # Global dictionary to keep track of timer tasks
 timer_tasks = {}
 
+
 async def handle_timer(game_id, player_id, db):
 
     # Cancel the previous timer task if it exists
@@ -17,7 +18,10 @@ async def handle_timer(game_id, player_id, db):
         del timer_tasks[game_id]
 
     # Start the timer for the new turn
-    timer_tasks[game_id] = asyncio.create_task(emit_timer(game_id, player_id, db))
+    timer_tasks[game_id] = asyncio.create_task(
+        emit_timer(game_id, player_id, db)
+    )
+
 
 async def emit_timer(game_id, player_id, db):
 
