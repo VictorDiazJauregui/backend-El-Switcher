@@ -1,7 +1,8 @@
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from app.services.game_events import emit_timer, emit_winner
+from app.services.game_events import emit_winner
+from app.services.timer import emit_timer
 
 from .db_setup import client, TestingSessionLocal, create_player
 
@@ -12,13 +13,13 @@ def test_client():
 
 
 @pytest.mark.asyncio
-@patch("app.services.game_events.Broadcast")
-@patch("app.services.game_events.end_turn")
-@patch("app.services.game_events.asyncio.sleep")
+@patch("app.services.timer.asyncio.sleep")
+@patch("app.services.timer.Broadcast")
+@patch("app.services.game.end_turn")
 @pytest.mark.filterwarnings(
     "ignore:coroutine 'AsyncMockMixin._execute_mock_call' was never awaited:RuntimeWarning"
 )
-async def test_emit_timer(mock_sleep, mock_end_turn, mock_broadcast):
+async def test_emit_timer(mock_end_turn, mock_broadcast, mock_sleep):
     db = TestingSessionLocal()
     player = create_player(db, 1)
 
