@@ -48,9 +48,7 @@ def validate_figure_function(
     #Consigue el tablero de la base de datos
     board = db.query(Board).filter(Board.game_id == gameID).first()
 
-
-
-    if colorCards[0]["color"] == board.block_color.value.upper():
+    if colorCards[0]["color"].upper() == board.block_color.value.upper():
         raise ValueError("This color is blocked")
 
     matrix = np.full((6, 6), None, dtype=object)
