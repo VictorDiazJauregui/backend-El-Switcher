@@ -145,4 +145,4 @@ async def emit_block_color(game_id, db):
 
     response = get_blocked_color(game_id, db)
 
-    await channel.broadcast(sio.sio_game, game_id, "blockedColor", response)
+    await channel.broadcast(sio.sio_game, game_id, "blocked_color", response)

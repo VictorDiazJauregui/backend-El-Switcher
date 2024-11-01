@@ -359,6 +359,6 @@ def set_block_color(game_id: int, color: Color, db: Session):
 def get_blocked_color(game_id: int, db: Session):
     """Obtiene el color bloqueado en el tablero"""
     board = db.query(Board).filter(Board.game_id == game_id).first()
-    blockedColor = BlockColorSchema(blockedColor=board.block_color.name)
+    response = BlockColorSchema(blockedColor=board.block_color.name if board.block_color else None)
 
-    return blockedColor.model_dump()
+    return response.model_dump()
