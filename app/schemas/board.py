@@ -7,5 +7,6 @@ class PieceResponseSchema(BaseModel):
     row: int
     column: int
 
+
 class BlockColorSchema(BaseModel):
     blockedColor: str | None
