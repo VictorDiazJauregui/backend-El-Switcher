@@ -8,7 +8,7 @@ from app.db.db import (
     ParallelBoard,
     CardMove,
     CardFig,
-    SquarePiece
+    SquarePiece,
 )
 
 

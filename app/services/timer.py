@@ -5,7 +5,7 @@ from app.services import game
 
 TURN_TIME_LIMIT = 120
 
-timer_tasks = {}    # Global dictionary to keep track of timer tasks
+timer_tasks = {}  # Global dictionary to keep track of timer tasks
 
 
 def stop_timer(game_id):
@@ -21,10 +21,12 @@ def start_timer(game_id, player_id, db):
         emit_timer(game_id, player_id, db)
     )
 
+
 async def handle_timer(game_id, player_id, db):
 
     stop_timer(game_id)
     start_timer(game_id, player_id, db)
+
 
 async def emit_timer(game_id, player_id, db):
 
