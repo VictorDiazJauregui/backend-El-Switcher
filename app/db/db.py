@@ -7,6 +7,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Text,
+    LargeBinary,
 )
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from contextlib import contextmanager
@@ -100,7 +101,7 @@ class Game(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(25), nullable=False)
-    password = Column(String(25), nullable=True)
+    password = Column(LargeBinary, nullable=True)
     max_players = Column(Integer, nullable=False)
     min_players = Column(Integer, nullable=False)
     status = Column(Enum(GameStatus), nullable=False)

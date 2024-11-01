@@ -10,6 +10,7 @@ async def emit_game_list(db):
             "gameName": game.name,
             "connectedPlayers": len(game.players),
             "maxPlayers": game.max_players,
+            "isPublic": game.password is None,
         }
         for game in games
     ]
