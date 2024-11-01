@@ -20,6 +20,7 @@ from app.schemas.cards import (
     CardMoveResponseSchema,
 )
 
+
 def add_cards_to_db(game_id: int, db: Session) -> int:
     """
     Adds all cards to be used in the game to the database.
@@ -349,7 +350,9 @@ async def win_by_figures(game_id: int, player_id: int, db: Session):
 
     if len(player.card_figs) == 0:
         from app.services import game_events
+
         await game_events.emit_winner(game_id, player_id, db)
+
 
 def unassign_played_movement_cards(player_id: int, db: Session):
     """
