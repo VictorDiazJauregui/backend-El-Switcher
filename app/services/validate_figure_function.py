@@ -49,7 +49,6 @@ async def validate_figure_function(
     # Consigue el tablero de la base de datos
     board = db.query(Board).filter(Board.game_id == gameID).first()
 
-
     if board.block_color is not None:
         if colorCards[0]["color"].upper() == board.block_color.value.upper():
             raise ValueError("This color is blocked")
