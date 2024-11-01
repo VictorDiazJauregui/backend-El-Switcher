@@ -136,6 +136,7 @@ async def emit_found_figures(game_id, db):
 
     await channel.broadcast(sio.sio_game, game_id, "found_figures", response)
 
+
 async def emit_block_color(game_id, db):
     """
     Emits the blocked color
