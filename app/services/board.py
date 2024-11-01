@@ -16,7 +16,7 @@ from app.db.db import (
     GameStatus,
 )
 from app.errors.handlers import NotFoundError
-from app.schemas.board import PieceResponseSchema
+from app.schemas.board import PieceResponseSchema, BlockColorSchema
 from app.schemas.move import MakeMoveSchema
 from app.services import game_events
 from app.services.game_player_service import get_game, get_player
@@ -359,4 +359,6 @@ def set_block_color(game_id: int, color: Color, db: Session):
 def get_blocked_color(game_id: int, db: Session):
     """Obtiene el color bloqueado en el tablero"""
     board = db.query(Board).filter(Board.game_id == game_id).first()
-    return board.block_color.name if board.block_color else None
+    blockedColor = BlockColorSchema(blockedColor=board.block_color.name)
+
+    return blockedColor.model_dump()

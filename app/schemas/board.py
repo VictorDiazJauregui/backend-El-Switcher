@@ -6,3 +6,6 @@ class PieceResponseSchema(BaseModel):
     color: str
     row: int
     column: int
+
+class BlockColorSchema(BaseModel):
+    blockedColor: str | None
