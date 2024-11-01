@@ -45,7 +45,7 @@ def validate_figure_function(
     for colorCard in figures_info.colorCards:
         colorCards.append(colorCard.model_dump())
 
-    #Consigue el tablero de la base de datos
+    # Consigue el tablero de la base de datos
     board = db.query(Board).filter(Board.game_id == gameID).first()
 
     if colorCards[0]["color"].upper() == board.block_color.value.upper():
@@ -82,7 +82,7 @@ def validate_figure_function(
 
     if not selected_figure.matches_any_rotation(connected_components[0]):
         raise ValueError("Figure does not match connected component")
-    
+
     set_block_color(gameID, colorCards[0]["color"], db)
 
     return 200

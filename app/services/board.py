@@ -343,7 +343,7 @@ async def undo_played_moves(game_id: int, player_id: int, db: Session):
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception(f"Error deleting partial cache: {e}")
-    
+
 
 def set_block_color(game_id: int, color: Color, db: Session):
     """Establece el color prohibido en el tablero"""
