@@ -102,29 +102,21 @@ jobs:
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-    # Paso 14: Mostrar estado de los archivos modificados
-    - name: Mostrar estado de los archivos modificados
-      run: git status
-
-    # Paso 15: Hacer commit de cambios si los hay
+    # Paso 14: Hacer commit de cambios si los hay
     - name: Hacer commit de cambios
       run: |
         git add .
         git commit -m "Formato de código aplicado por GitHub Action" || echo "No changes to commit"
 
-    # Paso 16: Hacer push de cambios si los hay
+    # Paso 15: Hacer push de cambios si los hay
     - name: Hacer push de cambios
       run: |
-        if git diff --quiet; then
-          echo "No changes to push"
-        else
-          git pull --rebase origin ${{ github.head_ref || github.ref }} || echo "No changes to pull"
-          git push origin HEAD:${{ github.head_ref || github.ref }}
-        fi
+        git pull --rebase origin ${{ github.head_ref || github.ref }} || echo "No changes to pull"
+        git push origin HEAD:${{ github.head_ref || github.ref }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Paso 17: Ejecutar pruebas con pytest
+    # Paso 16: Ejecutar pruebas con pytest
     - name: Ejecutar pruebas con pytest
       run: |
         source .venv/bin/activate
