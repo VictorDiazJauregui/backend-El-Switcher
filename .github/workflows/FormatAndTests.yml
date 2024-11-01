@@ -78,7 +78,7 @@ jobs:
       run: |
         source .venv/bin/activate
         pip install -r requirements.txt
-        pip install black  # Asegúrate de que black esté instalado
+        pip install black  # Me aseguro que black esté instalado
 
     # Paso 10: Corregir importación de pytest_verbose_parametrize
     - name: Corregir importación de pytest_verbose_parametrize
@@ -112,18 +112,19 @@ jobs:
         git add .
         git commit -m "Formato de código aplicado por GitHub Action" || echo "No changes to commit"
 
-    # Paso 16: Hacer pull de cambios remotos
-    - name: Hacer pull de cambios remotos
-      run: |
-        git pull --rebase origin ${{ github.head_ref || github.ref }} || echo "No changes to pull"
-
-    # Paso 17: Hacer push de cambios
+    # Paso 16: Hacer push de cambios si los hay
     - name: Hacer push de cambios
-      run: git push origin HEAD:${{ github.head_ref || github.ref }}
+      run: |
+        if git diff --cached --quiet; then
+          echo "No changes to push"
+        else
+          git pull --rebase origin ${{ github.head_ref || github.ref }} || echo "No changes to pull"
+          git push origin HEAD:${{ github.head_ref || github.ref }}
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Paso 18: Ejecutar pruebas con pytest
+    # Paso 17: Ejecutar pruebas con pytest
     - name: Ejecutar pruebas con pytest
       run: |
         source .venv/bin/activate
