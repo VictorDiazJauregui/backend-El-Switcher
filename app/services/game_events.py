@@ -4,7 +4,7 @@ from app.models.broadcast import Broadcast
 from app.routers import sio_game as sio
 from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
-from app.services.board import get_board
+from app.services.board import get_board, get_blocked_color
 from app.services.figures import figures_event
 from app.services.timer import handle_timer
 
@@ -135,3 +135,13 @@ async def emit_found_figures(game_id, db):
     response = figures_event(game_id, db)
 
     await channel.broadcast(sio.sio_game, game_id, "found_figures", response)
+
+async def emit_block_color(game_id, db):
+    """
+    Emits the blocked color
+    """
+    channel = Broadcast()
+
+    response = get_blocked_color(game_id, db)
+
+    await channel.broadcast(sio.sio_game, game_id, "blocked_color", response)

@@ -7,9 +7,10 @@ from app.models.figures import (
 )
 from app.db.db import Game, GameStatus, Player
 from app.services.board import set_block_color
+from app.services import game_events
 
 
-def validate_figure_function(
+async def validate_figure_function(
     figures_info: FigureSchema, gameID: int, playerID: int, db: Session
 ):
     """
@@ -48,8 +49,10 @@ def validate_figure_function(
     #Consigue el tablero de la base de datos
     board = db.query(Board).filter(Board.game_id == gameID).first()
 
-    if colorCards[0]["color"].upper() == board.block_color.value.upper():
-        raise ValueError("This color is blocked")
+
+    if board.block_color is not None:
+        if colorCards[0]["color"].upper() == board.block_color.value.upper():
+            raise ValueError("This color is blocked")
 
     matrix = np.full((6, 6), None, dtype=object)
 
@@ -84,5 +87,6 @@ def validate_figure_function(
         raise ValueError("Figure does not match connected component")
     
     set_block_color(gameID, colorCards[0]["color"], db)
+    await game_events.emit_block_color(gameID, db)
 
     return 200
