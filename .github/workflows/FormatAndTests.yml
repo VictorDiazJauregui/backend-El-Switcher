@@ -22,7 +22,7 @@ jobs:
     - name: Checkout del repositorio
       uses: actions/checkout@v2
       with:
-        ref: ${{ github.head_ref }}
+        ref: ${{ github.head_ref || github.ref }}
 
     # Paso 2: Cachear volumen Docker para MySQL
     - name: Cachear volumen Docker para MySQL
@@ -110,17 +110,13 @@ jobs:
         git add .
         git commit -m "Formato de código aplicado por GitHub Action" || echo "No changes to commit"
 
-    # Paso 15: Hacer pull de cambios remotos
-    - name: Hacer pull de cambios remotos
-      run: git pull --rebase origin ${{ github.head_ref }}
-
-    # Paso 16: Hacer push de cambios si los hay
+    # Paso 15: Hacer push de cambios si los hay
     - name: Hacer push de cambios
-      run: git push origin HEAD:${{ github.head_ref }}
+      run: git push origin HEAD:${{ github.head_ref || github.ref }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Paso 17: Ejecutar pruebas con pytest
+    # Paso 16: Ejecutar pruebas con pytest
     - name: Ejecutar pruebas con pytest
       run: |
         source .venv/bin/activate
