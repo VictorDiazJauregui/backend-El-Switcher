@@ -78,6 +78,7 @@ jobs:
       run: |
         source .venv/bin/activate
         pip install -r requirements.txt
+        pip install black  # Asegúrate de que black esté instalado
 
     # Paso 10: Corregir importación de pytest_verbose_parametrize
     - name: Corregir importación de pytest_verbose_parametrize
