@@ -1,4 +1,4 @@
-import socketio
+import socketio, asyncio
 
 from app.db.db import db_context, Game, Player, GameStatus
 from app.models.broadcast import Broadcast
@@ -50,6 +50,8 @@ async def connect(sid, environ, auth):
         await game_events.emit_cards(game_id, player_id, db)
 
         await game_events.emit_players_game(game_id, db)
+
+        # Broadcast turn info
 
         await game_events.emit_turn_info(game_id, db)
 
