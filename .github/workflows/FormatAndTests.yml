@@ -110,9 +110,7 @@ jobs:
 
     # Paso 15: Hacer push de cambios si los hay
     - name: Hacer push de cambios
-      run: |
-        git pull --rebase origin ${{ github.head_ref || github.ref }} || echo "No changes to pull"
-        git push origin HEAD:${{ github.head_ref || github.ref }}
+      run: git push origin HEAD:${{ github.head_ref || github.ref }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
