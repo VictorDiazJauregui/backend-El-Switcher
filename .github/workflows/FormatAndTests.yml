@@ -115,7 +115,7 @@ jobs:
     # Paso 16: Hacer push de cambios si los hay
     - name: Hacer push de cambios
       run: |
-        if git diff --cached --quiet; then
+        if git diff --quiet; then
           echo "No changes to push"
         else
           git pull --rebase origin ${{ github.head_ref || github.ref }} || echo "No changes to pull"
