@@ -140,7 +140,7 @@ async def pass_turn(game_id: int, player_id: int, db: Session):
     await game_events.emit_opponents_total_mov_cards(game_id, db)
 
     # Notify all players the new turn info
-    await game_events.emit_turn_info(game_id, db)
+    await game_events.emit_turn_info(game_id, db, reset=True)
 
 
 async def end_turn(game_id: int, player_id: int, db: Session):

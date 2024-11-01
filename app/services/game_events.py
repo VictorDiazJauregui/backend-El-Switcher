@@ -35,7 +35,7 @@ async def emit_players_game(game_id, db):
     )
 
 
-async def emit_turn_info(game_id, db):
+async def emit_turn_info(game_id, db, reset=False):
     game = db.query(Game).filter(Game.id == game_id).first()
 
     player = (
@@ -54,7 +54,7 @@ async def emit_turn_info(game_id, db):
     await broadcast.broadcast(sio.sio_game, game_id, "turn", turn_info)
 
     # start the timer for the current player
-    await handle_timer(game_id, player.id, db)
+    await handle_timer(game_id, player.id, db, reset)
 
 
 async def emit_winner(game_id, winner_id, db):
