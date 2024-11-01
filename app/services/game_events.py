@@ -1,22 +1,13 @@
-import asyncio
-from app.db.db import (
-    Player,
-    Game,
-    GameStatus,
-    Board,
-    ParallelBoard,
-    CardMove,
-    CardFig,
-    SquarePiece,
-)
 
+from app.db.db import Player, Game
 from app.models.broadcast import Broadcast
 from app.routers import sio_game as sio
 from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board
 from app.services.figures import figures_event
-from app.services.timer import handle_timer
+from app.services.timer import handle_timer, stop_timer
+from app.services.cleanup import cleanup_game
 
 
 async def disconnect_player_socket(player_id, game_id):
@@ -79,6 +70,7 @@ async def emit_winner(game_id, winner_id, db):
         WinnerSchema(idWinner=winner.id, nameWinner=winner.name).model_dump(),
     )
 
+    stop_timer(game_id)
     await cleanup_game(game_id, db)
 
 
@@ -147,37 +139,3 @@ async def emit_found_figures(game_id, db):
     response = figures_event(game_id, db)
 
     await channel.broadcast(sio.sio_game, game_id, "found_figures", response)
-
-
-async def cleanup_game(game_id, db):
-
-    game = db.query(Game).filter(Game.id == game_id).first()
-    game.status = GameStatus.FINISHED
-    db.commit()
-
-    # Sleep for 10 seconds
-    await asyncio.sleep(10)
-
-    # Delete all players related to the game
-    db.query(Player).filter(Player.game_id == game_id).delete()
-
-    # Delete all boards related to the game
-    db.query(Board).filter(Board.game_id == game_id).delete()
-
-    # Delete all parallel boards related to the game
-    db.query(ParallelBoard).filter(ParallelBoard.board_id == game_id).delete()
-
-    # Delete all card moves related to the game
-    db.query(CardMove).filter(CardMove.game_id == game_id).delete()
-
-    # Delete all card figures related to the game
-    db.query(CardFig).filter(CardFig.game_id == game_id).delete()
-
-    # Delete all square pieces related to the game
-    db.query(SquarePiece).filter(SquarePiece.board_id == game_id).delete()
-
-    # Delete the game itself
-    db.query(Game).filter(Game.id == game_id).delete()
-
-    # Commit the changes to the database
-    db.commit()

@@ -36,8 +36,9 @@ async def test_emit_timer(mock_end_turn, mock_broadcast, mock_sleep):
 
 
 @pytest.mark.asyncio
+@patch("app.services.cleanup.asyncio.sleep")
 @patch("app.services.game_events.Broadcast")
-async def test_emit_winner(mock_broadcast):
+async def test_emit_winner(mock_broadcast, mock_sleep):
     db = TestingSessionLocal()
     player = create_player(db, 1)
 
