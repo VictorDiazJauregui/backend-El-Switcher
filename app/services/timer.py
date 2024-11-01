@@ -8,6 +8,7 @@ TURN_TIME_LIMIT = 120
 timer_tasks = {}  # Global dictionary to keep track of timer tasks
 time_left_tasks = {}  # Global dictionary to keep track of time left for tasks
 
+
 def stop_timer(game_id):
 
     if game_id in timer_tasks:
