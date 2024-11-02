@@ -34,7 +34,9 @@ async def validate_figure(
         details: The details of the response, if exists.
     """
 
-    response = validate_figure_function(figures_info, game_id, player_id, db)
+    response = await validate_figure_function(
+        figures_info, game_id, player_id, db
+    )
     if response == 200:
         delete_partial_cache(game_id, db)
         delete_figure_card(figures_info.figureCardId, db)
