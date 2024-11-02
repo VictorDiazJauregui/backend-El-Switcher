@@ -1,17 +1,24 @@
+import asyncio
 from random import shuffle
 
 from sqlalchemy.orm import Session
 from sqlalchemy import func, select, exists
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.db.db import Player, CardMove, CardFig, MoveType, FigureType, Game
+from app.db.db import (
+    CardMove,
+    CardFig,
+    FigureType,
+    Game,
+    MoveType,
+    Player,
+)
 from app.errors.handlers import NotFoundError
 from app.schemas.cards import (
     CardFigSchema,
     CardFigResponseSchema,
     CardMoveResponseSchema,
 )
-from app.schemas.figures import FigureSchema
 
 
 def add_cards_to_db(game_id: int, db: Session) -> int:
@@ -317,6 +324,7 @@ def delete_figure_card(figureCardId: int, db: Session):
             .scalars()
             .first()
         )
+        game_id, player_id = card_sacrifice.game_id, card_sacrifice.owner_id
         if not card_sacrifice:
             raise Exception(f"Error deleting figure card: {e}")
         db.delete(card_sacrifice)
@@ -324,6 +332,26 @@ def delete_figure_card(figureCardId: int, db: Session):
 
     except SQLAlchemyError as e:
         raise Exception(f"Error deleting figure card: {e}")
+
+    asyncio.run(win_by_figures(game_id, player_id, db))
+
+
+async def win_by_figures(game_id: int, player_id: int, db: Session):
+    """
+    Comprueba si un jugador ha descartado todas sus figuras.
+    En caso afirmativo, termina el juego y se le declara ganador.
+    """
+
+    player = (
+        db.query(Player)
+        .filter(Player.id == player_id, Player.game_id == game_id)
+        .first()
+    )
+
+    if len(player.card_figs) == 0:
+        from app.services import game_events
+
+        await game_events.emit_winner(game_id, player_id, db)
 
 
 def unassign_played_movement_cards(player_id: int, db: Session):
