@@ -57,6 +57,23 @@ async def emit_turn_info(game_id, db):
     await handle_timer(game_id, player.id, db)
 
 
+async def win_by_figures(game_id: int, player_id: int, db):
+    """
+    Comprueba si un jugador ha descartado todas sus figuras.
+    En caso afirmativo, termina el juego y se le declara ganador.
+    """
+
+    player = (
+        db.query(Player)
+        .filter(Player.id == player_id, Player.game_id == game_id)
+        .first()
+    )
+
+    if len(player.card_figs) == 0:
+
+        await emit_winner(game_id, player_id, db)
+
+
 async def emit_winner(game_id, winner_id, db):
     winner = db.query(Player).filter(Player.id == winner_id).first()
 

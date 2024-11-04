@@ -122,7 +122,6 @@ def test_fetch_figure_cards_with_cards():
 ### ================================== ASSIGN FIGURE ============================================
 
 
-@pytest.mark.skip(reason="BROKEN TEST IN THIS PR")
 def test_assign_figure_cards():
     db = TestingSessionLocal()
     player = create_player(db, 4)
