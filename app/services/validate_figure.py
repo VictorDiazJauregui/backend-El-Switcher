@@ -6,7 +6,7 @@ from app.models.figures import (
 )
 from app.schemas.figures import FigureSchema
 from app.services import game_events
-from app.services.board import delete_partial_cache
+from app.services.board import delete_partial_cache, set_block_color
 from app.services.cards import (
     delete_figure_card,
     unassign_played_movement_cards,
@@ -37,9 +37,13 @@ def component_checks(components):
         raise ValueError("More than one connected component found")
 
 
-def process_components(figures_info):
+def process_components(colorCards, board):
+
+    if board.block_color is not None:
+        if colorCards[0]["color"].upper() == board.block_color.value.upper():
+            raise ValueError("This color is blocked")
+
     matrix = np.full((6, 6), None, dtype=object)
-    colorCards = [card.model_dump() for card in figures_info.colorCards]
 
     for figure in colorCards:
         matrix[figure["row"]][figure["column"]] = figure["color"]
@@ -77,15 +81,22 @@ def validate(
     player = db.query(Player).filter(Player.id == playerID).first()
     player_checks(player, game)
 
-    components = process_components(figures_info)
+    colorCards = [card.model_dump() for card in figures_info.colorCards]
+    board = db.query(Board).filter(Board.game_id == gameID).first()
+
+    components = process_components(colorCards, board)
 
     figure_checks(figures_info, components, db)
+
+    set_block_color(gameID, colorCards[0]["color"], db)
 
     return 200
 
 
 async def cleanup(figures_info, game_id, player_id, db):
     delete_partial_cache(game_id, db)
+    await game_events.emit_block_color(game_id, db)
     delete_figure_card(figures_info.figureCardId, db)
+    await game_events.win_by_figures(game_id, player_id, db)
     unassign_played_movement_cards(player_id, db)
     await game_events.emit_cards(game_id, player_id, db)

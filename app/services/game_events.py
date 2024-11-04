@@ -4,7 +4,7 @@ from app.models.broadcast import Broadcast
 from app.routers import sio_game as sio
 from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
-from app.services.board import get_board
+from app.services.board import get_board, get_blocked_color
 from app.services.figures import figures_event
 from app.services.timer import handle_timer
 
@@ -55,6 +55,23 @@ async def emit_turn_info(game_id, db):
 
     # start the timer for the current player
     await handle_timer(game_id, player.id, db)
+
+
+async def win_by_figures(game_id: int, player_id: int, db):
+    """
+    Comprueba si un jugador ha descartado todas sus figuras.
+    En caso afirmativo, termina el juego y se le declara ganador.
+    """
+
+    player = (
+        db.query(Player)
+        .filter(Player.id == player_id, Player.game_id == game_id)
+        .first()
+    )
+
+    if len(player.card_figs) == 0:
+
+        await emit_winner(game_id, player_id, db)
 
 
 async def emit_winner(game_id, winner_id, db):
@@ -135,3 +152,14 @@ async def emit_found_figures(game_id, db):
     response = figures_event(game_id, db)
 
     await channel.broadcast(sio.sio_game, game_id, "found_figures", response)
+
+
+async def emit_block_color(game_id, db):
+    """
+    Emits the blocked color
+    """
+    channel = Broadcast()
+
+    response = get_blocked_color(game_id, db)
+
+    await channel.broadcast(sio.sio_game, game_id, "blocked_color", response)
