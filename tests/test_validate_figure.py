@@ -192,11 +192,11 @@ def test_validate_figure_more_than_one_connected_component(
     ):
         validate(figures_info, game.id, player.id, db_session)
 
+
 @patch("app.services.validate_figure.board_checks")
 def test_validate_figure_figure_not_found(
-    mock_board_checks,
-    db_session,
-    not_found_figure_info):
+    mock_board_checks, db_session, not_found_figure_info
+):
 
     game = create_game(db_session, GameStatus.INGAME)
     player = create_player(db_session, game.id)
@@ -378,7 +378,7 @@ def test_validate_figure_failure(
     player = create_player(db, game.id)
 
     mock_board_checks.return_value = None
-    
+
     # Mock validate_figure to return error
     mock_validate_figure.return_value = 400
 
