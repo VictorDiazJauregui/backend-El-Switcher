@@ -36,13 +36,12 @@ def component_checks(components):
     elif len(components) > 1:
         raise ValueError("More than one connected component found")
 
-
-def process_components(colorCards, board):
-
+def board_checks(colorCards, board):
     if board.block_color is not None:
         if colorCards[0]["color"].upper() == board.block_color.value.upper():
             raise ValueError("This color is blocked")
 
+def process_components(colorCards):
     matrix = np.full((6, 6), None, dtype=object)
 
     for figure in colorCards:
@@ -82,13 +81,14 @@ def validate(
     player_checks(player, game)
 
     colorCards = [card.model_dump() for card in figures_info.colorCards]
+    color = colorCards[0]["color"]
     board = db.query(Board).filter(Board.game_id == gameID).first()
-
-    components = process_components(colorCards, board)
-
+    board_checks(color.upper(), board)
+    
+    components = process_components(colorCards)
     figure_checks(figures_info, components, db)
 
-    set_block_color(gameID, colorCards[0]["color"], db)
+    set_block_color(gameID, color, db)
 
     return 200
 
