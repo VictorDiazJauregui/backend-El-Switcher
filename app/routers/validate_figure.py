@@ -41,6 +41,7 @@ async def validate_figure(
         delete_partial_cache(game_id, db)
         delete_figure_card(figures_info.figureCardId, db)
         unassign_played_movement_cards(player_id, db)
+        await game_events.win_by_figures(game_id, player_id, db)
         await game_events.emit_cards(game_id, player_id, db)
 
     print(response)

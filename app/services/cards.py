@@ -1,4 +1,3 @@
-import asyncio
 from random import shuffle
 
 from sqlalchemy.orm import Session
@@ -332,26 +331,6 @@ def delete_figure_card(figureCardId: int, db: Session):
 
     except SQLAlchemyError as e:
         raise Exception(f"Error deleting figure card: {e}")
-
-    asyncio.run(win_by_figures(game_id, player_id, db))
-
-
-async def win_by_figures(game_id: int, player_id: int, db: Session):
-    """
-    Comprueba si un jugador ha descartado todas sus figuras.
-    En caso afirmativo, termina el juego y se le declara ganador.
-    """
-
-    player = (
-        db.query(Player)
-        .filter(Player.id == player_id, Player.game_id == game_id)
-        .first()
-    )
-
-    if len(player.card_figs) == 0:
-        from app.services import game_events
-
-        await game_events.emit_winner(game_id, player_id, db)
 
 
 def unassign_played_movement_cards(player_id: int, db: Session):
