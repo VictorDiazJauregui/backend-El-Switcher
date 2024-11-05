@@ -1,3 +1,4 @@
+import asyncio
 from app.db.db import Game, GameStatus, Player
 from app.models.figures import (
     get_figure_by_id,
@@ -37,9 +38,9 @@ def component_checks(components):
         raise ValueError("More than one connected component found")
 
 
-def board_checks(colorCards, board):
+def board_checks(color, board):
     if board.block_color is not None:
-        if colorCards[0]["color"].upper() == board.block_color.value.upper():
+        if color == board.block_color.value.upper():
             raise ValueError("This color is blocked")
 
 
