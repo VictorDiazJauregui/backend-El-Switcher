@@ -23,7 +23,7 @@ from app.routers import (
     move,
     validate_figure,
     cancel_move,
-    chat
+    chat,
 )
 from app.routers.sio_game import sio_game
 from app.routers.sio_lobby import sio_lobby

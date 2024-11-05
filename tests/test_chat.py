@@ -2,14 +2,22 @@ import pytest
 from app.db.db import GameStatus
 from app.schemas.chat import ChatMessageSchema
 from app.services.chat import get_chat_history
-from .db_setup import client, TestingSessionLocal, reset_db, create_game, create_player
+from .db_setup import (
+    client,
+    TestingSessionLocal,
+    reset_db,
+    create_game,
+    create_player,
+)
 
 
 @pytest.fixture(scope="module")
 def test_client():
     yield client
 
+
 reset_db()
+
 
 def test_chat_ingame(test_client):
     db = TestingSessionLocal()
@@ -27,6 +35,7 @@ def test_chat_ingame(test_client):
     )
     assert response.status_code == 200
 
+
 @pytest.mark.asyncio
 async def test_get_chat_history(test_client):
     db = TestingSessionLocal()
@@ -37,6 +46,3 @@ async def test_get_chat_history(test_client):
     chat_history = await get_chat_history(game_id=1, db=db)
 
     assert len(chat_history) == 1
-
-
-

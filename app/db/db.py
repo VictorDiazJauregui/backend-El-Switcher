@@ -8,7 +8,7 @@ from sqlalchemy import (
     ForeignKey,
     Text,
     LargeBinary,
-    DateTime
+    DateTime,
 )
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from contextlib import contextmanager
@@ -222,6 +222,6 @@ class ChatMessage(Base):
     message = Column(String(100), nullable=False)
     sender_id = Column(Integer, ForeignKey("players.id"))
     game_id = Column(Integer, ForeignKey("games.id"))
-    
+
     sender = relationship("Player", back_populates="chats")
     game = relationship("Game", back_populates="chats")

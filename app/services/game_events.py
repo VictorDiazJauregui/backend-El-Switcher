@@ -6,7 +6,11 @@ from app.models.broadcast import Broadcast
 from app.routers import sio_game as sio
 
 from app.schemas.player import PlayerResponseSchema, WinnerSchema
-from app.schemas.chat import SingleChatMessageSchema, MultipleChatMessagesSchema, ChatMessageSchema
+from app.schemas.chat import (
+    SingleChatMessageSchema,
+    MultipleChatMessagesSchema,
+    ChatMessageSchema,
+)
 
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board, get_blocked_color
@@ -160,7 +164,9 @@ async def emit_found_figures(game_id, db):
     await channel.broadcast(sio.sio_game, game_id, "found_figures", response)
 
 
-async def emit_single_chat_message(message: SingleChatMessageSchema, game_id: int):
+async def emit_single_chat_message(
+    message: SingleChatMessageSchema, game_id: int
+):
     """
     Given the message and the name of the sender, emits the message to
     every other player in the room
@@ -180,14 +186,18 @@ async def emit_chat_history(game_id: int, player_id: int, db: Session):
     # First fetch all the chat messages from the game
     chat_history = await get_chat_history(game_id, db)
     for message in chat_history:
-        message_schema = ChatMessageSchema(writtenBy=message.sender.name, message=message.message) # esto se ve horrible perdon
+        message_schema = ChatMessageSchema(
+            writtenBy=message.sender.name, message=message.message
+        )  # esto se ve horrible perdon
 
         # Append every message to the corresponding schema list
         data_to_emit.data.append(message_schema)
 
     channel = Broadcast()
-    
-    await channel.send_to_player(sio.sio_game, player_id, "chat_messages", data_to_emit.model_dump())
+
+    await channel.send_to_player(
+        sio.sio_game, player_id, "chat_messages", data_to_emit.model_dump()
+    )
 
 
 async def emit_block_color(game_id, db):

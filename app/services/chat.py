@@ -4,6 +4,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import Session, selectinload
 import app.models.broadcast
 
+
 async def get_chat_history(game_id: int, db: Session):
     result = db.execute(
         select(ChatMessage)
