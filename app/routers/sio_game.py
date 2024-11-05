@@ -45,6 +45,8 @@ async def connect(sid, environ, auth):
 
         await game_events.emit_found_figures(game_id, db)
 
+        await game_events.emit_block_color(game_id, db)
+
         # Broadcast cards
 
         await game_events.emit_cards(game_id, player_id, db)

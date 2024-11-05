@@ -4,14 +4,20 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, select, exists
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.db.db import Player, CardMove, CardFig, MoveType, FigureType, Game
+from app.db.db import (
+    CardMove,
+    CardFig,
+    FigureType,
+    Game,
+    MoveType,
+    Player,
+)
 from app.errors.handlers import NotFoundError
 from app.schemas.cards import (
     CardFigSchema,
     CardFigResponseSchema,
     CardMoveResponseSchema,
 )
-from app.schemas.figures import FigureSchema
 
 
 def add_cards_to_db(game_id: int, db: Session) -> int:
@@ -317,6 +323,7 @@ def delete_figure_card(figureCardId: int, db: Session):
             .scalars()
             .first()
         )
+        game_id, player_id = card_sacrifice.game_id, card_sacrifice.owner_id
         if not card_sacrifice:
             raise Exception(f"Error deleting figure card: {e}")
         db.delete(card_sacrifice)

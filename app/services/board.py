@@ -16,7 +16,7 @@ from app.db.db import (
     GameStatus,
 )
 from app.errors.handlers import NotFoundError
-from app.schemas.board import PieceResponseSchema
+from app.schemas.board import PieceResponseSchema, BlockColorSchema
 from app.schemas.move import MakeMoveSchema
 from app.services import game_events
 from app.services.game_player_service import get_game, get_player
@@ -343,3 +343,24 @@ async def undo_played_moves(game_id: int, player_id: int, db: Session):
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception(f"Error deleting partial cache: {e}")
+
+
+def set_block_color(game_id: int, color: Color, db: Session):
+    """Establece el color prohibido en el tablero"""
+    try:
+        board = db.query(Board).filter(Board.game_id == game_id).first()
+        board.block_color = color
+        db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception(f"Error setting block color: {e}")
+
+
+def get_blocked_color(game_id: int, db: Session):
+    """Obtiene el color bloqueado en el tablero"""
+    board = db.query(Board).filter(Board.game_id == game_id).first()
+    response = BlockColorSchema(
+        blockedColor=board.block_color.name if board.block_color else None
+    )
+
+    return response.model_dump()
