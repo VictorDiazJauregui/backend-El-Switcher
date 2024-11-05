@@ -164,7 +164,7 @@ async def emit_chat_history(game_id: int, player_id: int, db: Session):
     # First fetch all the chat messages from the game
     chat_history = await get_chat_history(game_id, db)
     for message in chat_history:
-        message_schema = ChatMessageSchema(writtenBy=message.sender.name, message=message.message) # perdoneme jefe
+        message_schema = ChatMessageSchema(writtenBy=message.sender.name, message=message.message) # esto se ve horrible perdon
 
         # Append every message to the corresponding schema list
         data_to_emit.data.append(message_schema)

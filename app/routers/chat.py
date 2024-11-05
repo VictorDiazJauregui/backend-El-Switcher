@@ -11,13 +11,16 @@ router = APIRouter()
 
 @router.post("/game/{game_id}/send_message")
 async def send_message(
-    chatMessageInfo: ChatSendMessageSchema, db: Session = Depends(get_db)
+    chatMessageInfo: ChatSendMessageSchema, game_id: int, db: Session = Depends(get_db)
 ):
     """
     Sends (broadcasts) the message written by the user in the game's chat
     to all other players in the room
     """
     player = get_player(chatMessageInfo.playerId, db)
+    if not player or player.game_id != game_id:
+        raise Exception("Player not found or not in game")
+
     message = ChatMessageSchema(writtenBy=player.name, message=chatMessageInfo.message)
     singleMessage = SingleChatMessageSchema(data=message).model_dump()
     
@@ -27,4 +30,4 @@ async def send_message(
 
     await emit_single_chat_message(message=singleMessage, game_id=player.game_id)
 
-
+    return 204
