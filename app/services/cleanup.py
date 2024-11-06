@@ -1,16 +1,13 @@
 import asyncio
-
 from app.db.db import (
     Game,
-    GameStatus,
-    Player,
     Board,
     ParallelBoard,
     CardMove,
     CardFig,
     SquarePiece,
+    SessionLocal
 )
-
 
 """
 Cleanup game data from the database.
@@ -25,37 +22,38 @@ commits the changes to the database.
 """
 
 
-async def cleanup_game(game_id, db):
+async def cleanup_game(game_id):
 
-    # Set the game status to FINISHED
+    await asyncio.sleep(5)
+    with SessionLocal() as db:
+        game = db.query(Game).filter(Game.id == game_id).first()
+        game_name = game.name
 
-    game = db.query(Game).filter(Game.id == game_id).first()
-    game.status = GameStatus.FINISHED
-    db.commit()
+        # Delete all card figures related to the game
+        db.query(CardFig).filter(CardFig.game_id == game_id).delete()
 
-    # Sleep for 10 seconds
-    await asyncio.sleep(10)
+        # Delete all card moves related to the game
+        db.query(CardMove).filter(CardMove.game_id == game_id).delete()
 
-    # Delete all players related to the game
-    db.query(Player).filter(Player.game_id == game_id).delete()
+        if game.players:
+            for player in game.players:
+                db.delete(player)
+                db.commit()
 
-    # Delete all boards related to the game
-    db.query(Board).filter(Board.game_id == game_id).delete()
+        # Delete all square pieces related to the game
+        db.query(SquarePiece).filter(SquarePiece.board_id == game_id).delete()
 
-    # Delete all parallel boards related to the game
-    db.query(ParallelBoard).filter(ParallelBoard.board_id == game_id).delete()
+        # Delete all parallel boards related to the game
+        db.query(ParallelBoard).filter(ParallelBoard.board_id == game_id).delete()
 
-    # Delete all card moves related to the game
-    db.query(CardMove).filter(CardMove.game_id == game_id).delete()
+        # Delete all boards related to the game
+        db.query(Board).filter(Board.game_id == game_id).delete()
+        
+        # Delete the game itself
+        db.query(Game).filter(Game.id == game_id).delete()
 
-    # Delete all card figures related to the game
-    db.query(CardFig).filter(CardFig.game_id == game_id).delete()
+        # Commit the changes to the database
+        db.commit()
+        print(f"Game {game_name} ID:{game_id} data has been cleaned up.")
 
-    # Delete all square pieces related to the game
-    db.query(SquarePiece).filter(SquarePiece.board_id == game_id).delete()
-
-    # Delete the game itself
-    db.query(Game).filter(Game.id == game_id).delete()
-
-    # Commit the changes to the database
-    db.commit()
+        return {"message": f"Game {game_id} has been cleaned up."}
