@@ -209,3 +209,15 @@ async def emit_block_color(game_id, db):
     response = get_blocked_color(game_id, db)
 
     await channel.broadcast(sio.sio_game, game_id, "blocked_color", response)
+
+async def emit_block_figure_event(game_id, figure_id):
+    """
+    Emits the event of blocking a figure
+    """
+    channel = Broadcast()
+
+    response = {
+        "figureId": figure_id
+    }
+
+    await channel.broadcast(sio.sio_game, game_id, "block_figure", response)
