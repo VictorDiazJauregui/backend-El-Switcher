@@ -54,6 +54,7 @@ async def emit_game_started(game_id):
         sio.sio_lobby, game_id, "game_started", {"gameStarted": True}
     )
 
+
 async def emit_game_cancel(game_id):
     broadcast = Broadcast()
 

@@ -170,9 +170,9 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
         )
 
     with lock_player(player_id, PlayerAction.REMOVE_PLAYER):
-        
+
         await game_events.disconnect_player_socket(player_id, game_id)
-        
+
         if game.status == GameStatus.INGAME:
             if player.turn == game.turn:
                 # if the player leaving is the current player, end their turn
@@ -192,7 +192,7 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
             game.status = GameStatus.FINISHED
             db.commit()
             return {"message": f"Player {player.name} has left the game."}
-        
+
         await game_events.emit_players_game(game_id, db)
 
         if game.status == GameStatus.LOBBY:
@@ -212,7 +212,9 @@ def cleanup(mapper, connection, target):
     if target.status == GameStatus.FINISHED:
         from app.services.timer import stop_timer
         from app.services.cleanup import cleanup_game
+
         stop_timer(target.id)
         asyncio.create_task(cleanup_game(target.id))
 
-event.listen(Game, 'after_update', cleanup)
+
+event.listen(Game, "after_update", cleanup)

@@ -41,7 +41,7 @@ async def emit_timer(game_id, player_id, db):
     broadcast = Broadcast()
     time_left = time_left_tasks[game_id]
 
-    player = get_player(player_id, db)   
+    player = get_player(player_id, db)
     game_ = get_game(game_id, db)
 
     while time_left > 0:
@@ -55,10 +55,12 @@ async def emit_timer(game_id, player_id, db):
     if player.turn == game_.turn:
         await game.end_turn(game_id, player_id, db)
 
+
 async def get_current_timer(game_id):
     if game_id in time_left_tasks:
         return time_left_tasks[game_id]
     return None
+
 
 async def get_current_task(game_id):
     if game_id in timer_tasks:

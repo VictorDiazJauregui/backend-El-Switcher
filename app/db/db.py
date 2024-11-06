@@ -24,12 +24,14 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 
 # Context manager to get a database session
 db_context = contextmanager(get_db)
@@ -111,13 +113,26 @@ class Game(Base):
     turn = Column(Enum(Turn), nullable=True)
 
     players = relationship(
-        "Player", back_populates="game", order_by="Player.turn", cascade="all, delete-orphan"
+        "Player",
+        back_populates="game",
+        order_by="Player.turn",
+        cascade="all, delete-orphan",
     )
-    board = relationship("Board", uselist=False, back_populates="game", cascade="all, delete-orphan")
-    cardmoves = relationship("CardMove", back_populates="game", cascade="all, delete-orphan")
-    cardfigs = relationship("CardFig", back_populates="game", cascade="all, delete-orphan")
-    chats = relationship("ChatMessage", back_populates="game", cascade="all, delete-orphan")
-
+    board = relationship(
+        "Board",
+        uselist=False,
+        back_populates="game",
+        cascade="all, delete-orphan",
+    )
+    cardmoves = relationship(
+        "CardMove", back_populates="game", cascade="all, delete-orphan"
+    )
+    cardfigs = relationship(
+        "CardFig", back_populates="game", cascade="all, delete-orphan"
+    )
+    chats = relationship(
+        "ChatMessage", back_populates="game", cascade="all, delete-orphan"
+    )
 
 
 # Modelo Player
@@ -131,9 +146,16 @@ class Player(Base):
 
     game = relationship("Game", back_populates="players")
     card_moves = relationship("CardMove", back_populates="owner")
-    card_figs = relationship("CardFig", back_populates="owner", cascade="all, delete-orphan")
-    parallel_boards = relationship("ParallelBoard", back_populates="player", cascade="all, delete-orphan")
-    chats = relationship("ChatMessage", back_populates="sender", cascade="all, delete-orphan")
+    card_figs = relationship(
+        "CardFig", back_populates="owner", cascade="all, delete-orphan"
+    )
+    parallel_boards = relationship(
+        "ParallelBoard", back_populates="player", cascade="all, delete-orphan"
+    )
+    chats = relationship(
+        "ChatMessage", back_populates="sender", cascade="all, delete-orphan"
+    )
+
 
 # Modelo Board
 class Board(Base):
@@ -143,8 +165,12 @@ class Board(Base):
     block_color = Column(Enum(Color), nullable=True, default=None)
 
     game = relationship("Game", back_populates="board")
-    square_pieces = relationship("SquarePiece", back_populates="board", cascade="all, delete-orphan")
-    parallel_boards = relationship("ParallelBoard", back_populates="board", cascade="all, delete-orphan")
+    square_pieces = relationship(
+        "SquarePiece", back_populates="board", cascade="all, delete-orphan"
+    )
+    parallel_boards = relationship(
+        "ParallelBoard", back_populates="board", cascade="all, delete-orphan"
+    )
 
 
 # Modelo ParallelBoard
@@ -214,6 +240,7 @@ class SquarePiece(Base):
 
     board = relationship("Board", back_populates="square_pieces")
 
+
 class ChatMessage(Base):
     __tablename__ = "chat"
 
@@ -225,6 +252,7 @@ class ChatMessage(Base):
 
     sender = relationship("Player", back_populates="chats")
     game = relationship("Game", back_populates="chats")
+
 
 # Event listener to set owner_id to None instead of deleting CardMove
 @event.listens_for(Player, "before_delete")
@@ -241,4 +269,3 @@ def receive_before_delete(mapper, connection, target):
         .where(CardMove.owner_id == target.id)
         .where(CardMove.owner_id.is_(None))
     )
-

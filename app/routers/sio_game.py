@@ -60,7 +60,7 @@ async def connect(sid, environ, auth):
 
         current_time = await get_current_timer(game_id)
         if current_time is not None:
-            await sio_game.emit('timer', {'time': current_time}, room=sid)
+            await sio_game.emit("timer", {"time": current_time}, room=sid)
         else:
             start_timer(game_id, player_id, db)
 

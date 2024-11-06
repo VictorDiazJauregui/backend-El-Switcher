@@ -99,6 +99,7 @@ async def emit_winner(game_id, player_id, db):
 
     stop_timer(game_id)
 
+
 async def emit_cards(game_id, player_id, db):
     """
     Emits to specified player their own movement cards and all other player's figure cards.
