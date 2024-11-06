@@ -6,6 +6,7 @@ class CardFigSchema(BaseModel):
     figureCardId: int
     difficulty: str
     figureType: int
+    isBlocked: bool
 
 
 class CardFigResponseSchema(BaseModel):
