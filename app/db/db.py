@@ -8,9 +8,11 @@ from sqlalchemy import (
     ForeignKey,
     Text,
     LargeBinary,
+    DateTime,
 )
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from contextlib import contextmanager
+from datetime import datetime, timezone
 import enum
 
 DATABASE_URL = "mysql+pymysql://root:secret@localhost:33061/switcher"
@@ -113,6 +115,7 @@ class Game(Base):
     board = relationship("Board", uselist=False, back_populates="game")
     cardmoves = relationship("CardMove", back_populates="game")
     cardfigs = relationship("CardFig", back_populates="game")
+    chats = relationship("ChatMessage", back_populates="game")
 
 
 # Modelo Player
@@ -128,6 +131,7 @@ class Player(Base):
     card_moves = relationship("CardMove", back_populates="owner")
     card_figs = relationship("CardFig", back_populates="owner")
     parallel_boards = relationship("ParallelBoard", back_populates="player")
+    chats = relationship("ChatMessage", back_populates="sender")
 
 
 # Modelo Board
@@ -208,3 +212,16 @@ class SquarePiece(Base):
     partial_id = Column(Integer, nullable=True)
 
     board = relationship("Board", back_populates="square_pieces")
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat"
+
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    message = Column(String(100), nullable=False)
+    sender_id = Column(Integer, ForeignKey("players.id"))
+    game_id = Column(Integer, ForeignKey("games.id"))
+
+    sender = relationship("Player", back_populates="chats")
+    game = relationship("Game", back_populates="chats")
