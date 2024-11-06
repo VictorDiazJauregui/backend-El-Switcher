@@ -93,7 +93,6 @@ app.include_router(validate_figure.router)
 app.include_router(cancel_move.router)
 
 
-
 # Mount the Socket.IO app
 socket_app = socketio.ASGIApp(
     sio_game, other_asgi_app=app, socketio_path="/game/ws"

@@ -18,7 +18,7 @@ async def validate_figure(
     db: Session = Depends(get_db),
 ):
     figure = get_figure_by_id(figures_info.figureCardId, db)
-    if(figure.owner_id == player_id):
+    if figure.owner_id == player_id:
         response = validate(figures_info, game_id, player_id, db)
         if response == 200:
             await cleanup(figures_info, game_id, player_id, db)
@@ -26,4 +26,3 @@ async def validate_figure(
     else:
         response = block_figure_service(figures_info, game_id, player_id, db)
         return response
-
