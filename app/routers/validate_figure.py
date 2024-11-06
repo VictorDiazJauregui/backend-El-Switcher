@@ -15,7 +15,7 @@ async def validate_figure(
     player_id: int,
     db: Session = Depends(get_db),
 ):
-
+    
     response = validate(figures_info, game_id, player_id, db)
     if response == 200:
         await cleanup(figures_info, game_id, player_id, db)

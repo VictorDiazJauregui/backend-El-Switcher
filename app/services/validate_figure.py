@@ -1,5 +1,6 @@
 import asyncio
-from app.db.db import Game, GameStatus, Player
+
+from app.db.db import Game, GameStatus, Player, CardFig
 from app.models.figures import (
     get_figure_by_id,
     get_figure_type_by_id,
@@ -57,12 +58,18 @@ def process_components(colorCards):
     return components
 
 
-def figure_checks(figures_info, components, db):
+def figure_checks(figures_info, components, playerId,  db: Session):
     cardId = figures_info.figureCardId
 
     figure = get_figure_by_id(cardId, db)
     if figure is None:
         raise ValueError("Figure not found")
+    
+    len_card_figs_from_player = len(db.query(CardFig).filter(CardFig.game_id == figure.game_id, CardFig.owner_id == playerId, CardFig.in_hand == True).all())
+
+    if figure.block and len_card_figs_from_player > 1:
+        raise ValueError("Figure blocked")
+
 
     figure_type = get_figure_type_by_id(cardId, db)
     if figure_type is None:
@@ -89,7 +96,7 @@ def validate(
     board_checks(color.upper(), board)
 
     components = process_components(colorCards)
-    figure_checks(figures_info, components, db)
+    figure_checks(figures_info, components, playerID,  db)
 
     set_block_color(gameID, color, db)
 

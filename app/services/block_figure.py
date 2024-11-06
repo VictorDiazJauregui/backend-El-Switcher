@@ -1,18 +1,10 @@
 import asyncio
-from app.db.db import Game, GameStatus, Player
+from sqlalchemy.orm import Session
 from app.models.figures import (
     get_figure_by_id,
-    get_figure_type_by_id,
-    select_figure_by_his_type,
 )
 from app.schemas.figures import FigureSchema
 from app.services import game_events
-from app.services.board import delete_partial_cache, set_block_color
-from app.services.cards import (
-    delete_figure_card,
-    unassign_played_movement_cards,
-)
-from app.services.figures import *
 from app.services.validate_figure import validate
 
 
