@@ -23,6 +23,7 @@ from app.routers import (
     move,
     validate_figure,
     cancel_move,
+    chat,
 )
 from app.routers.sio_game import sio_game
 from app.routers.sio_lobby import sio_lobby
@@ -83,6 +84,7 @@ app.include_router(start.router)
 app.include_router(end_turn.router)
 app.include_router(leave.router)
 app.include_router(move.router)
+app.include_router(chat.router)
 
 
 # Register the figures router

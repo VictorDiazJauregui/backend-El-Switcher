@@ -11,9 +11,12 @@ from sqlalchemy import (
     Text,
     LargeBinary,
     event,
+    DateTime,
 )
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from contextlib import contextmanager
+from datetime import datetime, timezone
+import enum
 
 DATABASE_URL = "mysql+pymysql://root:secret@localhost:33061/switcher"
 engine = create_engine(DATABASE_URL)
@@ -113,6 +116,8 @@ class Game(Base):
     board = relationship("Board", uselist=False, back_populates="game", cascade="all, delete-orphan")
     cardmoves = relationship("CardMove", back_populates="game", cascade="all, delete-orphan")
     cardfigs = relationship("CardFig", back_populates="game", cascade="all, delete-orphan")
+    chats = relationship("ChatMessage", back_populates="game", cascade="all, delete-orphan")
+
 
 
 # Modelo Player
@@ -128,7 +133,7 @@ class Player(Base):
     card_moves = relationship("CardMove", back_populates="owner")
     card_figs = relationship("CardFig", back_populates="owner", cascade="all, delete-orphan")
     parallel_boards = relationship("ParallelBoard", back_populates="player", cascade="all, delete-orphan")
-
+    chats = relationship("ChatMessage", back_populates="sender", cascade="all, delete-orphan")
 
 # Modelo Board
 class Board(Base):
@@ -209,6 +214,17 @@ class SquarePiece(Base):
 
     board = relationship("Board", back_populates="square_pieces")
 
+class ChatMessage(Base):
+    __tablename__ = "chat"
+
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    message = Column(String(100), nullable=False)
+    sender_id = Column(Integer, ForeignKey("players.id"))
+    game_id = Column(Integer, ForeignKey("games.id"))
+
+    sender = relationship("Player", back_populates="chats")
+    game = relationship("Game", back_populates="chats")
 
 # Event listener to set owner_id to None instead of deleting CardMove
 @event.listens_for(Player, "before_delete")
@@ -225,3 +241,4 @@ def receive_before_delete(mapper, connection, target):
         .where(CardMove.owner_id == target.id)
         .where(CardMove.owner_id.is_(None))
     )
+

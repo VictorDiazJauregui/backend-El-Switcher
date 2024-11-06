@@ -65,3 +65,7 @@ async def connect(sid, environ, auth):
             start_timer(game_id, player_id, db)
 
         await game_events.emit_opponents_total_mov_cards(game_id, db)
+
+        # Broadcast chat
+
+        await game_events.emit_chat_history(game_id, player_id, db)

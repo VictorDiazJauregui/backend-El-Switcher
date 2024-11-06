@@ -68,6 +68,10 @@ def add_cards_to_db(game_id: int, db: Session) -> int:
 
 
 def distribute_cards_to_deck(game_id: int, db: Session):
+    """
+    Make it fair by assigning the same amount of hard/easy cards
+    to each player.
+    """
     try:
         list_of_ids = (
             db.execute(select(Player.id).where(Player.game_id == game_id))
@@ -93,7 +97,7 @@ def distribute_cards_to_deck(game_id: int, db: Session):
         for player_id in list_of_ids:
             player_easy_cards = easy_cards[
                 :num_of_easy_per_deck
-            ]  # Select only the needed cards
+            ]  # This selects only the needed number of cards
             player_hard_cards = hard_cards[:num_of_hard_per_deck]
 
             for card in player_easy_cards:
