@@ -173,16 +173,15 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
 
         await game_events.disconnect_player_socket(player_id, game_id)
 
-        if game.status == GameStatus.INGAME:
-            if player.turn == game.turn:
-                # if the player leaving is the current player, end their turn
-                await end_turn(game_id, player_id, db)
-
         cancel_lobby = False
-        if game.status == GameStatus.LOBBY:
-            if player.turn == Turn.P1:
+        if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
+                # If the host of the lobby is leaving, cancel the game
                 asyncio.create_task(lobby_events.emit_game_cancel(game.id))
                 cancel_lobby = True
+
+        if game.status == GameStatus.INGAME and player.turn == game.turn:
+                # If the player leaving is the current player, end their turn
+                await end_turn(game_id, player_id, db)
 
         db.delete(player)
         db.commit()
@@ -193,15 +192,15 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
             db.commit()
             return {"message": f"Player {player.name} has left the game."}
 
-        await game_events.emit_players_game(game_id, db)
-
         if game.status == GameStatus.LOBBY:
             await lobby_events.emit_players_lobby(game_id, db)
             await lobby_events.emit_can_start_game(game_id, db)
             await game_list_events.emit_game_list(db)
 
-        if game.status == GameStatus.INGAME and len(game.players) == 1:
-            await game_events.emit_winner(game_id, game.players[0].id, db)
+        if game.status == GameStatus.INGAME:
+            await game_events.emit_players_game(game_id, db)
+            if len(game.players) == 1:
+                await game_events.emit_winner(game_id, game.players[0].id, db)
 
     print(f"Player {player.name} has left the game")
 
