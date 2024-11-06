@@ -113,7 +113,9 @@ def validate(
 async def cleanup(figures_info, game_id, player_id, db):
     delete_partial_cache(game_id, db)
     await game_events.emit_block_color(game_id, db)
-    delete_figure_card(figures_info.figureCardId, db)
+    figure = get_figure_by_id(figures_info.figureCardId, db)
+    if figure.owner_id == player_id:
+        delete_figure_card(figures_info.figureCardId, db)
     await game_events.win_by_figures(game_id, player_id, db)
     unassign_played_movement_cards(player_id, db)
     await game_events.emit_cards(game_id, player_id, db)
