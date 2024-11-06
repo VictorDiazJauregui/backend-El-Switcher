@@ -16,5 +16,6 @@ async def block_figure_service(figures_info : FigureSchema, game_id: int, player
         db.commit()
         #emite el evento de bloqueo de figura
         await game_events.emit_block_figure_event(game_id, figure.id)
+        return 200
 
     

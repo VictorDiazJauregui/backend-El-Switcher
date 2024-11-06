@@ -24,7 +24,6 @@ from app.routers import (
     validate_figure,
     cancel_move,
     chat,
-    block_figure,
 )
 from app.routers.sio_game import sio_game
 from app.routers.sio_lobby import sio_lobby
@@ -93,7 +92,7 @@ app.include_router(figures.router)
 app.include_router(validate_figure.router)
 app.include_router(cancel_move.router)
 
-app.include_router(block_figure.router)
+
 
 # Mount the Socket.IO app
 socket_app = socketio.ASGIApp(

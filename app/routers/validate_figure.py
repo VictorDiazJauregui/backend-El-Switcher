@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from app.db.db import get_db
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure import validate, cleanup
+from app.services.block_figure import block_figure_service
+from app.models.figures import get_figure_by_id
 
 router = APIRouter()
 
@@ -15,8 +17,13 @@ async def validate_figure(
     player_id: int,
     db: Session = Depends(get_db),
 ):
-    
-    response = validate(figures_info, game_id, player_id, db)
-    if response == 200:
-        await cleanup(figures_info, game_id, player_id, db)
-    return response
+    figure = get_figure_by_id(figures_info.figureCardId, db)
+    if(figure.owner_id == player_id):
+        response = validate(figures_info, game_id, player_id, db)
+        if response == 200:
+            await cleanup(figures_info, game_id, player_id, db)
+        return response
+    else:
+        response = block_figure_service(figures_info, game_id, player_id, db)
+        return response
+
