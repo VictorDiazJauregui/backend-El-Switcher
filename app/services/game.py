@@ -175,13 +175,13 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
 
         cancel_lobby = False
         if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
-                # If the host of the lobby is leaving, cancel the game
-                asyncio.create_task(lobby_events.emit_game_cancel(game.id))
-                cancel_lobby = True
+            # If the host of the lobby is leaving, cancel the game
+            asyncio.create_task(lobby_events.emit_game_cancel(game.id))
+            cancel_lobby = True
 
         if game.status == GameStatus.INGAME and player.turn == game.turn:
-                # If the player leaving is the current player, end their turn
-                await end_turn(game_id, player_id, db)
+            # If the player leaving is the current player, end their turn
+            await end_turn(game_id, player_id, db)
 
         db.delete(player)
         db.commit()
