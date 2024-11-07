@@ -15,7 +15,7 @@ from app.schemas.chat import (
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board, get_blocked_color
 from app.services.figures import figures_event
-from app.services.timer import handle_timer
+from app.services.timer import restart_timer, stop_timer
 from app.services.chat import get_chat_history
 
 
@@ -45,7 +45,7 @@ async def emit_players_game(game_id, db):
     )
 
 
-async def emit_turn_info(game_id, db):
+async def emit_turn_info(game_id, db, reset):
     game = db.query(Game).filter(Game.id == game_id).first()
 
     player = (
@@ -63,8 +63,9 @@ async def emit_turn_info(game_id, db):
     # send the turn info to all players in the lobby
     await broadcast.broadcast(sio.sio_game, game_id, "turn", turn_info)
 
-    # start the timer for the current player
-    await handle_timer(game_id, player.id, db)
+    if reset:
+        # start the timer for the current player
+        await restart_timer(game_id, player.id, db)
 
 
 async def win_by_figures(game_id: int, player_id: int, db):
@@ -84,8 +85,8 @@ async def win_by_figures(game_id: int, player_id: int, db):
         await emit_winner(game_id, player_id, db)
 
 
-async def emit_winner(game_id, winner_id, db):
-    winner = db.query(Player).filter(Player.id == winner_id).first()
+async def emit_winner(game_id, player_id, db):
+    winner = db.query(Player).filter(Player.id == player_id).first()
 
     broadcast = Broadcast()
 
@@ -95,6 +96,8 @@ async def emit_winner(game_id, winner_id, db):
         "winner",
         WinnerSchema(idWinner=winner.id, nameWinner=winner.name).model_dump(),
     )
+
+    stop_timer(game_id)
 
 
 async def emit_cards(game_id, player_id, db):

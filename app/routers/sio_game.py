@@ -4,6 +4,7 @@ from app.db.db import db_context, Game, Player, GameStatus
 from app.models.broadcast import Broadcast
 from app.services import game_events
 from app.utils.parse_query_string import parse_query_string
+from app.services.timer import get_current_timer, start_timer
 
 # Create a new Socket.IO server
 sio_game = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=[])
@@ -55,7 +56,13 @@ async def connect(sid, environ, auth):
 
         # Broadcast turn info
 
-        await game_events.emit_turn_info(game_id, db)
+        await game_events.emit_turn_info(game_id, db, reset=False)
+
+        current_time = await get_current_timer(game_id)
+        if current_time is not None:
+            await sio_game.emit("timer", {"time": current_time}, room=sid)
+        else:
+            start_timer(game_id, player_id, db)
 
         await game_events.emit_opponents_total_mov_cards(game_id, db)
 
