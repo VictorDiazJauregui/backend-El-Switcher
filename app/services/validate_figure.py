@@ -105,7 +105,7 @@ def validate(
     components = process_components(colorCards)
     figure_checks(figures_info, components, playerID, db)
 
-    set_block_color(gameID, color, db)
+
 
     return 200
 

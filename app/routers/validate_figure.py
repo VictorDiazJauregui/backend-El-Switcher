@@ -6,6 +6,7 @@ from app.schemas.figures import FigureSchema
 from app.services.validate_figure import validate, cleanup
 from app.services.block_figure import block_figure_service
 from app.models.figures import get_figure_by_id
+from app.services.board import set_block_color
 
 router = APIRouter()
 
@@ -26,5 +27,6 @@ async def validate_figure(
         )
 
     if response == 200:
+        set_block_color(game_id, figures_info.colorCards[0].color, db)
         await cleanup(figures_info, game_id, player_id, db)
     return response
