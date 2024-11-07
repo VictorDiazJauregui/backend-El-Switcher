@@ -12,6 +12,7 @@ from app.services.board import delete_partial_cache, set_block_color
 from app.services.cards import (
     delete_figure_card,
     unassign_played_movement_cards,
+    unblock_card,
 )
 from app.services.figures import *
 
@@ -116,4 +117,5 @@ async def cleanup(figures_info, game_id, player_id, db):
         delete_figure_card(figures_info.figureCardId, db)
     await game_events.win_by_figures(game_id, player_id, db)
     unassign_played_movement_cards(player_id, db)
+    unblock_card(player_id, db)
     await game_events.emit_cards(game_id, player_id, db)

@@ -328,7 +328,6 @@ def delete_figure_card(figureCardId: int, db: Session):
             .scalars()
             .first()
         )
-        game_id, player_id = card_sacrifice.game_id, card_sacrifice.owner_id
         if not card_sacrifice:
             raise Exception(f"Error deleting figure card: {e}")
         db.delete(card_sacrifice)
@@ -375,3 +374,20 @@ def initialize_cards(game_id: int, db: Session):
             assign_movement_cards(game_id, player_id, db)
     except SQLAlchemyError as e:
         raise Exception(f"Error initializing cards: {e}")
+
+
+def unblock_card(player_id: int, db: Session):
+    """
+    Unblocks the player's blocked figure card if it's the
+    only one left in their hand.
+    """
+    cards_in_hand = (
+        db.query(CardFig)
+        .filter(CardFig.owner_id == player_id, CardFig.in_hand == True)
+        .all()
+    )
+    the_only_card = cards_in_hand[0]
+    if len(cards_in_hand) == 1 and the_only_card.block == True:
+        the_only_card.block = False
+
+    db.commit()

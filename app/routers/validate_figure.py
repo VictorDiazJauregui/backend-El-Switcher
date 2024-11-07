@@ -29,4 +29,5 @@ async def validate_figure(
     if response == 200:
         set_block_color(game_id, figures_info.colorCards[0].color, db)
         await cleanup(figures_info, game_id, player_id, db)
+
     return response
