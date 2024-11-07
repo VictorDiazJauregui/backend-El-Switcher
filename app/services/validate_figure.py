@@ -105,8 +105,6 @@ def validate(
     components = process_components(colorCards)
     figure_checks(figures_info, components, playerID, db)
 
-
-
     return 200
 
 

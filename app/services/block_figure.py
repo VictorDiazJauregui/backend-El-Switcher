@@ -14,21 +14,18 @@ async def block_figure_service(
     if validate(figures_info, game_id, player_id, db) == 200:
         # Obtiene la figura por su Id
         figure = get_figure_by_id(figures_info.figureCardId, db)
-        #verifico que el resto de la mano del jugador no esté bloqueada
-
+        # verifico que el resto de la mano del jugador no esté bloqueada
 
         len_card_figs_from_player_blocked = len(
             db.query(CardFig)
             .filter(
                 CardFig.game_id == figure.game_id,
-                CardFig.owner_id == figure.owner_id, 
-                CardFig.in_hand == True, 
+                CardFig.owner_id == figure.owner_id,
+                CardFig.in_hand == True,
                 CardFig.block == True,
             )
             .all()
         )
-        
-
 
         if len_card_figs_from_player_blocked >= 1:
             raise ValueError("The player already has a blocked figure")
@@ -44,7 +41,9 @@ async def block_figure_service(
         )
         print(len_card_figs_from_player)
         if len_card_figs_from_player < 2:
-            raise ValueError("You can't block a figure from a player that has less than 2 figures in hand")
+            raise ValueError(
+                "You can't block a figure from a player that has less than 2 figures in hand"
+            )
 
         # Bloquea la figura
         figure.block = True
