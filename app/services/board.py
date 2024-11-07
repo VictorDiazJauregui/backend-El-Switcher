@@ -169,7 +169,9 @@ def switch_pieces(piece1: int, piece2: int, state_id: int, db: Session):
         raise Exception(f"Error switching pieces: {e}")
 
 
-def validate_move(piece1: int, piece2: int, move_type: MoveType):
+def validate_move(
+    piece1: SquarePiece, piece2: SquarePiece, move_type: MoveType
+):
     row_diff = abs(piece1.row - piece2.row)
     col_diff = abs(piece1.column - piece2.column)
 
@@ -227,7 +229,8 @@ def validate_move(piece1: int, piece2: int, move_type: MoveType):
                 and piece1.row == piece2.row
             )
         )
-    return False
+    else:
+        raise ValueError("Invalid move type")
 
 
 async def validate_and_cancel_move(game_id: int, player_id: int, db: Session):
