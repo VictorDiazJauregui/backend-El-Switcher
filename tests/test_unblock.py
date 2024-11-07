@@ -10,6 +10,7 @@ from app.services.cards import unblock_card
 def test_client():
     yield client
 
+
 def test_unblock_card():
     db = TestingSessionLocal()
     reset_db()
@@ -36,18 +37,17 @@ def test_unblock_card():
         owner_id=player1.id,
         figure=FigureType.HARD_1,
         in_hand=True,
-        block=True
+        block=True,
     )
     db.add_all([card1, card2, card3])
     db.commit()
 
     unblock_card(player1.id, db)
-    assert(card3.block == True)
+    assert card3.block == True
 
     db.delete(card2)
     db.delete(card1)
     db.commit()
 
     unblock_card(player1.id, db)
-    assert(card3.block == False)
-
+    assert card3.block == False

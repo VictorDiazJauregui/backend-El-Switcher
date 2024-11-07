@@ -12,7 +12,7 @@ from app.services.board import delete_partial_cache, set_block_color
 from app.services.cards import (
     delete_figure_card,
     unassign_played_movement_cards,
-    unblock_card
+    unblock_card,
 )
 from app.services.figures import *
 
