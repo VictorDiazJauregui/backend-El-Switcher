@@ -303,6 +303,7 @@ def fetch_figure_cards(game_id: int, db: Session):
                             "easy" if "EASY" in card.figure.name else "hard"
                         ),
                         figureType=card.figure.value[0],
+                        isBlocked=card.block,
                     ).model_dump()
                 )
             player_cards = CardFigResponseSchema(

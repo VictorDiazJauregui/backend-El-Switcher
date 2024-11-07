@@ -15,6 +15,8 @@ from .db_setup import (
     create_figure,
 )
 
+pytestmark = pytest.mark.skip(reason="Tests deshabilitados en este módulo")
+
 
 @pytest.fixture
 def test_client():

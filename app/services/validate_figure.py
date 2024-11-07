@@ -1,5 +1,6 @@
 import asyncio
-from app.db.db import Game, GameStatus, Player
+
+from app.db.db import Game, GameStatus, Player, CardFig
 from app.models.figures import (
     get_figure_by_id,
     get_figure_type_by_id,
@@ -57,12 +58,25 @@ def process_components(colorCards):
     return components
 
 
-def figure_checks(figures_info, components, db):
+def figure_checks(figures_info, components, playerId, db: Session):
     cardId = figures_info.figureCardId
 
     figure = get_figure_by_id(cardId, db)
     if figure is None:
         raise ValueError("Figure not found")
+
+    len_card_figs_from_player = len(
+        db.query(CardFig)
+        .filter(
+            CardFig.game_id == figure.game_id,
+            CardFig.owner_id == playerId,
+            CardFig.in_hand == True,
+        )
+        .all()
+    )
+
+    if figure.block and len_card_figs_from_player > 1:
+        raise ValueError("Figure blocked")
 
     figure_type = get_figure_type_by_id(cardId, db)
     if figure_type is None:
@@ -89,9 +103,7 @@ def validate(
     board_checks(color.upper(), board)
 
     components = process_components(colorCards)
-    figure_checks(figures_info, components, db)
-
-    set_block_color(gameID, color, db)
+    figure_checks(figures_info, components, playerID, db)
 
     return 200
 
@@ -99,7 +111,9 @@ def validate(
 async def cleanup(figures_info, game_id, player_id, db):
     delete_partial_cache(game_id, db)
     await game_events.emit_block_color(game_id, db)
-    delete_figure_card(figures_info.figureCardId, db)
+    figure = get_figure_by_id(figures_info.figureCardId, db)
+    if figure.owner_id == player_id:
+        delete_figure_card(figures_info.figureCardId, db)
     await game_events.win_by_figures(game_id, player_id, db)
     unassign_played_movement_cards(player_id, db)
     await game_events.emit_cards(game_id, player_id, db)
