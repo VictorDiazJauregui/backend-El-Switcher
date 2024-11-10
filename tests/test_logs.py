@@ -17,8 +17,6 @@ def test_client():
     yield client
 
 
-
-
 @pytest.mark.asyncio
 async def test_get_chat_history(test_client):
     db = TestingSessionLocal()
@@ -31,5 +29,5 @@ async def test_get_chat_history(test_client):
     log_history = await get_log_history(game_id=game.id, db=db)
     print(log_history)
 
-    assert log_history[0].message == "LOG HOLA" 
+    assert log_history[0].message == "LOG HOLA"
     assert len(log_history) == 1

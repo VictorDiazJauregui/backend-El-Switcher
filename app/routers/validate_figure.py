@@ -23,9 +23,11 @@ async def validate_figure(
     figure = get_figure_by_id(figures_info.figureCardId, db)
     if figure.owner_id == player_id:
         response = validate(figures_info, game_id, player_id, db)
-        
+
         player = get_player(player_id, db)
-        await game_events.emit_log(game_id, f"{player.name} eliminó una de sus figuras.", db)
+        await game_events.emit_log(
+            game_id, f"{player.name} eliminó una de sus figuras.", db
+        )
     else:
         response = await block_figure_service(
             figures_info, game_id, player_id, db

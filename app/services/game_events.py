@@ -11,7 +11,11 @@ from app.schemas.chat import (
     MultipleChatMessagesSchema,
     ChatMessageSchema,
 )
-from app.schemas.logs import (SingleLogMessageSchema, MultipleLogMessagesSchema, LogMessageSchema)
+from app.schemas.logs import (
+    SingleLogMessageSchema,
+    MultipleLogMessagesSchema,
+    LogMessageSchema,
+)
 
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board, get_blocked_color

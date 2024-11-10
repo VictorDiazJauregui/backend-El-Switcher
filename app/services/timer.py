@@ -54,7 +54,9 @@ async def emit_timer(game_id, player_id, db):
         time_left -= 1
 
     if player.turn == game_.turn:
-        await game_events.emit_log(game_id, f"Ups! El tiempo para {player.name} ha terminado...", db)
+        await game_events.emit_log(
+            game_id, f"Ups! El tiempo para {player.name} ha terminado...", db
+        )
         await game.end_turn(game_id, player_id, db)
 
 

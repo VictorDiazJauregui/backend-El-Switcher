@@ -51,6 +51,8 @@ async def block_figure_service(
         figure.block = True
         db.commit()
         player = get_player(game_id, db)
-        await game_events.emit_log(game_id, f"Le han bloqueado una carta a {player.name}!", db)
+        await game_events.emit_log(
+            game_id, f"Le han bloqueado una carta a {player.name}!", db
+        )
 
         return 200

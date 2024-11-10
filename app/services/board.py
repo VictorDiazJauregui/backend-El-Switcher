@@ -113,7 +113,11 @@ async def make_move(
         card_move.played = True
         db.commit()
 
-        await game_events.emit_log(game_id, f"{player.name} ha jugado su movimiento {card_move.move.value[1]}.", db)
+        await game_events.emit_log(
+            game_id,
+            f"{player.name} ha jugado su movimiento {card_move.move.value[1]}.",
+            db,
+        )
         await game_events.emit_cards(game_id, player_id, db)
         await game_events.emit_board(game_id, db)
         await game_events.emit_found_figures(game_id, db)
@@ -299,7 +303,9 @@ async def revert_move_state(game_id: int, player_id: int, db: Session):
         db.commit()
 
         player = get_player(player_id, db)
-        await game_events.emit_log(game_id, f"{player.name} ha cancelado un movimiento.", db)
+        await game_events.emit_log(
+            game_id, f"{player.name} ha cancelado un movimiento.", db
+        )
         await game_events.emit_board(game_id, db)
         await game_events.emit_opponents_total_mov_cards(game_id, db)
         await game_events.emit_cards(game_id, player_id, db)
@@ -357,7 +363,9 @@ async def set_block_color(game_id: int, color: Color, db: Session):
         board = db.query(Board).filter(Board.game_id == game_id).first()
         board.block_color = color
 
-        await game_events.emit_log(game_id, f"El nuevo color bloqueado es {color}.", db)
+        await game_events.emit_log(
+            game_id, f"El nuevo color bloqueado es {color}.", db
+        )
         db.commit()
     except SQLAlchemyError as e:
         db.rollback()

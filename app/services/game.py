@@ -157,9 +157,10 @@ async def end_turn(game_id: int, player_id: int, db: Session):
     with lock_player(player_id, PlayerAction.END_TURN):
         await pass_turn(game_id, player_id, db)
 
-    await game_events.emit_log(game_id, f"{player.name} ha terminado su turno." ,db)
+    await game_events.emit_log(
+        game_id, f"{player.name} ha terminado su turno.", db
+    )
     return {"message": f"Player {player.name} has ended their turn."}
-    
 
 
 async def remove_player_from_game(game_id: int, player_id: int, db: Session):
