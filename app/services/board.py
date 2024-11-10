@@ -113,6 +113,7 @@ async def make_move(
         card_move.played = True
         db.commit()
 
+        await game_events.emit_log(game_id, f"{player.name} ha jugado su movimiento {card_move.move.value[1]}.", db)
         await game_events.emit_cards(game_id, player_id, db)
         await game_events.emit_board(game_id, db)
         await game_events.emit_found_figures(game_id, db)

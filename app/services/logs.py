@@ -6,11 +6,6 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import Session, selectinload
 
 
-async def save_log_in_db(game_id: int, message: str, db: Session):
-    db.add(LogMessage(message=message, game_id=game_id))
-    db.commit()
-
-
 async def get_log_history(game_id: int, db: Session):
     result = db.execute(
         select(LogMessage)

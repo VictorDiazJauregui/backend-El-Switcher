@@ -115,7 +115,6 @@ async def cleanup(figures_info, game_id, player_id, db):
     await game_events.emit_block_color(game_id, db)
 
     figure = get_figure_by_id(figures_info.figureCardId, db)
-    figure_name = figure.figure[1]
     if figure.owner_id == player_id:
         delete_figure_card(figures_info.figureCardId, db)
     await game_events.win_by_figures(game_id, player_id, db)
@@ -124,3 +123,5 @@ async def cleanup(figures_info, game_id, player_id, db):
     unblock_card(player_id, db)
     await game_events.emit_cards(game_id, player_id, db)
 
+    player = get_player(player_id, db)
+    await game_events.emit_log(game_id, f"{player.name} eliminó una de sus figuras.", db)
