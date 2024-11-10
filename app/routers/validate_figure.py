@@ -38,8 +38,10 @@ async def validate_figure(
         await set_block_color(game_id, figures_info.colorCards[0].color, db)
         response = get_blocked_color(game_id, db)
         await game_events.emit_log(
-                game_id, f"El nuevo color bloqueado es { response['blockedColor'] }.", db
-            )
+            game_id,
+            f"El nuevo color bloqueado es { response['blockedColor'] }.",
+            db,
+        )
         await cleanup(figures_info, game_id, player_id, db)
 
     return response
