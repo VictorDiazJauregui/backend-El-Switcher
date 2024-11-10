@@ -3,6 +3,7 @@ from app.models.broadcast import Broadcast
 from app.routers import sio_game as sio
 from app.services import game
 from app.services.game_player_service import get_game, get_player
+from app.services import game_events
 
 TURN_TIME_LIMIT = 120
 
@@ -53,6 +54,7 @@ async def emit_timer(game_id, player_id, db):
         time_left -= 1
 
     if player.turn == game_.turn:
+        await game_events.emit_log(game_id, f"Ups! El tiempo para {player.name} ha terminado...")
         await game.end_turn(game_id, player_id, db)
 
 
