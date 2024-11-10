@@ -351,7 +351,9 @@ async def undo_played_moves(game_id: int, player_id: int, db: Session):
 
         for _ in played_card_moves:
             await revert_move_state(game_id, player_id, db)
-        await game_events.emit_log(game_id, f"Los movimientos parciales se han revertido.", db)
+        await game_events.emit_log(
+            game_id, f"Los movimientos parciales se han revertido.", db
+        )
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception(f"Error deleting partial cache: {e}")
