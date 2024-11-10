@@ -122,6 +122,3 @@ async def cleanup(figures_info, game_id, player_id, db):
     unassign_played_movement_cards(player_id, db)
     unblock_card(player_id, db)
     await game_events.emit_cards(game_id, player_id, db)
-
-    player = get_player(player_id, db)
-    await game_events.emit_log(game_id, f"{player.name} eliminó una de sus figuras.", db)

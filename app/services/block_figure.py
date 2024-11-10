@@ -6,6 +6,8 @@ from app.models.figures import (
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure import validate
 from app.db.db import CardFig
+from app.services import game_events
+from app.services.game_player_service import get_player
 
 
 async def block_figure_service(
@@ -48,4 +50,7 @@ async def block_figure_service(
         # Bloquea la figura
         figure.block = True
         db.commit()
+        player = get_player(game_id, db)
+        await game_events.emit_log(game_id, f"Le han bloqueado una carta a {player.name}!", db)
+
         return 200

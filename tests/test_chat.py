@@ -37,12 +37,10 @@ def test_chat_ingame(test_client):
 
 
 @pytest.mark.asyncio
-async def test_get_chat_history(test_client):
+async def test_get_chat_history():
     db = TestingSessionLocal()
-
-    game = create_game(db, GameStatus.INGAME)
-    player = create_player(db, game.id)
 
     chat_history = await get_chat_history(game_id=1, db=db)
 
+    assert chat_history[0].message == "HOLA SE ESCUCHA"
     assert len(chat_history) == 1
