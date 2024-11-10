@@ -249,6 +249,10 @@ async def validate_and_cancel_move(game_id: int, player_id: int, db: Session):
     if player.turn != game.turn:
         raise ValueError("It's not your turn")
 
+    player = get_player(player_id, db)
+    await game_events.emit_log(
+        game_id, f"{player.name} ha cancelado un movimiento.", db
+    )
     await revert_move_state(game_id, player_id, db)
 
 
@@ -302,10 +306,6 @@ async def revert_move_state(game_id: int, player_id: int, db: Session):
         used_card.played = False
         db.commit()
 
-        player = get_player(player_id, db)
-        await game_events.emit_log(
-            game_id, f"{player.name} ha cancelado un movimiento.", db
-        )
         await game_events.emit_board(game_id, db)
         await game_events.emit_opponents_total_mov_cards(game_id, db)
         await game_events.emit_cards(game_id, player_id, db)
@@ -351,7 +351,7 @@ async def undo_played_moves(game_id: int, player_id: int, db: Session):
 
         for _ in played_card_moves:
             await revert_move_state(game_id, player_id, db)
-
+        await game_events.emit_log(game_id, f"Los movimientos parciales se han revertido.", db)
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception(f"Error deleting partial cache: {e}")
