@@ -365,9 +365,6 @@ async def set_block_color(game_id: int, color: Color, db: Session):
         board = db.query(Board).filter(Board.game_id == game_id).first()
         board.block_color = color
 
-        await game_events.emit_log(
-            game_id, f"El nuevo color bloqueado es {color}.", db
-        )
         db.commit()
     except SQLAlchemyError as e:
         db.rollback()

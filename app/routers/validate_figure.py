@@ -9,6 +9,7 @@ from app.models.figures import get_figure_by_id
 from app.services.board import set_block_color
 from app.services import game_events
 from app.services.game_player_service import get_player
+from app.services.board import get_blocked_color
 
 router = APIRouter()
 
@@ -34,7 +35,11 @@ async def validate_figure(
         )
 
     if response == 200:
-        set_block_color(game_id, figures_info.colorCards[0].color, db)
+        await set_block_color(game_id, figures_info.colorCards[0].color, db)
+        response = get_blocked_color(game_id, db)
+        await game_events.emit_log(
+                game_id, f"El nuevo color bloqueado es { response['blockedColor'] }.", db
+            )
         await cleanup(figures_info, game_id, player_id, db)
 
     return response
