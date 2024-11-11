@@ -386,8 +386,11 @@ def unblock_card(player_id: int, db: Session):
         .filter(CardFig.owner_id == player_id, CardFig.in_hand == True)
         .all()
     )
-    the_only_card = cards_in_hand[0]
-    if len(cards_in_hand) == 1 and the_only_card.block == True:
-        the_only_card.block = False
+    if cards_in_hand:
+        the_only_card = cards_in_hand[0]
+        if len(cards_in_hand) == 1 and the_only_card.block == True:
+            the_only_card.block = False
 
-    db.commit()
+        db.commit()
+    else:
+        return
