@@ -21,4 +21,5 @@ def test_get_game_by_id():
         "gameName": game.name,
         "maxPlayers": game.max_players,
         "minPlayers": game.min_players,
+        "status": game.status.value,
     }

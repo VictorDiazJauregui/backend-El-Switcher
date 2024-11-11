@@ -1,4 +1,4 @@
-from app.db.db import Player, Game
+from app.db.db import Player, Game, LogMessage
 from sqlalchemy.orm import Session
 
 from app.models.broadcast import Broadcast
@@ -11,12 +11,18 @@ from app.schemas.chat import (
     MultipleChatMessagesSchema,
     ChatMessageSchema,
 )
+from app.schemas.logs import (
+    SingleLogMessageSchema,
+    MultipleLogMessagesSchema,
+    LogMessageSchema,
+)
 
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board, get_blocked_color
 from app.services.figures import figures_event
-from app.services.timer import handle_timer
+from app.services.timer import restart_timer, stop_timer
 from app.services.chat import get_chat_history
+from app.services.logs import get_log_history
 
 
 async def disconnect_player_socket(player_id, game_id):
@@ -45,7 +51,7 @@ async def emit_players_game(game_id, db):
     )
 
 
-async def emit_turn_info(game_id, db):
+async def emit_turn_info(game_id, db, reset):
     game = db.query(Game).filter(Game.id == game_id).first()
 
     player = (
@@ -63,8 +69,9 @@ async def emit_turn_info(game_id, db):
     # send the turn info to all players in the lobby
     await broadcast.broadcast(sio.sio_game, game_id, "turn", turn_info)
 
-    # start the timer for the current player
-    await handle_timer(game_id, player.id, db)
+    if reset:
+        # start the timer for the current player
+        await restart_timer(game_id, player.id, db)
 
 
 async def win_by_figures(game_id: int, player_id: int, db):
@@ -84,8 +91,8 @@ async def win_by_figures(game_id: int, player_id: int, db):
         await emit_winner(game_id, player_id, db)
 
 
-async def emit_winner(game_id, winner_id, db):
-    winner = db.query(Player).filter(Player.id == winner_id).first()
+async def emit_winner(game_id, player_id, db):
+    winner = db.query(Player).filter(Player.id == player_id).first()
 
     broadcast = Broadcast()
 
@@ -95,6 +102,8 @@ async def emit_winner(game_id, winner_id, db):
         "winner",
         WinnerSchema(idWinner=winner.id, nameWinner=winner.name).model_dump(),
     )
+
+    stop_timer(game_id)
 
 
 async def emit_cards(game_id, player_id, db):
@@ -197,6 +206,42 @@ async def emit_chat_history(game_id: int, player_id: int, db: Session):
 
     await channel.send_to_player(
         sio.sio_game, player_id, "chat_messages", data_to_emit.model_dump()
+    )
+
+
+async def emit_log(game_id: int, message: str, db: Session):
+    # Save log to db
+    db.add(LogMessage(message=message, game_id=game_id))
+    db.commit()
+
+    # Format log for emission
+    log_message = LogMessageSchema(message=message)
+    data_to_emit = SingleLogMessageSchema(data=log_message).model_dump()
+
+    # Emit log
+    channel = Broadcast()
+    await channel.broadcast(sio.sio_game, game_id, "game_logs", data_to_emit)
+
+
+async def emit_log_history(game_id: int, player_id: int, db: Session):
+    """
+    Emit all the log messages previously sent to the newly connected or
+    re-connected player.
+    """
+    data_to_emit = MultipleLogMessagesSchema(data=[])
+
+    # First fetch all the chat messages from the game
+    log_history = await get_log_history(game_id, db)
+    for message in log_history:
+        message_schema = LogMessageSchema(message=message.message)
+
+        # Append every message to the corresponding schema list
+        data_to_emit.data.append(message_schema)
+
+    channel = Broadcast()
+
+    await channel.send_to_player(
+        sio.sio_game, player_id, "game_logs", data_to_emit.model_dump()
     )
 
 

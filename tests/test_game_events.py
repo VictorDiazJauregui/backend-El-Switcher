@@ -1,10 +1,11 @@
 import pytest
 from unittest.mock import AsyncMock, patch
 
+from app.db.db import GameStatus
 from app.services.game_events import emit_winner
-from app.services.timer import emit_timer
+from app.services.timer import emit_timer, time_left_tasks
 
-from .db_setup import client, TestingSessionLocal, create_player
+from .db_setup import client, TestingSessionLocal, create_player, create_game
 
 
 @pytest.fixture(scope="module")
@@ -21,23 +22,27 @@ def test_client():
 )
 async def test_emit_timer(mock_end_turn, mock_broadcast, mock_sleep):
     db = TestingSessionLocal()
-    player = create_player(db, 1)
+    game = create_game(db, GameStatus.INGAME)
+    player = create_player(db, game.id)
 
     # Mock Broadcast
     mock_broadcast_instance = AsyncMock()
     mock_broadcast.return_value = mock_broadcast_instance
 
+    time_left_tasks[game.id] = 120
+
     # Act
-    await emit_timer(1, player.id, db)
+    await emit_timer(game.id, player.id, db)
 
     # Assert
     assert mock_broadcast_instance.broadcast.call_count == 120
-    mock_end_turn.assert_called_once_with(1, player.id, db)
+    mock_end_turn.assert_called_once_with(game.id, player.id, db)
 
 
 @pytest.mark.asyncio
+@patch("app.services.cleanup.asyncio.sleep")
 @patch("app.services.game_events.Broadcast")
-async def test_emit_winner(mock_broadcast):
+async def test_emit_winner(mock_broadcast, mock_sleep):
     db = TestingSessionLocal()
     player = create_player(db, 1)
 

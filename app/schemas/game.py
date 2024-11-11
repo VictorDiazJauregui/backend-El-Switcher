@@ -36,3 +36,4 @@ class GameInfoSchema(BaseModel):
     gameName: str
     maxPlayers: int
     minPlayers: int
+    status: str

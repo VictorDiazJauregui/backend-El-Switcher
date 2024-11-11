@@ -30,4 +30,5 @@ def get_game_by_id(gameID: int, db: Session = Depends(get_db)):
         gameName=game.name,
         maxPlayers=game.max_players,
         minPlayers=game.min_players,
+        status=game.status,
     )

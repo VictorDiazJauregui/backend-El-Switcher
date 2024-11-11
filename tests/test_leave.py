@@ -36,10 +36,10 @@ def test_leave_lobby_host(test_client):
 
     # Try to delete the owner from the lobby
     response = test_client.delete(f"/game/{game.id}/leave/{player.id}")
-    assert response.status_code == 403
+    assert response.status_code == 200
     assert (
-        response.json()["detail"]
-        == "Host does not have permission to leave the lobby."
+        response.json()["message"]
+        == f"""Player {player.name} has left the game."""
     )
 
 
