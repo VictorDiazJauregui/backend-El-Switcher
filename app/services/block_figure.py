@@ -36,12 +36,11 @@ async def block_figure_service(
             db.query(CardFig)
             .filter(
                 CardFig.game_id == figure.game_id,
-                CardFig.owner_id == player_id,
+                CardFig.owner_id == figure.owner_id,
                 CardFig.in_hand == True,
             )
             .all()
         )
-        print(len_card_figs_from_player)
         if len_card_figs_from_player < 2:
             raise ValueError(
                 "You can't block a figure from a player that has less than 2 figures in hand"
