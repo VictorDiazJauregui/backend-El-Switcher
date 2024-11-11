@@ -22,12 +22,10 @@ async def test_get_chat_history(test_client):
     db = TestingSessionLocal()
     reset_db()
     game = create_game(db, GameStatus.INGAME)
-    print(f"AAAAAAAAAAA EL GAME ES NUMERO {game.id}")
 
     await game_events.emit_log(1, "LOG HOLA", db)
 
     log_history = await get_log_history(game_id=game.id, db=db)
-    print(log_history)
 
     assert log_history[0].message == "LOG HOLA"
     assert len(log_history) == 1
