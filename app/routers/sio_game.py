@@ -69,3 +69,5 @@ async def connect(sid, environ, auth):
         # Broadcast chat
 
         await game_events.emit_chat_history(game_id, player_id, db)
+
+        await game_events.emit_log_history(game_id, player_id, db)

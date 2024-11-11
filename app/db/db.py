@@ -133,6 +133,9 @@ class Game(Base):
     chats = relationship(
         "ChatMessage", back_populates="game", cascade="all, delete-orphan"
     )
+    logs = relationship(
+        "LogMessage", back_populates="game", cascade="all, delete-orphan"
+    )
 
 
 # Modelo Player
@@ -252,6 +255,17 @@ class ChatMessage(Base):
 
     sender = relationship("Player", back_populates="chats")
     game = relationship("Game", back_populates="chats")
+
+
+class LogMessage(Base):
+    __tablename__ = "log"
+
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    message = Column(String(100), nullable=False)
+    game_id = Column(Integer, ForeignKey("games.id"))
+
+    game = relationship("Game", back_populates="logs")
 
 
 # Event listener to set owner_id to None instead of deleting CardMove
