@@ -1,4 +1,4 @@
-from app.db.db import Player, Game, LogMessage
+from app.db.db import GameStatus, Player, Game, LogMessage
 from sqlalchemy.orm import Session
 
 from app.models.broadcast import Broadcast
@@ -79,6 +79,7 @@ async def win_by_figures(game_id: int, player_id: int, db):
     Comprueba si un jugador ha descartado todas sus figuras.
     En caso afirmativo, termina el juego y se le declara ganador.
     """
+    game = db.query(Game).filter(Game.id == game_id).first()
 
     player = (
         db.query(Player)
@@ -87,7 +88,7 @@ async def win_by_figures(game_id: int, player_id: int, db):
     )
 
     if len(player.card_figs) == 0:
-
+        game.status = GameStatus.FINISHED
         await emit_winner(game_id, player_id, db)
 
 

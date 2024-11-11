@@ -190,7 +190,9 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
         db.commit()
         db.refresh(game)
 
-        if len(game.players) == 0 or cancel_lobby:
+        if (
+            len(game.players) == 0 or cancel_lobby
+        ) and game.status != GameStatus.FINISHED:
             game.status = GameStatus.FINISHED
             db.commit()
             return {"message": f"Player {player.name} has left the game."}
