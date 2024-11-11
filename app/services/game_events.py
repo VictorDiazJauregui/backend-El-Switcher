@@ -1,4 +1,4 @@
-from app.db.db import GameStatus, Player, Game
+from app.db.db import GameStatus, Player, Game, LogMessage
 from sqlalchemy.orm import Session
 
 from app.models.broadcast import Broadcast
@@ -11,12 +11,18 @@ from app.schemas.chat import (
     MultipleChatMessagesSchema,
     ChatMessageSchema,
 )
+from app.schemas.logs import (
+    SingleLogMessageSchema,
+    MultipleLogMessagesSchema,
+    LogMessageSchema,
+)
 
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board, get_blocked_color
 from app.services.figures import figures_event
 from app.services.timer import restart_timer, stop_timer
 from app.services.chat import get_chat_history
+from app.services.logs import get_log_history
 
 
 async def disconnect_player_socket(player_id, game_id):
@@ -201,6 +207,42 @@ async def emit_chat_history(game_id: int, player_id: int, db: Session):
 
     await channel.send_to_player(
         sio.sio_game, player_id, "chat_messages", data_to_emit.model_dump()
+    )
+
+
+async def emit_log(game_id: int, message: str, db: Session):
+    # Save log to db
+    db.add(LogMessage(message=message, game_id=game_id))
+    db.commit()
+
+    # Format log for emission
+    log_message = LogMessageSchema(message=message)
+    data_to_emit = SingleLogMessageSchema(data=log_message).model_dump()
+
+    # Emit log
+    channel = Broadcast()
+    await channel.broadcast(sio.sio_game, game_id, "game_logs", data_to_emit)
+
+
+async def emit_log_history(game_id: int, player_id: int, db: Session):
+    """
+    Emit all the log messages previously sent to the newly connected or
+    re-connected player.
+    """
+    data_to_emit = MultipleLogMessagesSchema(data=[])
+
+    # First fetch all the chat messages from the game
+    log_history = await get_log_history(game_id, db)
+    for message in log_history:
+        message_schema = LogMessageSchema(message=message.message)
+
+        # Append every message to the corresponding schema list
+        data_to_emit.data.append(message_schema)
+
+    channel = Broadcast()
+
+    await channel.send_to_player(
+        sio.sio_game, player_id, "game_logs", data_to_emit.model_dump()
     )
 
 
