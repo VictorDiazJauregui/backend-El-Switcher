@@ -1,3 +1,4 @@
+import bcrypt
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -11,9 +12,12 @@ from app.db.db import (
     SquarePiece,
     Player,
     CardMove,
+    CardFig,
+    FigureType,
     Color,
     Turn,
 )
+from app.schemas.figures import FigureSchema
 
 # Setup the test database
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -51,13 +55,19 @@ def reset_db():
 reset_db()
 
 
-def create_game(db, game_status):
+def create_game(db, game_status, password: str = None):
+
     game = Game(
         name="test_game",
         max_players=4,
         min_players=2,
         status=game_status,
         turn=Turn.P1,
+        password=(
+            bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+            if password
+            else None
+        ),
     )
     db.add(game)
     db.commit()
@@ -165,3 +175,26 @@ def create_card_move(db, player_id, move_type):
     db.commit()
     db.refresh(card_move)
     return card_move
+
+
+def create_card_fig(db, game_id, player_id):
+    card_fig = CardFig(
+        game_id=game_id,
+        owner_id=player_id,
+        in_hand=True,
+        figure=FigureType.EASY_7,
+    )
+    db.add(card_fig)
+    db.commit()
+    db.refresh(card_fig)
+    return card_fig
+
+
+def create_figure(card_id):
+    return FigureSchema(
+        colorCards=[
+            {"row": 0, "column": 0, "color": Color.RED.name},
+            {"row": 0, "column": 1, "color": Color.RED.name},
+        ],
+        figureCardId=card_id,
+    )

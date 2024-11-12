@@ -5,6 +5,7 @@ from typing import List
 class GameCreateSchema(BaseModel):
     ownerName: str
     gameName: str
+    password: str = None
     maxPlayers: int
     minPlayers: int
 
@@ -35,3 +36,4 @@ class GameInfoSchema(BaseModel):
     gameName: str
     maxPlayers: int
     minPlayers: int
+    status: str

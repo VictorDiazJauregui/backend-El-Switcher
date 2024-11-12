@@ -1,3 +1,5 @@
+import asyncio
+import enum
 from sqlalchemy import (
     create_engine,
     Column,
@@ -7,9 +9,13 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Text,
+    LargeBinary,
+    event,
+    DateTime,
 )
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from contextlib import contextmanager
+from datetime import datetime, timezone
 import enum
 
 DATABASE_URL = "mysql+pymysql://root:secret@localhost:33061/switcher"
@@ -100,18 +106,36 @@ class Game(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(25), nullable=False)
-    password = Column(String(25), nullable=True)
+    password = Column(LargeBinary, nullable=True)
     max_players = Column(Integer, nullable=False)
     min_players = Column(Integer, nullable=False)
     status = Column(Enum(GameStatus), nullable=False)
     turn = Column(Enum(Turn), nullable=True)
 
     players = relationship(
-        "Player", back_populates="game", order_by="Player.turn"
+        "Player",
+        back_populates="game",
+        order_by="Player.turn",
+        cascade="all, delete-orphan",
     )
-    board = relationship("Board", uselist=False, back_populates="game")
-    cardmoves = relationship("CardMove", back_populates="game")
-    cardfigs = relationship("CardFig", back_populates="game")
+    board = relationship(
+        "Board",
+        uselist=False,
+        back_populates="game",
+        cascade="all, delete-orphan",
+    )
+    cardmoves = relationship(
+        "CardMove", back_populates="game", cascade="all, delete-orphan"
+    )
+    cardfigs = relationship(
+        "CardFig", back_populates="game", cascade="all, delete-orphan"
+    )
+    chats = relationship(
+        "ChatMessage", back_populates="game", cascade="all, delete-orphan"
+    )
+    logs = relationship(
+        "LogMessage", back_populates="game", cascade="all, delete-orphan"
+    )
 
 
 # Modelo Player
@@ -125,8 +149,15 @@ class Player(Base):
 
     game = relationship("Game", back_populates="players")
     card_moves = relationship("CardMove", back_populates="owner")
-    card_figs = relationship("CardFig", back_populates="owner")
-    parallel_boards = relationship("ParallelBoard", back_populates="player")
+    card_figs = relationship(
+        "CardFig", back_populates="owner", cascade="all, delete-orphan"
+    )
+    parallel_boards = relationship(
+        "ParallelBoard", back_populates="player", cascade="all, delete-orphan"
+    )
+    chats = relationship(
+        "ChatMessage", back_populates="sender", cascade="all, delete-orphan"
+    )
 
 
 # Modelo Board
@@ -134,11 +165,15 @@ class Board(Base):
     __tablename__ = "boards"
 
     game_id = Column(Integer, ForeignKey("games.id"), primary_key=True)
-    block_color = Column(Enum(Color))
+    block_color = Column(Enum(Color), nullable=True, default=None)
 
     game = relationship("Game", back_populates="board")
-    square_pieces = relationship("SquarePiece", back_populates="board")
-    parallel_boards = relationship("ParallelBoard", back_populates="board")
+    square_pieces = relationship(
+        "SquarePiece", back_populates="board", cascade="all, delete-orphan"
+    )
+    parallel_boards = relationship(
+        "ParallelBoard", back_populates="board", cascade="all, delete-orphan"
+    )
 
 
 # Modelo ParallelBoard
@@ -207,3 +242,44 @@ class SquarePiece(Base):
     partial_id = Column(Integer, nullable=True)
 
     board = relationship("Board", back_populates="square_pieces")
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat"
+
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    message = Column(String(100), nullable=False)
+    sender_id = Column(Integer, ForeignKey("players.id"))
+    game_id = Column(Integer, ForeignKey("games.id"))
+
+    sender = relationship("Player", back_populates="chats")
+    game = relationship("Game", back_populates="chats")
+
+
+class LogMessage(Base):
+    __tablename__ = "log"
+
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    message = Column(String(100), nullable=False)
+    game_id = Column(Integer, ForeignKey("games.id"))
+
+    game = relationship("Game", back_populates="logs")
+
+
+# Event listener to set owner_id to None instead of deleting CardMove
+@event.listens_for(Player, "before_delete")
+def receive_before_delete(mapper, connection, target):
+    # Set owner_id to None if it is not already None
+    connection.execute(
+        CardMove.__table__.update()
+        .where(CardMove.owner_id == target.id)
+        .values(owner_id=None)
+    )
+    # Delete CardMove if owner_id is already None
+    connection.execute(
+        CardMove.__table__.delete()
+        .where(CardMove.owner_id == target.id)
+        .where(CardMove.owner_id.is_(None))
+    )

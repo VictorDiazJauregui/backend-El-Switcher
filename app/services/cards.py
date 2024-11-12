@@ -4,14 +4,20 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, select, exists
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.db.db import Player, CardMove, CardFig, MoveType, FigureType, Game
+from app.db.db import (
+    CardMove,
+    CardFig,
+    FigureType,
+    Game,
+    MoveType,
+    Player,
+)
 from app.errors.handlers import NotFoundError
 from app.schemas.cards import (
     CardFigSchema,
     CardFigResponseSchema,
     CardMoveResponseSchema,
 )
-from app.schemas.figures import FigureSchema
 
 
 def add_cards_to_db(game_id: int, db: Session) -> int:
@@ -62,6 +68,10 @@ def add_cards_to_db(game_id: int, db: Session) -> int:
 
 
 def distribute_cards_to_deck(game_id: int, db: Session):
+    """
+    Make it fair by assigning the same amount of hard/easy cards
+    to each player.
+    """
     try:
         list_of_ids = (
             db.execute(select(Player.id).where(Player.game_id == game_id))
@@ -87,7 +97,7 @@ def distribute_cards_to_deck(game_id: int, db: Session):
         for player_id in list_of_ids:
             player_easy_cards = easy_cards[
                 :num_of_easy_per_deck
-            ]  # Select only the needed cards
+            ]  # This selects only the needed number of cards
             player_hard_cards = hard_cards[:num_of_hard_per_deck]
 
             for card in player_easy_cards:
@@ -293,6 +303,7 @@ def fetch_figure_cards(game_id: int, db: Session):
                             "easy" if "EASY" in card.figure.name else "hard"
                         ),
                         figureType=card.figure.value[0],
+                        isBlocked=card.block,
                     ).model_dump()
                 )
             player_cards = CardFigResponseSchema(
@@ -363,3 +374,23 @@ def initialize_cards(game_id: int, db: Session):
             assign_movement_cards(game_id, player_id, db)
     except SQLAlchemyError as e:
         raise Exception(f"Error initializing cards: {e}")
+
+
+def unblock_card(player_id: int, db: Session):
+    """
+    Unblocks the player's blocked figure card if it's the
+    only one left in their hand.
+    """
+    cards_in_hand = (
+        db.query(CardFig)
+        .filter(CardFig.owner_id == player_id, CardFig.in_hand == True)
+        .all()
+    )
+    if cards_in_hand:
+        the_only_card = cards_in_hand[0]
+        if len(cards_in_hand) == 1 and the_only_card.block == True:
+            the_only_card.block = False
+
+        db.commit()
+    else:
+        return

@@ -16,7 +16,7 @@ from app.db.db import (
     GameStatus,
 )
 from app.errors.handlers import NotFoundError
-from app.schemas.board import PieceResponseSchema
+from app.schemas.board import PieceResponseSchema, BlockColorSchema
 from app.schemas.move import MakeMoveSchema
 from app.services import game_events
 from app.services.game_player_service import get_game, get_player
@@ -113,6 +113,11 @@ async def make_move(
         card_move.played = True
         db.commit()
 
+        await game_events.emit_log(
+            game_id,
+            f"{player.name} ha jugado su movimiento {card_move.move.value[1]}.",
+            db,
+        )
         await game_events.emit_cards(game_id, player_id, db)
         await game_events.emit_board(game_id, db)
         await game_events.emit_found_figures(game_id, db)
@@ -169,7 +174,9 @@ def switch_pieces(piece1: int, piece2: int, state_id: int, db: Session):
         raise Exception(f"Error switching pieces: {e}")
 
 
-def validate_move(piece1: int, piece2: int, move_type: MoveType):
+def validate_move(
+    piece1: SquarePiece, piece2: SquarePiece, move_type: MoveType
+):
     row_diff = abs(piece1.row - piece2.row)
     col_diff = abs(piece1.column - piece2.column)
 
@@ -227,7 +234,8 @@ def validate_move(piece1: int, piece2: int, move_type: MoveType):
                 and piece1.row == piece2.row
             )
         )
-    return False
+    else:
+        raise ValueError("Invalid move type")
 
 
 async def validate_and_cancel_move(game_id: int, player_id: int, db: Session):
@@ -241,6 +249,10 @@ async def validate_and_cancel_move(game_id: int, player_id: int, db: Session):
     if player.turn != game.turn:
         raise ValueError("It's not your turn")
 
+    player = get_player(player_id, db)
+    await game_events.emit_log(
+        game_id, f"{player.name} ha cancelado un movimiento.", db
+    )
     await revert_move_state(game_id, player_id, db)
 
 
@@ -339,7 +351,31 @@ async def undo_played_moves(game_id: int, player_id: int, db: Session):
 
         for _ in played_card_moves:
             await revert_move_state(game_id, player_id, db)
-
+        await game_events.emit_log(
+            game_id, f"Los movimientos parciales se han revertido.", db
+        )
     except SQLAlchemyError as e:
         db.rollback()
         raise Exception(f"Error deleting partial cache: {e}")
+
+
+async def set_block_color(game_id: int, color: Color, db: Session):
+    """Establece el color prohibido en el tablero"""
+    try:
+        board = db.query(Board).filter(Board.game_id == game_id).first()
+        board.block_color = color
+
+        db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise Exception(f"Error setting block color: {e}")
+
+
+def get_blocked_color(game_id: int, db: Session):
+    """Obtiene el color bloqueado en el tablero"""
+    board = db.query(Board).filter(Board.game_id == game_id).first()
+    response = BlockColorSchema(
+        blockedColor=board.block_color.name if board.block_color else None
+    )
+
+    return response.model_dump()

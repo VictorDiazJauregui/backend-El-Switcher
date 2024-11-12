@@ -1,6 +1,6 @@
 import pytest
-
-from app.db.db import SquarePiece, MoveType, GameStatus
+from unittest.mock import patch, AsyncMock, ANY
+from app.db.db import SquarePiece, MoveType, GameStatus, Turn
 from .db_setup import (
     client,
     TestingSessionLocal,
@@ -9,6 +9,7 @@ from .db_setup import (
     create_player,
     create_card_move,
 )
+from app.services.board import validate_move, get_square_pieces
 
 
 @pytest.fixture(scope="module")
@@ -53,8 +54,88 @@ def test_make_move(test_client):
         db.close()
 
 
+def test_cancel_move_endpoint():
+    db = TestingSessionLocal()
+
+    game = create_game(db, GameStatus.INGAME)
+    player = create_player(db, game.id)
+
+    with patch(
+        "app.services.board.revert_move_state"
+    ) as mock_revert_move_state:
+        response = client.post(
+            f"/game/{game.id}/move_undo/{player.id}", json={}
+        )
+        assert response.status_code == 200
+        mock_revert_move_state.assert_called_once_with(game.id, player.id, ANY)
+
+
+def test_cancel_move_game_not_in_progress():
+    db = TestingSessionLocal()
+
+    game = create_game(db, GameStatus.FINISHED)  # Game is not in progress
+    player = create_player(db, game.id)
+
+    with patch(
+        "app.services.board.revert_move_state"
+    ) as mock_revert_move_state:
+        response = client.post(
+            f"/game/{game.id}/move_undo/{player.id}", json={}
+        )
+        assert (
+            response.status_code == 400
+        )  # Assuming 400 is returned for invalid game state
+        assert response.json()["detail"] == "Game is not in progress"
+        mock_revert_move_state.assert_not_called()
+
+
+def test_cancel_move_not_player_turn():
+    db = TestingSessionLocal()
+
+    game = create_game(db, GameStatus.INGAME)
+    player = create_player(db, game.id)
+    player.turn = Turn.P3  # It's not the player's turn
+    db.commit()
+
+    with patch(
+        "app.services.board.revert_move_state"
+    ) as mock_revert_move_state:
+        response = client.post(
+            f"/game/{game.id}/move_undo/{player.id}", json={}
+        )
+        assert (
+            response.status_code == 400
+        )  # Assuming 400 is returned for invalid turn
+        assert response.json()["detail"] == "It's not your turn"
+
+        mock_revert_move_state.assert_not_called()
+
+
 def generate_square_piece(row, column):
     return SquarePiece(row=row, column=column)
+
+
+# Mock movetype object
+@patch("app.db.db.MoveType")
+def test_validate_move_error(mock_move_type):
+    mock_move_type.MOV_111 = "invalid_move_type"
+    mockpiece1 = generate_square_piece(0, 0)
+    mockpiece2 = generate_square_piece(1, 1)
+    with pytest.raises(ValueError, match="Invalid move type"):
+        validate_move(mockpiece1, mockpiece2, mock_move_type.MOV_111)
+
+
+def test_get_square_pieces_error():
+    db = TestingSessionLocal()
+
+    with pytest.raises(ValueError, match="Both piece IDs must be provided"):
+        get_square_pieces(None, 1, db)
+
+    with pytest.raises(ValueError, match="Both piece IDs must be provided"):
+        get_square_pieces(1, None, db)
+
+    with pytest.raises(ValueError, match="Both piece IDs must be provided"):
+        get_square_pieces(None, None, db)
 
 
 # Generate test cases for each MoveType

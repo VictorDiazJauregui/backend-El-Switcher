@@ -1,7 +1,10 @@
+import bcrypt
+import asyncio
+from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from app.db.db import Game, Player, GameStatus, Turn
-from app.errors.handlers import ForbiddenError, NotFoundError
+from app.errors.handlers import ForbiddenError
 from app.schemas.game import GameCreateSchema, StartResponseSchema
 from app.schemas.player import PlayerResponseSchema
 from app.services import lobby_events, game_events, game_list_events
@@ -17,6 +20,13 @@ async def create_game(data: GameCreateSchema, db: Session):
     max_players = data.maxPlayers
     min_players = data.minPlayers
 
+    if data.password is None or data.password == "":
+        password = None
+    else:
+        password = bcrypt.hashpw(
+            data.password.encode("utf-8"), bcrypt.gensalt()
+        )
+
     if not owner_name or not game_name or not max_players or not min_players:
         raise ValueError("All fields required")
     if max_players < min_players:
@@ -30,6 +40,7 @@ async def create_game(data: GameCreateSchema, db: Session):
 
     db_game = Game(
         name=game_name,
+        password=password,
         max_players=max_players,
         min_players=min_players,
         status=GameStatus.LOBBY,
@@ -50,7 +61,7 @@ async def create_game(data: GameCreateSchema, db: Session):
 
 
 async def add_player_to_game(
-    player_name: str, game_id: int, db: Session
+    player_name: str, game_id: int, db: Session, password: str = None
 ) -> PlayerResponseSchema:
     game = get_game(game_id, db)
 
@@ -59,6 +70,15 @@ async def add_player_to_game(
 
     if len(game.players) >= game.max_players:
         raise ValueError(f"Game {game_id} is full.")
+
+    if not game.password and password:
+        raise ValueError("Game does not have a password.")
+    if game.password and not password:
+        raise ValueError("Password required to join game.")
+    if game.password and not bcrypt.checkpw(
+        password.encode("utf-8"), game.password
+    ):
+        raise ValueError("Incorrect password.")
 
     # Determine the turn for the new player
     turn_order = len(game.players) + 1
@@ -122,7 +142,7 @@ async def pass_turn(game_id: int, player_id: int, db: Session):
     await game_events.emit_opponents_total_mov_cards(game_id, db)
 
     # Notify all players the new turn info
-    await game_events.emit_turn_info(game_id, db)
+    await game_events.emit_turn_info(game_id, db, reset=True)
 
 
 async def end_turn(game_id: int, player_id: int, db: Session):
@@ -137,6 +157,9 @@ async def end_turn(game_id: int, player_id: int, db: Session):
     with lock_player(player_id, PlayerAction.END_TURN):
         await pass_turn(game_id, player_id, db)
 
+    await game_events.emit_log(
+        game_id, f"{player.name} ha terminado su turno.", db
+    )
     return {"message": f"Player {player.name} has ended their turn."}
 
 
@@ -150,27 +173,29 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
         )
 
     with lock_player(player_id, PlayerAction.REMOVE_PLAYER):
-        # Disconnect the player's socket from the game room
+
         await game_events.disconnect_player_socket(player_id, game_id)
 
+        cancel_lobby = False
         if game.status == GameStatus.LOBBY and player.turn == Turn.P1:
-            raise ForbiddenError(
-                "Host does not have permission to leave the lobby."
-            )
+            # If the host of the lobby is leaving, cancel the game
+            asyncio.create_task(lobby_events.emit_game_cancel(game.id))
+            cancel_lobby = True
 
         if game.status == GameStatus.INGAME and player.turn == game.turn:
-            # if the player leaving is the current player, end their turn
+            # If the player leaving is the current player, end their turn
             await end_turn(game_id, player_id, db)
 
         db.delete(player)
         db.commit()
+        db.refresh(game)
 
-        if game.status == GameStatus.INGAME and len(game.players) == 1:
-            # if there is only one player left in the game, the game is over and that player wins
+        if (
+            len(game.players) == 0 or cancel_lobby
+        ) and game.status != GameStatus.FINISHED:
             game.status = GameStatus.FINISHED
             db.commit()
-
-            await game_events.emit_winner(game_id, game.players[0].id, db)
+            return {"message": f"Player {player.name} has left the game."}
 
         if game.status == GameStatus.LOBBY:
             await lobby_events.emit_players_lobby(game_id, db)
@@ -179,5 +204,21 @@ async def remove_player_from_game(game_id: int, player_id: int, db: Session):
 
         if game.status == GameStatus.INGAME:
             await game_events.emit_players_game(game_id, db)
+            if len(game.players) == 1:
+                await game_events.emit_winner(game_id, game.players[0].id, db)
+
+    print(f"Player {player.name} has left the game")
 
     return {"message": f"Player {player.name} has left the game."}
+
+
+def cleanup(mapper, connection, target):
+    if target.status == GameStatus.FINISHED:
+        from app.services.timer import stop_timer
+        from app.services.cleanup import cleanup_game
+
+        stop_timer(target.id)
+        asyncio.create_task(cleanup_game(target.id))
+
+
+event.listen(Game, "after_update", cleanup)

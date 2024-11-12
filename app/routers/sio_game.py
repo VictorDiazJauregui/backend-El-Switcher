@@ -1,9 +1,10 @@
-import socketio
+import socketio, asyncio
 
 from app.db.db import db_context, Game, Player, GameStatus
 from app.models.broadcast import Broadcast
 from app.services import game_events
 from app.utils.parse_query_string import parse_query_string
+from app.services.timer import cancel_timer, start_timer
 
 # Create a new Socket.IO server
 sio_game = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=[])
@@ -45,12 +46,22 @@ async def connect(sid, environ, auth):
 
         await game_events.emit_found_figures(game_id, db)
 
+        await game_events.emit_block_color(game_id, db)
+
         # Broadcast cards
 
         await game_events.emit_cards(game_id, player_id, db)
 
         await game_events.emit_players_game(game_id, db)
 
-        await game_events.emit_turn_info(game_id, db)
+        # Broadcast turn info
+
+        await game_events.emit_turn_info(game_id, db, reset=False)
 
         await game_events.emit_opponents_total_mov_cards(game_id, db)
+
+        # Broadcast chat
+
+        await game_events.emit_chat_history(game_id, player_id, db)
+
+        await game_events.emit_log_history(game_id, player_id, db)

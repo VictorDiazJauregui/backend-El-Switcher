@@ -21,6 +21,8 @@ jobs:
     # Paso 1: Checkout del repositorio
     - name: Checkout del repositorio
       uses: actions/checkout@v2
+      with:
+        ref: ${{ github.head_ref || github.ref }}
 
     # Paso 2: Cachear volumen Docker para MySQL
     - name: Cachear volumen Docker para MySQL
@@ -78,6 +80,7 @@ jobs:
       run: |
         source .venv/bin/activate
         pip install -r requirements.txt
+        pip install black  # Me aseguro que black esté instalado
 
     # Paso 10: Corregir importación de pytest_verbose_parametrize
     - name: Corregir importación de pytest_verbose_parametrize
@@ -101,28 +104,19 @@ jobs:
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-    # Paso 14: Mostrar estado de los archivos modificados
-    - name: Mostrar estado de los archivos modificados
-      run: git status
-
-    # Paso 15: Hacer commit de cambios si los hay
+    # Paso 14: Hacer commit de cambios si los hay
     - name: Hacer commit de cambios
       run: |
         git add .
         git commit -m "Formato de código aplicado por GitHub Action" || echo "No changes to commit"
 
-    # Paso 16: Hacer pull de cambios remotos
-    - name: Hacer pull de cambios remotos
-      run: |
-        git pull --rebase origin ${{ github.head_ref || github.ref }} || echo "No changes to pull"
-
-    # Paso 17: Hacer push de cambios
+    # Paso 15: Hacer push de cambios si los hay
     - name: Hacer push de cambios
       run: git push origin HEAD:${{ github.head_ref || github.ref }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Paso 18: Ejecutar pruebas con pytest
+    # Paso 16: Ejecutar pruebas con pytest
     - name: Ejecutar pruebas con pytest
       run: |
         source .venv/bin/activate
