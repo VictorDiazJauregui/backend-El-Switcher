@@ -58,9 +58,6 @@ async def connect(sid, environ, auth):
 
         await game_events.emit_turn_info(game_id, db, reset=False)
 
-        cancel_timer(game_id)
-        start_timer(game_id, player_id, db)
-
         await game_events.emit_opponents_total_mov_cards(game_id, db)
 
         # Broadcast chat

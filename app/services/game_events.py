@@ -20,7 +20,7 @@ from app.schemas.logs import (
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board, get_blocked_color
 from app.services.figures import figures_event
-from app.services.timer import restart_timer, stop_timer
+from app.services.timer import restart_timer, stop_timer, cancel_timer, start_timer
 from app.services.chat import get_chat_history
 from app.services.logs import get_log_history
 
@@ -72,6 +72,9 @@ async def emit_turn_info(game_id, db, reset):
     if reset:
         # start the timer for the current player
         await restart_timer(game_id, player.id, db)
+    else:
+        cancel_timer(game_id)
+        start_timer(game_id, player.id, db)
 
 
 async def win_by_figures(game_id: int, player_id: int, db):
