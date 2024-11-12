@@ -46,7 +46,9 @@ async def cleanup_game(game_id):
         db.query(SquarePiece).filter(SquarePiece.board_id == game_id).delete()
 
         # Delete all parallel boards related to the game
-        db.query(ParallelBoard).filter(ParallelBoard.board_id == game_id).delete()
+        db.query(ParallelBoard).filter(
+            ParallelBoard.board_id == game_id
+        ).delete()
 
         # Delete all boards related to the game
         db.query(Board).filter(Board.game_id == game_id).delete()
