@@ -26,6 +26,10 @@ def start_timer(game_id, player_id, db):
     if game_id not in time_left_tasks:
         time_left_tasks[game_id] = TURN_TIME_LIMIT
 
+    if game_id in timer_tasks:
+        timer_tasks[game_id].cancel()
+        del timer_tasks[game_id]
+
     timer_tasks[game_id] = asyncio.create_task(
         emit_timer(game_id, player_id, db)
     )
