@@ -13,10 +13,10 @@ from .db_setup import (
     create_player,
     create_card_fig,
     create_figure,
-    add_example_board
+    add_example_board,
 )
 
-#pytestmark = pytest.mark.skip(reason="Tests deshabilitados en este módulo")
+# pytestmark = pytest.mark.skip(reason="Tests deshabilitados en este módulo")
 
 
 @pytest.fixture
@@ -210,6 +210,7 @@ def test_validate_figure_figure_not_found(
     with pytest.raises(ValueError, match="Figure not found"):
         validate(not_found_figure_info, game.id, player.id, db_session)
 
+
 @patch("app.services.game_events.emit_block_color", new_callable=AsyncMock)
 @patch("app.services.validate_figure.set_block_color")
 @patch("app.services.validate_figure.figure_checks")
@@ -236,7 +237,6 @@ def test_validate_figure_returns_200(
     mock_emit_block_color.return_value = None
 
 
-
 @patch("app.services.validate_figure.get_figure_by_id")
 @patch("app.services.validate_figure.get_figure_type_by_id")
 @patch("app.services.validate_figure.board_checks")
@@ -258,7 +258,6 @@ def test_validate_figure_figure_type_not_found(
     mock_get_figure_by_id.return_value = mock_figure
 
     mock_get_figure_type_by_id.return_value = None
-
 
     with pytest.raises(ValueError, match="Figure type not found"):
         validate(not_found_figure_info, game.id, player.id, db_session)
@@ -287,8 +286,9 @@ def test_validate_figure_figure_does_not_match(
     mock_get_figure_by_id.return_value = mock_figure
 
     mock_get_figure_type_by_id.return_value = MagicMock()
-    mock_select_figure_by_his_type.return_value.matches_any_rotation.return_value = False
-
+    mock_select_figure_by_his_type.return_value.matches_any_rotation.return_value = (
+        False
+    )
 
     with pytest.raises(
         ValueError, match="Figure does not match connected component"
@@ -352,7 +352,6 @@ def test_validate_figure_all_types(
     mock_board_checks.return_value = None
     mock_set_block_color.return_value = None
     mock_emit_block_color.return_value = None
-
 
     # Mock the figure lookups
     mock_figure = MagicMock()
