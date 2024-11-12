@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch, AsyncMock
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.db.db import GameStatus, Turn, CardFig
+from app.db.db import GameStatus, Turn, CardFig, Color
 from app.models.figures import get_figure_type_by_id
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure import validate, select_figure_by_his_type
@@ -13,9 +13,10 @@ from .db_setup import (
     create_player,
     create_card_fig,
     create_figure,
+    add_example_board
 )
 
-pytestmark = pytest.mark.skip(reason="Tests deshabilitados en este módulo")
+#pytestmark = pytest.mark.skip(reason="Tests deshabilitados en este módulo")
 
 
 @pytest.fixture
@@ -34,8 +35,8 @@ def db_session():
 def figures_info():
     return FigureSchema(
         colorCards=[
-            {"row": 0, "column": 0, "color": "red"},
-            {"row": 0, "column": 1, "color": "red"},
+            {"row": 0, "column": 0, "color": Color.RED},
+            {"row": 0, "column": 1, "color": Color.RED},
         ],
         figureCardId=998,
     )
@@ -45,8 +46,8 @@ def figures_info():
 def not_found_figure_info():
     return FigureSchema(
         colorCards=[
-            {"row": 0, "column": 0, "color": "red"},
-            {"row": 0, "column": 1, "color": "red"},
+            {"row": 0, "column": 0, "color": Color.RED},
+            {"row": 0, "column": 1, "color": Color.RED},
         ],
         figureCardId=999,
     )
@@ -75,6 +76,7 @@ def test_validate_figure_returns_200(
 ):
     # Create test data
     game = create_game(db_session, GameStatus.INGAME)
+    board = add_example_board(db_session, game.id)
     player = create_player(db_session, game.id)
     card = create_card_fig(db_session, game.id, player.id)
     figure = create_figure(card.id)
@@ -208,6 +210,32 @@ def test_validate_figure_figure_not_found(
     with pytest.raises(ValueError, match="Figure not found"):
         validate(not_found_figure_info, game.id, player.id, db_session)
 
+@patch("app.services.game_events.emit_block_color", new_callable=AsyncMock)
+@patch("app.services.validate_figure.set_block_color")
+@patch("app.services.validate_figure.figure_checks")
+@patch("app.services.validate_figure.board_checks")
+def test_validate_figure_returns_200(
+    mock_board_checks,
+    mock_figure_checks,
+    mock_set_block_color,
+    mock_emit_block_color,
+    db_session,
+    test_client,
+):
+    # Create test data
+    game = create_game(db_session, GameStatus.INGAME)
+    board = add_example_board(db_session, game.id)
+    player = create_player(db_session, game.id)
+    card = create_card_fig(db_session, game.id, player.id)
+    figure = create_figure(card.id)
+
+    # Mock the figure lookups
+    mock_board_checks.return_value = None
+    mock_figure_checks.return_value = None
+    mock_set_block_color.return_value = None
+    mock_emit_block_color.return_value = None
+
+
 
 @patch("app.services.validate_figure.get_figure_by_id")
 @patch("app.services.validate_figure.get_figure_type_by_id")
@@ -223,8 +251,14 @@ def test_validate_figure_figure_type_not_found(
     player = create_player(db_session, game.id)
 
     mock_board_checks.return_value = None
-    mock_get_figure_by_id.return_value = MagicMock()
+
+    # Create a mock figure with a valid game_id
+    mock_figure = MagicMock()
+    mock_figure.game_id = game.id
+    mock_get_figure_by_id.return_value = mock_figure
+
     mock_get_figure_type_by_id.return_value = None
+
 
     with pytest.raises(ValueError, match="Figure type not found"):
         validate(not_found_figure_info, game.id, player.id, db_session)
@@ -246,11 +280,15 @@ def test_validate_figure_figure_does_not_match(
     player = create_player(db_session, game.id)
 
     mock_board_checks.return_value = None
-    mock_get_figure_by_id.return_value = MagicMock()
+
+    # Create a mock figure with a valid game_id
+    mock_figure = MagicMock()
+    mock_figure.game_id = game.id
+    mock_get_figure_by_id.return_value = mock_figure
+
     mock_get_figure_type_by_id.return_value = MagicMock()
-    mock_select_figure_by_his_type.return_value.matches_any_rotation.return_value = (
-        False
-    )
+    mock_select_figure_by_his_type.return_value.matches_any_rotation.return_value = False
+
 
     with pytest.raises(
         ValueError, match="Figure does not match connected component"
@@ -315,13 +353,15 @@ def test_validate_figure_all_types(
     mock_set_block_color.return_value = None
     mock_emit_block_color.return_value = None
 
+
     # Mock the figure lookups
-    mock_get_figure_by_id.return_value = MagicMock()
-    mock_get_figure_type_by_id.return_value = MagicMock()
-    mock_get_figure_type_by_id.return_value.value = (
-        figure_id,
-        figure_type,
-    )  # Tuple of (id, type)
+    mock_figure = MagicMock()
+    mock_figure.game_id = game.id
+    mock_get_figure_by_id.return_value = mock_figure
+
+    mock_figure_type = MagicMock()
+    mock_figure_type.value = (figure_id, figure_type)
+    mock_get_figure_type_by_id.return_value = mock_figure_type
 
     # Get the actual figure instance
     figure = select_figure_by_his_type(figure_type)
@@ -378,6 +418,7 @@ def test_validate_figure_failure(
     db = TestingSessionLocal()
     game = create_game(db, GameStatus.INGAME)
     player = create_player(db, game.id)
+    card = create_card_fig(db, game.id, player.id)
 
     mock_board_checks.return_value = None
 
@@ -387,10 +428,10 @@ def test_validate_figure_failure(
     # Test data
     figure_data = {
         "colorCards": [
-            {"row": 0, "column": 0, "color": "red"},
-            {"row": 0, "column": 1, "color": "red"},
+            {"row": 0, "column": 0, "color": "Red"},
+            {"row": 0, "column": 1, "color": "Red"},
         ],
-        "figureCardId": 1,
+        "figureCardId": card.id,
     }
 
     # Make request

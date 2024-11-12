@@ -193,8 +193,8 @@ def create_card_fig(db, game_id, player_id):
 def create_figure(card_id):
     return FigureSchema(
         colorCards=[
-            {"row": 0, "column": 0, "color": "red"},
-            {"row": 0, "column": 1, "color": "red"},
+            {"row": 0, "column": 0, "color": Color.RED.name},
+            {"row": 0, "column": 1, "color": Color.RED.name},
         ],
         figureCardId=card_id,
     )
