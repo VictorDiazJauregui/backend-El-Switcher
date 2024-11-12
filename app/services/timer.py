@@ -71,6 +71,7 @@ async def get_current_task(game_id):
         return timer_tasks[game_id]
     return None
 
+
 def cancel_timer(game_id):
     if game_id in timer_tasks:
         timer_tasks[game_id].cancel()
