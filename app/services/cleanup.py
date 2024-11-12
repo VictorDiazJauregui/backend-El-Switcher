@@ -7,6 +7,8 @@ from app.db.db import (
     CardFig,
     SquarePiece,
     SessionLocal,
+    LogMessage,
+    ChatMessage,
 )
 
 """
@@ -50,6 +52,12 @@ async def cleanup_game(game_id):
 
         # Delete all boards related to the game
         db.query(Board).filter(Board.game_id == game_id).delete()
+
+        # Delete all chat messages related to the game
+        db.query(ChatMessage).filter(ChatMessage.game_id == game_id).delete()
+
+        # Delete all log messages related to the game
+        db.query(LogMessage).filter(LogMessage.game_id == game_id).delete()
 
         # Delete the game itself
         db.query(Game).filter(Game.id == game_id).delete()
