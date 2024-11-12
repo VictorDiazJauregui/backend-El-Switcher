@@ -20,7 +20,12 @@ from app.schemas.logs import (
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board, get_blocked_color
 from app.services.figures import figures_event
-from app.services.timer import restart_timer, stop_timer, cancel_timer, start_timer
+from app.services.timer import (
+    restart_timer,
+    stop_timer,
+    cancel_timer,
+    start_timer,
+)
 from app.services.chat import get_chat_history
 from app.services.logs import get_log_history
 
