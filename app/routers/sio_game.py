@@ -58,11 +58,7 @@ async def connect(sid, environ, auth):
 
         await game_events.emit_turn_info(game_id, db, reset=False)
 
-        current_time = await get_current_timer(game_id)
-        if current_time is not None:
-            await sio_game.emit("timer", {"time": current_time}, room=sid)
-        else:
-            start_timer(game_id, player_id, db)
+        start_timer(game_id, player_id, db)
 
         await game_events.emit_opponents_total_mov_cards(game_id, db)
 
