@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from contextlib import contextmanager
 
 DATABASE_URL = "mysql+pymysql://root:secret@localhost:33061/switcher"
 engine = create_engine(DATABASE_URL)
@@ -11,3 +12,5 @@ def get_db():
         yield db
     finally:
         db.close()
+
+db_context = contextmanager(get_db)
