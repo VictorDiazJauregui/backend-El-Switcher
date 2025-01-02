@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.db.db import get_db
+from app.db.session import get_db
 from app.schemas.game import StartResponseSchema
 from app.services.board import create_board
 from app.services.cards import add_cards_to_db, initialize_cards
