@@ -1,20 +1,16 @@
 import random
 import json
-from typing import List
 
+from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.db.db import (
-    Board,
-    Color,
-    SquarePiece,
-    ParallelBoard,
-    CardMove,
-    Player,
-    MoveType,
-    GameStatus,
-)
+from app.db.enums import Color, GameStatus, MoveType
+from app.db.models.board import Board
+from app.db.models.card_move import CardMove
+from app.db.models.parallel_board import ParallelBoard
+from app.db.models.player import Player
+from app.db.models.square_piece import SquarePiece
 from app.errors.handlers import NotFoundError
 from app.schemas.board import PieceResponseSchema, BlockColorSchema
 from app.schemas.move import MakeMoveSchema
