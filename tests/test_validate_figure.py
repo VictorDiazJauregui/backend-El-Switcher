@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.db.enums import GameStatus, Turn, Color
 from app.db.models.card_fig import CardFig
-from app.models.figures import get_figure_type_by_id
+from app.models.figures.figures import get_figure_type_by_id
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure import validate, select_figure_by_his_type
 from .db_setup import (
