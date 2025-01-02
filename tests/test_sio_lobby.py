@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from app.db.db import GameStatus
+from app.db.enums import GameStatus
 from app.routers.sio_lobby import connect
 from .db_setup import client, TestingSessionLocal, create_game, create_player
 

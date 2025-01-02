@@ -1,6 +1,6 @@
 import socketio
 
-from app.db.db import db_context
+from app.db.session import db_context
 from app.services import game_list_events
 
 # Create a new Socket.IO server

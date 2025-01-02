@@ -90,7 +90,7 @@ jobs:
     - name: Crear tablas en la base de datos de prueba
       run: |
         source .venv/bin/activate
-        python -c "from app.db.db import Base, engine; Base.metadata.create_all(bind=engine)"
+        python -c "from app.db.base import Base; from app.db.session import engine; Base.metadata.create_all(bind=engine)"
 
     # Paso 12: Formatear código con black
     - name: Formatear código

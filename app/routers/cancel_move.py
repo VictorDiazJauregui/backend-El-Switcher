@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.services.board import validate_and_cancel_move
 
-from app.db.db import get_db
+from app.services.board import validate_and_cancel_move
+from app.db.session import get_db
 
 router = APIRouter()
 

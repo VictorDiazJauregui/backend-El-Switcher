@@ -2,7 +2,8 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.orm import Session
 
-from app.db.db import Player, CardMove
+from app.db.models.card_move import CardMove
+from app.db.models.player import Player
 from app.schemas.player import PlayerResponseSchema
 from app.services.game_events import (
     emit_players_game,

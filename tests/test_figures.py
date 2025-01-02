@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from app.models.figures import Figure, get_all_figures
-from app.db.db import GameStatus
+from app.db.enums import GameStatus
 from .db_setup import (
     client,
     TestingSessionLocal,

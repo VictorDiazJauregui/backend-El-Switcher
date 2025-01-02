@@ -1,5 +1,4 @@
-from app.schemas.chat import ChatMessageSchema
-from app.db.db import ChatMessage
+from app.db.models.chat_message import ChatMessage
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session, selectinload
 import app.models.broadcast

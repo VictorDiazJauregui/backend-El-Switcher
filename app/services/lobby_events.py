@@ -1,4 +1,6 @@
-from app.db.db import Player, Game, Turn
+from app.db.enums import Turn
+from app.db.models.game import Game
+from app.db.models.player import Player
 from app.models.broadcast import Broadcast
 from app.routers import sio_lobby as sio
 from app.schemas.player import PlayerResponseSchema

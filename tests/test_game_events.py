@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from app.db.db import GameStatus
+from app.db.enums import GameStatus
 from app.services.game_events import emit_winner
 from app.services.timer import emit_timer, time_left_tasks
 

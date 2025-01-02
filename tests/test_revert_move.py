@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.exc import SQLAlchemyError
 from app.services.board import revert_move_state
-from app.db.db import ParallelBoard, SquarePiece, CardMove, Color
+from app.db.enums import Color
+from app.db.models.card_move import CardMove
+from app.db.models.parallel_board import ParallelBoard
+from app.db.models.square_piece import SquarePiece
 from app.errors.handlers import NotFoundError
 
 

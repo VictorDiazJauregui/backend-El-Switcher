@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch, AsyncMock, ANY
-from app.db.db import SquarePiece, MoveType, GameStatus, Turn
+from app.db.enums import MoveType, GameStatus, Turn
+from app.db.models.square_piece import SquarePiece
 from .db_setup import (
     client,
     TestingSessionLocal,
@@ -116,7 +117,7 @@ def generate_square_piece(row, column):
 
 
 # Mock movetype object
-@patch("app.db.db.MoveType")
+@patch("app.db.enums.MoveType")
 def test_validate_move_error(mock_move_type):
     mock_move_type.MOV_111 = "invalid_move_type"
     mockpiece1 = generate_square_piece(0, 0)

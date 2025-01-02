@@ -1,6 +1,6 @@
 import pytest
 
-from app.db.db import GameStatus
+from app.db.enums import GameStatus
 from .db_setup import client, TestingSessionLocal, create_game, create_player
 
 

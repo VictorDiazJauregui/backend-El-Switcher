@@ -1,5 +1,5 @@
 import pytest
-from app.db.db import GameStatus
+from app.db.enums import GameStatus
 from app.schemas.logs import LogMessageSchema
 from app.services.logs import get_log_history
 from app.services import game_events

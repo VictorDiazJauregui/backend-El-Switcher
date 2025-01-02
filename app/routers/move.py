@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.db.session import get_db
 from app.schemas.move import MakeMoveSchema
-from app.db.db import get_db
 from app.services.board import make_move
 
 router = APIRouter()

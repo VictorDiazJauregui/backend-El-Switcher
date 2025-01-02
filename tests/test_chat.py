@@ -1,5 +1,6 @@
 import pytest
-from app.db.db import GameStatus
+
+from app.db.enums import GameStatus
 from app.schemas.chat import ChatMessageSchema
 from app.services.chat import get_chat_history
 from .db_setup import (

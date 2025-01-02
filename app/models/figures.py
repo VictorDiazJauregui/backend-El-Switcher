@@ -1,7 +1,7 @@
 import numpy as np
-from app.db.db import Color
 from sqlalchemy.orm import Session
-from app.db.db import CardFig
+
+from app.db.models.card_fig import CardFig
 
 
 class Figure:

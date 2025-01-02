@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch, AsyncMock
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.db.db import GameStatus, Turn, CardFig, Color
+from app.db.enums import GameStatus, Turn, Color
+from app.db.models.card_fig import CardFig
 from app.models.figures import get_figure_type_by_id
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure import validate, select_figure_by_his_type

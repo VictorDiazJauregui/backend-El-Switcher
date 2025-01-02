@@ -3,7 +3,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.orm import Session
 
 from app.services.game_list_events import emit_game_list
-from app.db.db import Game, GameStatus
+from app.db.enums import GameStatus
+from app.db.models.game import Game
 
 
 @pytest.fixture

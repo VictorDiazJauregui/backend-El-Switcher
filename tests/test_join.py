@@ -1,5 +1,6 @@
 import pytest
-from app.db.db import GameStatus, Player
+from app.db.enums import GameStatus
+from app.db.models.player import Player
 from .db_setup import (
     client,
     TestingSessionLocal,

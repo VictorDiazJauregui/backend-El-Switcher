@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from app.db.db import GameStatus
+from app.db.enums import GameStatus
 from app.services.lobby_events import (
     emit_can_start_game,
     emit_players_lobby,

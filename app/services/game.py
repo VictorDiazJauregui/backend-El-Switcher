@@ -3,7 +3,9 @@ import asyncio
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 
-from app.db.db import Game, Player, GameStatus, Turn
+from app.db.enums import GameStatus, Turn
+from app.db.models.game import Game
+from app.db.models.player import Player
 from app.errors.handlers import ForbiddenError
 from app.schemas.game import GameCreateSchema, StartResponseSchema
 from app.schemas.player import PlayerResponseSchema

@@ -1,4 +1,5 @@
-from app.db.db import Game, GameStatus
+from app.db.enums import GameStatus
+from app.db.models.game import Game
 from app.routers import sio_game_list as sio
 
 

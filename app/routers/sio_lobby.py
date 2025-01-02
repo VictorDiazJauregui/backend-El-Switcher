@@ -1,6 +1,9 @@
 import socketio
 
-from app.db.db import db_context, Game, Player, GameStatus
+from app.db.enums import GameStatus
+from app.db.models.game import Game
+from app.db.models.player import Player
+from app.db.session import db_context
 from app.models.broadcast import Broadcast
 from app.services import lobby_events
 from app.utils.parse_query_string import parse_query_string

@@ -1,9 +1,10 @@
 import numpy as np
-from collections import defaultdict
 
+from collections import defaultdict
 from sqlalchemy.orm import Session
 
-from app.db.db import Board, Color
+from app.db.enums import Color
+from app.db.models.board import Board
 from app.errors.handlers import NotFoundError
 from app.models.figures import get_all_figures
 
