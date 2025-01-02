@@ -2,6 +2,7 @@ from sqlalchemy import event
 from app.db.models.card_move import CardMove
 from app.db.models.player import Player
 
+
 # Event listener to set owner_id to None instead of deleting CardMove
 @event.listens_for(Player, "before_delete")
 def receive_before_delete(mapper, connection, target):
