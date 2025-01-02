@@ -4,19 +4,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.main import app
-from app.db.db import (
-    Base,
-    get_db,
-    Game,
-    Board,
-    SquarePiece,
-    Player,
-    CardMove,
-    CardFig,
-    FigureType,
-    Color,
-    Turn,
-)
+from app.db.base import Base
+from app.db.enums import Color, FigureType, Turn
+from app.db.models.board import Board
+from app.db.models.card_fig import CardFig
+from app.db.models.card_move import CardMove
+from app.db.models.game import Game
+from app.db.models.player import Player
+from app.db.models.square_piece import SquarePiece
+from app.db.session import get_db
 from app.schemas.figures import FigureSchema
 
 # Setup the test database
