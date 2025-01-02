@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.db.base import Base
 
+
 class LogMessage(Base):
     __tablename__ = "log"
 
