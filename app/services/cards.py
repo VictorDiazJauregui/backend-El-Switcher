@@ -1,17 +1,13 @@
 from random import shuffle
-
 from sqlalchemy.orm import Session
 from sqlalchemy import func, select, exists
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.db.db import (
-    CardMove,
-    CardFig,
-    FigureType,
-    Game,
-    MoveType,
-    Player,
-)
+from app.db.enums import FigureType, MoveType
+from app.db.models.card_fig import CardFig
+from app.db.models.card_move import CardMove
+from app.db.models.game import Game
+from app.db.models.player import Player
 from app.errors.handlers import NotFoundError
 from app.schemas.cards import (
     CardFigSchema,
