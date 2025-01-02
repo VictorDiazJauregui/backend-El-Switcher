@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.db.db import get_db
+from app.db.session import get_db
 from app.services.game import remove_player_from_game
 
 router = APIRouter()
