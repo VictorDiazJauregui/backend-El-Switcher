@@ -1,15 +1,18 @@
 import enum
 
+
 class GameStatus(enum.Enum):
     LOBBY = "Lobby"
     INGAME = "Ingame"
     FINISHED = "Finished"
+
 
 class Turn(enum.Enum):
     P1 = 1
     P2 = 2
     P3 = 3
     P4 = 4
+
 
 class FigureType(enum.Enum):
     # Easy figures
@@ -40,6 +43,7 @@ class FigureType(enum.Enum):
     HARD_17 = (17, "Figura Difícil 17")
     HARD_18 = (18, "Figura Difícil 18")
 
+
 class MoveType(enum.Enum):
     MOV_1 = (1, "CRUCE DIAGONAL CON UN ESPACIO")
     MOV_2 = (2, "CRUCE EN LINEA CON UN ESPACIO")
@@ -48,6 +52,7 @@ class MoveType(enum.Enum):
     MOV_5 = (5, "CRUCE EN L A LA IZQUIERDA CON DOS ESPACIOS")
     MOV_6 = (6, "CRUCE EN L A LA DERECHA CON DOS ESPACIOS")
     MOV_7 = (7, "CRUCE EN LINEA AL LATERAL")
+
 
 class Color(enum.Enum):
     RED = "Red"
