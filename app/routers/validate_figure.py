@@ -1,7 +1,8 @@
 import asyncio
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.db.db import get_db
+
+from app.db.session import get_db
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure import validate, cleanup
 from app.services.block_figure import block_figure_service
