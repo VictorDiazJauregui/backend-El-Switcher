@@ -1,15 +1,15 @@
 import asyncio
-from app.db.db import (
-    Game,
-    Board,
-    ParallelBoard,
-    CardMove,
-    CardFig,
-    SquarePiece,
-    SessionLocal,
-    LogMessage,
-    ChatMessage,
-)
+
+from app.db.models.board import Board
+from app.db.models.card_fig import CardFig
+from app.db.models.card_move import CardMove
+from app.db.models.chat_message import ChatMessage
+from app.db.models.game import Game
+from app.db.models.log_message import LogMessage
+from app.db.models.parallel_board import ParallelBoard
+from app.db.models.square_piece import SquarePiece
+from app.db.session import SessionLocal
+
 
 """
 Cleanup game data from the database.
