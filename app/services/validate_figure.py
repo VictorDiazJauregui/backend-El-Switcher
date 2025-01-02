@@ -1,6 +1,9 @@
 import asyncio
 
-from app.db.db import Game, GameStatus, Player, CardFig
+from app.db.enums import GameStatus
+from app.db.models.card_fig import CardFig
+from app.db.models.game import Game
+from app.db.models.player import Player
 from app.models.figures import (
     get_figure_by_id,
     get_figure_type_by_id,
