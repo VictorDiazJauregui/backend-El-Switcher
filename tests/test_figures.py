@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 
-from app.models.figures import Figure, get_all_figures
+from app.models.figures.base import Figure
+from app.models.figures.figures import get_all_figures
 from app.db.enums import GameStatus
 from .db_setup import (
     client,
