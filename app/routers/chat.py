@@ -6,7 +6,8 @@ from app.schemas.chat import (
     ChatSendMessageSchema,
     SingleChatMessageSchema,
 )
-from app.db.db import get_db, ChatMessage
+from app.db.session import get_db
+from app.db.models.chat_message import ChatMessage
 from app.services.game_player_service import get_player
 from app.services.game_events import emit_single_chat_message
 
