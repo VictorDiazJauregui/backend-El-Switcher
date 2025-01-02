@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.db.db import Base, engine
+from app.db.base import Base
+from app.db.session import engine
 from app.errors.handlers import (
     NotFoundError,
     ForbiddenError,
