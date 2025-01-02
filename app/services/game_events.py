@@ -1,10 +1,11 @@
-from app.db.db import GameStatus, Player, Game, LogMessage
 from sqlalchemy.orm import Session
 
+from app.db.enums import GameStatus
+from app.db.models.game import Game
+from app.db.models.log_message import LogMessage
+from app.db.models.player import Player
 from app.models.broadcast import Broadcast
-
 from app.routers import sio_game as sio
-
 from app.schemas.player import PlayerResponseSchema, WinnerSchema
 from app.schemas.chat import (
     SingleChatMessageSchema,
@@ -16,7 +17,6 @@ from app.schemas.logs import (
     MultipleLogMessagesSchema,
     LogMessageSchema,
 )
-
 from app.services.cards import fetch_figure_cards, fetch_movement_cards
 from app.services.board import get_board, get_blocked_color
 from app.services.figures import figures_event
