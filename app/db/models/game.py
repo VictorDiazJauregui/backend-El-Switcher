@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from app.db.base import Base
 from app.db.enums import GameStatus, Turn
 
+
 class Game(Base):
     __tablename__ = "games"
 
