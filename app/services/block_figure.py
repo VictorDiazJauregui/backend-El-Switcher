@@ -1,11 +1,12 @@
 import asyncio
 from sqlalchemy.orm import Session
+
+from app.db.models.card_fig import CardFig
 from app.models.figures import (
     get_figure_by_id,
 )
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure import validate
-from app.db.db import CardFig
 from app.services import game_events
 from app.services.game_player_service import get_player
 
