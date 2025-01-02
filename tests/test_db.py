@@ -2,7 +2,8 @@ import pytest
 
 from sqlalchemy.orm import Session
 
-from app.db.db import get_db, Player
+from app.db.session import get_db
+from app.db.models.player import Player
 
 
 # Skipped by default to not trigger prod database operations
