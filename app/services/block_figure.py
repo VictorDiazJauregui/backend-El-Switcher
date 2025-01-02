@@ -2,7 +2,7 @@ import asyncio
 from sqlalchemy.orm import Session
 
 from app.db.models.card_fig import CardFig
-from app.models.figures import (
+from app.models.figures.figures import (
     get_figure_by_id,
 )
 from app.schemas.figures import FigureSchema

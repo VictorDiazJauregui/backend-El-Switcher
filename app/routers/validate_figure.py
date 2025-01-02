@@ -6,7 +6,7 @@ from app.db.session import get_db
 from app.schemas.figures import FigureSchema
 from app.services.validate_figure import validate, cleanup
 from app.services.block_figure import block_figure_service
-from app.models.figures import get_figure_by_id
+from app.models.figures.figures import get_figure_by_id
 from app.services.board import set_block_color
 from app.services import game_events
 from app.services.game_player_service import get_player

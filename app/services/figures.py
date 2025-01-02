@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.db.enums import Color
 from app.db.models.board import Board
 from app.errors.handlers import NotFoundError
-from app.models.figures import get_all_figures
+from app.models.figures.figures import get_all_figures
 
 
 def get_matrix(game_id: int, db: Session) -> np.ndarray:
