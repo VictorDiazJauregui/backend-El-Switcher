@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from app.db.base import Base
 from app.db.enums import FigureType
 
+
 class CardFig(Base):
     __tablename__ = "card_figs"
 
