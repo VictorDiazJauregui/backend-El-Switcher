@@ -5,6 +5,7 @@ anyio==4.4.0
 asynctest==0.13.0
 bcrypt==4.2.0
 bidict==0.23.1
+black==24.10.0
 certifi==2024.8.30
 cffi==1.17.1
 click==8.1.7
