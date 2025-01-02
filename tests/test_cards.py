@@ -1,5 +1,8 @@
 import pytest
-from app.db.db import CardMove, MoveType, CardFig, FigureType
+
+from app.db.enums import MoveType, FigureType
+from app.db.models.card_fig import CardFig
+from app.db.models.card_move import CardMove
 from app.schemas.figures import FigureSchema
 from app.services import cards
 from .db_setup import client, TestingSessionLocal, create_player, reset_db
